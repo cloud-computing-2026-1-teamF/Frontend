@@ -1,5 +1,7 @@
 # 서울상권 with AI
 
+![alt text](image.png)
+
 서울특별시에서 요식업 독립 창업자를 위한 입지 추천 서비스의 프론트엔드 애플리케이션이다.
 지도에서 위치를 지정하면 주변 상권 데이터와 공실매물을 분석하여 생존율이 높은
 **Top 3 공실매물**을 추천한다.
@@ -228,3 +230,78 @@ src/
 | `test` | 테스트 추가 / 수정 | `test: Nav 컴포넌트 테스트 추가` |
 | `chore` | 의존성 / 설정 / 빌드 도구 변경 | `chore: vite 5.4로 업그레이드` |
 | `ci` | CI 설정 변경 | `ci: GitHub Actions 빌드 스텝 추가` |
+
+---
+
+## Git 워크플로우
+
+파일을 수정해서 원격에 반영하는 한 사이클의 전체 흐름.
+
+### 작업 사이클
+
+```
+[main에서 시작]
+  ↓ git pull origin main
+  ↓ git checkout -b feat/뭐고치는지
+[새 브랜치에서 작업]
+  ↓ 코드 수정
+  ↓ git add → git commit  (필요 시 여러 번 반복)
+  ↓ git push
+[GitHub UI에서]
+  ↓ PR 생성 → 머지
+[로컬 정리]
+  ↓ git checkout main
+  ↓ git pull origin main
+  ↓ git branch -d feat/뭐고치는지
+```
+
+### 단계별 명령어
+
+#### 1. 작업 시작 — 브랜치 생성
+
+```bash
+git checkout main                       # main으로 이동
+git pull origin main                    # 원격 최신 내역 받아오기
+git checkout -b feat/profile-dropdown   # 새 브랜치 생성 + 이동
+```
+
+#### 2. 코드 수정 + commit
+
+```bash
+git status                              # 변경된 파일 확인
+git add .                               # 또는 git add <파일>
+git commit -m "feat: 프로필 드롭다운 추가"
+```
+
+같은 브랜치에서 commit은 여러 번 만들 수 있다. 작업 단위마다 쪼개는 것을 권장한다.
+
+#### 3. 원격에 push
+
+```bash
+git push -u origin feat/profile-dropdown   # 첫 push (-u 로 upstream 설정)
+git push                                   # 같은 브랜치 추가 push는 생략 가능
+```
+
+#### 4. PR 생성 + 머지
+
+GitHub UI에서 PR을 생성하고 머지한다. PR 제목은 commit 메시지와 동일한 형식을 사용한다.
+
+#### 5. 머지 후 로컬 정리
+
+```bash
+git checkout main
+git pull origin main
+git branch -d feat/profile-dropdown
+```
+
+### 자주 쓰는 명령어
+
+| 명령 | 사용 시점 |
+|---|---|
+| `git pull origin main` | 작업 시작 전 동기화 |
+| `git checkout -b 브랜치명` | 새 브랜치 생성 + 이동 |
+| `git status` | 변경된 파일 확인 |
+| `git add .` 또는 `git add <파일>` | 변경 사항 staging |
+| `git commit -m "타입: 내용"` | commit 생성 (로컬) |
+| `git push` | 원격 전송 |
+| `git branch -d 브랜치명` | 머지 끝난 로컬 브랜치 삭제 |
