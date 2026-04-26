@@ -1,0 +1,160 @@
+/* ============================================
+   SANGGWON AI — Design tokens
+   Data/Fintech aesthetic, Pretendard base
+   ============================================ */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+
+:root {
+  /* Core neutrals — cool, data-forward */
+  --ink-900: #0A0E1A;
+  --ink-800: #111727;
+  --ink-700: #1B2236;
+  --ink-600: #2A3249;
+  --ink-500: #4A5472;
+  --ink-400: #6B7490;
+  --ink-300: #9AA3BD;
+  --ink-200: #C9D0E2;
+  --ink-100: #E5E9F2;
+  --ink-50:  #F4F6FB;
+  --ink-0:   #FFFFFF;
+
+  /* Primary — refined warm orange (survives dark bg too) */
+  --brand-600: #E85D1F;
+  --brand-500: #F26B2E;
+  --brand-400: #FF8547;
+  --brand-100: #FEE6D5;
+  --brand-50:  #FFF5EC;
+
+  /* Secondary accents — for data categories / chart variety */
+  --teal-500:  #0FB5A6;
+  --teal-100:  #D5F3EF;
+  --blue-500:  #3B6FE8;
+  --blue-100:  #DCE6FA;
+  --violet-500:#7C5CE6;
+  --violet-100:#E6DFFB;
+  --amber-500: #F4B431;
+  --amber-100: #FDEFD1;
+  --rose-500:  #E85070;
+  --rose-100:  #FBD9E1;
+
+  /* Semantic */
+  --success: #16B981;
+  --warning: #F4B431;
+  --danger:  #E85070;
+  --info:    #3B6FE8;
+
+  /* Surfaces */
+  --bg: var(--ink-50);
+  --bg-alt: var(--ink-0);
+  --bg-dark: var(--ink-900);
+  --surface: #FFFFFF;
+  --border: #E3E7F0;
+  --border-strong: #CBD2E0;
+
+  /* Radii */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-2xl: 28px;
+
+  /* Shadows — subtle, fintech-y */
+  --sh-sm: 0 1px 2px rgba(16,24,40,.06);
+  --sh-md: 0 4px 12px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.04);
+  --sh-lg: 0 16px 40px rgba(16,24,40,.10), 0 2px 6px rgba(16,24,40,.06);
+  --sh-xl: 0 32px 80px rgba(16,24,40,.14);
+
+  /* Type — locked to Pretendard */
+  --font-sans: 'Pretendard';
+  --font-mono: 'Pretendard';
+}
+
+* { box-sizing: border-box; }
+/* Force Pretendard everywhere — overrides any inherited or component-level font */
+html, body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, span, div, a, label, li, th, td {
+  font-family: 'Pretendard' !important;
+}
+html {
+  zoom: 1.25;
+}
+html, body {
+  margin: 0; padding: 0;
+  font-family: 'Pretendard';
+  color: var(--ink-900);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'ss01', 'ss02';
+}
+body { letter-spacing: -0.01em; word-break: keep-all; line-break: strict; }
+*, *::before, *::after { word-break: keep-all; overflow-wrap: normal; }
+.nowrap, .logo, .logo-word, .nav-links a, .btn, .hc-badge, .hc-rank, .hc-score, .hc-d-mon, .hc-d-time, .hs-num, .hist-filters button, .hd-meta span, .nav-user-name, .nav-user-tier { white-space: nowrap; }
+
+/* Common reusable atoms */
+.mono { font-family: 'Pretendard' !important; font-feature-settings: 'tnum'; letter-spacing: -0.01em; font-weight: 500; }
+.num { font-family: 'Pretendard' !important; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--brand-600);
+}
+.eyebrow::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--brand-500);
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 20px; border-radius: var(--r-md);
+  font-family: var(--font-sans); font-weight: 600; font-size: 14px;
+  border: 1px solid transparent; cursor: pointer;
+  transition: all .15s ease; text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--brand-600); color: #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,.15) inset, 0 1px 2px rgba(232,93,31,.3);
+}
+.btn-primary:hover { background: var(--brand-500); transform: translateY(-1px); }
+.btn-secondary {
+  background: #fff; color: var(--ink-900); border-color: var(--border-strong);
+}
+.btn-secondary:hover { border-color: var(--ink-600); }
+.btn-ghost { background: transparent; color: var(--ink-700); }
+.btn-ghost:hover { background: var(--ink-100); }
+.btn-dark {
+  background: var(--ink-900); color: #fff;
+}
+.btn-dark:hover { background: var(--ink-800); }
+.btn-lg { padding: 16px 28px; font-size: 15px; border-radius: var(--r-lg); }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 500;
+  background: var(--ink-100); color: var(--ink-700);
+}
+.chip-brand { background: var(--brand-50); color: var(--brand-600); }
+.chip-success { background: #E0F5EC; color: var(--success); }
+.chip-info { background: var(--blue-100); color: var(--blue-500); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+/* Utility layouts */
+.container { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+
+/* scrollbar minimal */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--ink-200); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-300); }
+::-webkit-scrollbar-track { background: transparent; }

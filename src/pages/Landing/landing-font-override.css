@@ -1,0 +1,4 @@
+/* Landing page Pretendard enforcement — strong refresh proof */
+body, body *, .hero, .hero *, .section, .section *, .site-nav, .site-nav *, .site-footer, .site-footer * {
+  font-family: 'Pretendard' !important;
+}

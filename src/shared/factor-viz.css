@@ -1,0 +1,178 @@
+/* Shared factor visualization — analyze side panel + history detail page */
+
+.fv-card {
+  background: #fff;
+  border: 1px solid #EDF0F6;
+  border-radius: 14px;
+  padding: 16px 16px 14px;
+  display: flex; flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fv-card-head {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.fv-card-title {
+  font-size: 13px; font-weight: 700; color: #0A0E1A;
+  letter-spacing: -0.02em;
+}
+.fv-card-sub { font-size: 11px; color: #9AA3BD; }
+
+.fv-value-row {
+  display: flex; align-items: baseline; gap: 6px;
+  margin-top: 2px;
+}
+.fv-value {
+  font-size: 32px; font-weight: 800; color: #0A0E1A;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.fv-unit { font-size: 12px; color: #6B7490; font-weight: 500; }
+
+.fv-badge {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.fv-badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.fv-badge-up   { background: rgba(22,185,129,.10); color: #0A7A5B; }
+.fv-badge-up   .fv-badge-dot { background: #16B981; }
+.fv-badge-down { background: rgba(230,57,82,.10); color: #B7263C; }
+.fv-badge-down .fv-badge-dot { background: #E63952; }
+.fv-badge-flat { background: rgba(59,111,232,.10); color: #1E4DB7; }
+.fv-badge-flat .fv-badge-dot { background: #3B6FE8; }
+
+.fv-viz { margin-top: 4px; }
+.fv-axis {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: #9AA3BD;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 6px;
+}
+
+/* 1) bar vs average ------------------------------------------------ */
+.fv-bar-avg { padding-bottom: 22px; } /* room for the absolutely-placed marker label */
+.fv-bar-track {
+  position: relative;
+  height: 10px;
+  background: #F0F2F7;
+  border-radius: 999px;
+}
+.fv-bar-fill {
+  position: absolute; top: 0; left: 0; bottom: 0;
+  border-radius: 999px;
+}
+.fv-bar-fill.is-up   { background: linear-gradient(90deg, #22C58A, #16B981); }
+.fv-bar-fill.is-down { background: linear-gradient(90deg, #FF8A8A, #E63952); }
+/* Marker is the short dark tick that straddles the track at the
+   industry-average position. The "업종 평균" label is absolutely
+   positioned below the track so it never overlaps the colored fill. */
+.fv-bar-marker {
+  position: absolute;
+  top: -4px; bottom: -4px;
+  width: 2px;
+  background: #4A5472;
+  border-radius: 1px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.fv-bar-marker-lab {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px; color: #4A5472; font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 2) zone strip --------------------------------------------------- */
+.fv-zone-track {
+  position: relative;
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #F0F2F7;
+}
+.fv-zone-seg { height: 100%; }
+.fv-zone-low  { background: #BFD8EA; }
+.fv-zone-mid  { background: #C5EFD9; }
+.fv-zone-high { background: #FFD2C8; }
+.fv-zone-marker {
+  position: absolute;
+  top: -3px; bottom: -3px;
+  width: 3px;
+  background: #0A0E1A;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 2px #fff;
+}
+.fv-zone-labs {
+  display: flex; justify-content: space-between;
+  margin-top: 6px;
+  font-size: 10px; color: #6B7490;
+}
+.fv-zone-labs span { display: flex; flex-direction: column; gap: 1px; }
+.fv-zone-labs b { font-size: 10px; font-weight: 700; color: #4A5472; }
+.fv-zone-labs i {
+  font-style: normal;
+  color: #9AA3BD;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 3) percentile bar ----------------------------------------------- */
+.fv-pct-track {
+  height: 10px;
+  background: #F0F2F7;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.fv-pct-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6E97F0, #3B6FE8);
+  border-radius: 999px;
+}
+.fv-pct-foot {
+  margin-top: 6px;
+  text-align: right;
+  font-size: 10px; color: #6B7490;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 4) signed bar (negative ↔ positive) ----------------------------- */
+.fv-signed .fv-axis span:nth-child(2) { font-weight: 600; color: #4A5472; }
+.fv-signed-track {
+  position: relative;
+  height: 10px;
+  background: #F0F2F7;
+  border-radius: 999px;
+}
+.fv-signed-zero {
+  position: absolute;
+  top: -3px; bottom: -3px;
+  width: 2px;
+  background: #4A5472;
+  transform: translateX(-50%);
+  border-radius: 1px;
+}
+.fv-signed-fill {
+  position: absolute;
+  top: 0; bottom: 0;
+  border-radius: 999px;
+}
+.fv-signed-fill.is-up   { background: linear-gradient(90deg, #22C58A, #16B981); }
+.fv-signed-fill.is-down { background: linear-gradient(270deg, #FF8A8A, #E63952); }
+
+/* desc line ------------------------------------------------------- */
+.fv-desc {
+  margin: 2px 0 0;
+  font-size: 11px; color: #6B7490;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
