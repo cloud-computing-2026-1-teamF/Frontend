@@ -194,8 +194,37 @@ src/
 ## 협업 가이드
 
 - `main` 브랜치 직접 push 금지. 모든 변경은 PR로 머지한다.
-- 브랜치 prefix: `feat/`, `fix/`, `refactor/`, `style/`
 - 작업 시작 전 `git pull origin main`으로 동기화 후 `git checkout -b feat/xxx`
 - 작은 단위로 자주 머지한다.
 - PR 본문에는 변경 사항, 변경 이유, 관련 스크린샷을 포함한다.
 - 공유 영역 파일을 수정하는 PR의 제목에는 `[shared]` 태그를 부착한다.
+
+### 브랜치 이름
+
+형식: `prefix/내용` (소문자 + 하이픈)
+
+| Prefix | 사용 시점 | 예시 |
+|---|---|---|
+| `feat/` | 새 기능 개발 | `feat/auth-modal-validation` |
+| `fix/` | 버그 수정 | `fix/scroll-locked-on-landing` |
+| `refactor/` | 구조 개선 | `refactor/extract-map-component` |
+| `style/` | UI / CSS 작업 | `style/landing-hero-spacing` |
+| `chore/` | 잡일 (의존성 등) | `chore/upgrade-vite` |
+| `docs/` | 문서 작업 | `docs/update-readme` |
+| `hotfix/` | 운영 긴급 수정 | `hotfix/login-broken` |
+
+### Commit 메시지
+
+형식: `타입: 한 줄 요약`
+
+| 타입 | 사용 시점 | 예시 |
+|---|---|---|
+| `feat` | 새 기능 추가 | `feat: 로그인 모달 추가` |
+| `fix` | 버그 수정 | `fix: Analyze 페이지 스크롤 잠김 해결` |
+| `docs` | 문서 수정 (README 등) | `docs: 팀 분담 표 추가` |
+| `style` | 코드 포맷 / 공백 등 동작 변화 없는 변경 | `style: 들여쓰기 통일` |
+| `refactor` | 기능 변화 없이 코드 구조 변경 | `refactor: AuthContext 분리` |
+| `perf` | 성능 개선 | `perf: 이미지 lazy load 적용` |
+| `test` | 테스트 추가 / 수정 | `test: Nav 컴포넌트 테스트 추가` |
+| `chore` | 의존성 / 설정 / 빌드 도구 변경 | `chore: vite 5.4로 업그레이드` |
+| `ci` | CI 설정 변경 | `ci: GitHub Actions 빌드 스텝 추가` |
