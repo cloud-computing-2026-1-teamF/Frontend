@@ -84,6 +84,7 @@
 .hist-empty svg { color: var(--ink-300); margin-bottom: 12px; }
 .hist-empty h3 { margin: 0 0 4px; font-size: 16px; color: var(--ink-900); }
 .hist-empty p { margin: 0; font-size: 13px; }
+.hist-empty-action { margin-top: 18px; }
 
 /* Card */
 .hc {
@@ -107,6 +108,34 @@
 .hc-main { flex: 1; min-width: 0; }
 .hc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
 .hc-head h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.01em; word-break: keep-all; }
+.hc-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.hc-status span {
+  font-variant-numeric: tabular-nums;
+  opacity: .78;
+}
+.hc-status-pending,
+.hc-status-running {
+  background: rgba(244,180,49,.14);
+  color: #9A6400;
+}
+.hc-status-done {
+  background: rgba(22,185,129,.14);
+  color: #0A7A5B;
+}
+.hc-status-failed {
+  background: rgba(232,93,31,.12);
+  color: #A8431A;
+}
 .hc-badges { display: flex; gap: 4px; }
 .hc-badge {
   display: inline-flex; align-items: center; gap: 4px;

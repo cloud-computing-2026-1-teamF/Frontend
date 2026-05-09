@@ -85,6 +85,69 @@
 
 .dt-section { margin-bottom: 28px; }
 
+.dt-api-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+.dt-api-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  min-width: 0;
+}
+.dt-api-card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.dt-api-card-head span {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink-900);
+}
+.dt-api-card-head b {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--brand-600);
+  word-break: break-all;
+}
+.dt-api-card p {
+  min-height: 54px;
+  margin: 0 0 12px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-600);
+}
+.dt-api-card time {
+  display: block;
+  font-size: 10px;
+  color: var(--ink-400);
+}
+.dt-api-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  color: var(--ink-500);
+}
+.dt-api-empty b {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-900);
+  margin-bottom: 3px;
+}
+.dt-api-empty p {
+  margin: 0;
+  font-size: 12px;
+}
+
 /* ===== Top 3 grid ===== */
 .dt-top3 { margin-bottom: 28px; }
 .dt-top3-grid {
@@ -362,12 +425,14 @@
 @media (max-width: 1080px) {
   .dt-top3-grid { grid-template-columns: 1fr; }
   .dt-factors { grid-template-columns: repeat(2, 1fr); }
+  .dt-api-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dt-grid-2 { grid-template-columns: 1fr; }
   .dt-hero { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .dt-hero-kpis { width: 100%; }
 }
 @media (max-width: 620px) {
   .dt-factors { grid-template-columns: 1fr; }
+  .dt-api-grid { grid-template-columns: 1fr; }
   .dt-hero-kpis { grid-template-columns: repeat(2, 1fr); }
   .dt-hk + .dt-hk::before { display: none; }
   .dt-comp-head, .dt-comp-row { grid-template-columns: 1.6fr 60px 1fr; }

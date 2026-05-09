@@ -1,5 +1,3 @@
-// Detail page — full analysis view for one history item.
-// Loads via `GET /analyses/:id` (mock-routed while USE_MOCK is on).
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import './detail.css';
@@ -7,7 +5,15 @@ import { Icon } from '../../shared/Icon';
 import { FactorCard, buildFactorViz } from '../../shared/FactorViz';
 import { Footer } from '../../shared/Nav';
 import type { SavedAnalysis } from '../../lib/savedAnalyses';
-import { api } from '../../api';
+import { api, type AnalysisSectionTodo } from '../../api';
+import { USE_MOCK } from '../../api/client';
+import { HISTORY_ITEMS } from '../../data/history';
+import { readSavedAnalyses } from '../../lib/savedAnalyses';
+import {
+  findAnalysisSession,
+  patchAnalysisSessionStatus,
+  sessionToSavedAnalysis,
+} from '../../features/analysisSessions/store';
 import { HourlyChart } from '../../features/detail/components/HourlyChart';
 import { RiskSummary } from '../../features/detail/components/RiskSummary';
 import { ScoreRing } from '../../features/detail/components/ScoreRing';
@@ -17,17 +23,50 @@ export function Detail() {
   const { id: idParam } = useParams<{ id: string }>();
 
   const [item, setItem] = useState<SavedAnalysis | null>(null);
+  const [sections, setSections] = useState<AnalysisSectionTodo[]>([]);
+  const [sectionError, setSectionError] = useState<string | null>(null);
   const [status, setStatus] = useState<'loading' | 'ok' | 'missing'>('loading');
 
   useEffect(() => {
     let cancelled = false;
     setStatus('loading');
-    // `:id` is numeric in the current mock store but the API contract treats
-    // it as opaque — `api.analyses.get` accepts both `number | string`.
+    setSections([]);
+    setSectionError(null);
     const id = idParam ?? '';
-    api.analyses.get(id)
-      .then(res => { if (!cancelled) { setItem(res); setStatus('ok'); } })
-      .catch(() => { if (!cancelled) setStatus('missing'); });
+
+    if (USE_MOCK) {
+      const found = [...readSavedAnalyses(), ...HISTORY_ITEMS].find(row => String(row.id) === id);
+      if (!found) {
+        setStatus('missing');
+      } else {
+        setItem(found);
+        setStatus('ok');
+      }
+      return () => { cancelled = true; };
+    }
+
+    const session = findAnalysisSession(id);
+    if (!session) {
+      setStatus('missing');
+      return () => { cancelled = true; };
+    }
+
+    setItem(sessionToSavedAnalysis(session));
+    setStatus('ok');
+
+    api.analyses.poll(id)
+      .then(nextStatus => {
+        const next = patchAnalysisSessionStatus(id, nextStatus);
+        if (!cancelled && next) setItem(sessionToSavedAnalysis(next));
+      })
+      .catch(() => { /* Keep the locally saved session visible. */ });
+
+    api.analyses.sections(id)
+      .then(res => { if (!cancelled) setSections(res); })
+      .catch(error => {
+        if (!cancelled) setSectionError(error instanceof Error ? error.message : '상세 섹션을 불러오지 못했어요.');
+      });
+
     return () => { cancelled = true; };
   }, [idParam]);
 
@@ -83,7 +122,7 @@ export function Detail() {
                 )}
                 <span className="dt-chip">{item.categoryEmoji} {item.category}</span>
                 <span className="dt-chip"><Icon name="calendar" size={11} /> {item.date} · {item.time}</span>
-                <span className="dt-chip"><Icon name="database" size={11} /> 공실매물 {item.count}개 검토</span>
+                <span className="dt-chip"><Icon name="database" size={11} /> {item.count > 0 ? `공실매물 ${item.count}개 검토` : '상세 데이터 준비 중'}</span>
               </div>
               <p className="dt-budget">
                 <span className="dt-budget-lab">예산 조건</span>
@@ -160,9 +199,49 @@ export function Detail() {
             </div>
           </section>
 
+          {!USE_MOCK && (
+            <section className="dt-section">
+              <div className="dt-sec-label">
+                <span className="dt-sec-num">02</span>
+                <span>백엔드 상세 섹션 API</span>
+              </div>
+              {sectionError ? (
+                <div className="dt-api-empty">
+                  <Icon name="info" size={18} />
+                  <div>
+                    <b>섹션 API를 불러오지 못했어요</b>
+                    <p>{sectionError}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="dt-api-grid">
+                  {sections.map(section => (
+                    <div className="dt-api-card" key={section.sectionKey}>
+                      <div className="dt-api-card-head">
+                        <span>{section.sectionLabel}</span>
+                        <b>{section.sectionKey}</b>
+                      </div>
+                      <p>{section.todo}</p>
+                      <time>{new Date(section.updatedAt).toLocaleString()}</time>
+                    </div>
+                  ))}
+                  {sections.length === 0 && (
+                    <div className="dt-api-empty">
+                      <Icon name="database" size={18} />
+                      <div>
+                        <b>상세 섹션을 불러오는 중</b>
+                        <p>추천 매물, 주요 지표, 유동인구, 경쟁, 매출, 성장률, 접근성 API를 확인하고 있어요.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
+
           <section className="dt-section">
             <div className="dt-sec-label">
-              <span className="dt-sec-num">02</span>
+              <span className="dt-sec-num">{USE_MOCK ? '02' : '03'}</span>
               <span>주요 지표</span>
             </div>
             <div className="dt-factors">
@@ -174,7 +253,7 @@ export function Detail() {
 
           <section className="dt-section">
             <div className="dt-sec-label">
-              <span className="dt-sec-num">03</span>
+              <span className="dt-sec-num">{USE_MOCK ? '03' : '04'}</span>
               <span>유동 패턴 & 입지 접근성</span>
             </div>
             <div className="dt-grid-2">
@@ -233,7 +312,7 @@ export function Detail() {
 
           <section className="dt-section">
             <div className="dt-sec-label">
-              <span className="dt-sec-num">04</span>
+              <span className="dt-sec-num">{USE_MOCK ? '04' : '05'}</span>
               <span>종합 진단</span>
             </div>
             <RiskSummary sel={sel} selRank={selRank} />
