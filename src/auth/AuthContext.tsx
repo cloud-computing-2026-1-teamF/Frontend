@@ -3,19 +3,9 @@
 // every endpoint at the real backend without touching this file.
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { loginRequest, signUp } from '../lib/auth';
 import { api, type AuthUser } from '../api';
 
 export type { AuthUser };
-export type AuthUser = {
-  name: string;
-  email: string;
-  password: string;
-  tier: string;
-  id?: string;
-  accessToken?: string;
-  refreshToken?: string;
-};
 
 type AuthState = {
   user: AuthUser | null;
@@ -57,41 +47,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true; };
   }, []);
 
-  const openAuth = useCallback(async (mode: 'login' | 'signup' = 'login') => {
+  const openAuth = useCallback((mode: 'login' | 'signup' = 'login') => {
     setAuthMode(mode);
     setAuthOpen(true);
-    switch(mode) {
-      case 'login':
-        const res = await loginRequest(user.email, user.password);
-        console.log(res);
-        setUser({
-          ...user,
-          accessToken: res.tokens.acces_token,
-          refreshToken: res.tokens.refresh_token,
-        });
-        break
-      case 'signup':
-        const userData = await signUp(user.accessToken, user.email, user.password, user.name);
-        console.log(userData);
-        setUser({
-          ...user,
-          accessToken: userData.tokens.access_token,
-          name: userData.data.user.name,
-          email: userData.data.user.email,
-          tier: userData.data.user.tier,
-          id: userData.data.user.id,
-        });
-        console.log('setUser completed.');
-        login();
-        break
-    }
   }, []);
 
   const closeAuth = useCallback(() => {
     setAuthOpen(false);
-    // demo auto-login on modal close (matches the v1 behaviour)
-    persist({ name: '창업준비생', email: 'demo@sanggwon.ai', password: '1234', tier: 'Pro' });
-  }, [persist]);
+  }, []);
 
   const login = useCallback((mode: 'login' | 'signup' = 'login') => openAuth(mode), [openAuth]);
 
