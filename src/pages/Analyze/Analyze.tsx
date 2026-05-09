@@ -127,11 +127,6 @@ export function Analyze() {
 
   const runAnalysis = async () => {
     if (!bizType || !area) return;
-    if (!USE_MOCK && area.id.startsWith('coord:')) {
-      setAnalysisError('실서버 분석은 검색으로 나온 행정동을 선택해야 시작할 수 있어요.');
-      setPhase('failed');
-      return;
-    }
 
     trackingCleanupRef.current?.();
     trackingCleanupRef.current = null;
@@ -142,15 +137,19 @@ export function Analyze() {
     setShowMarkers(false);
     setMapCenter({ lat: area.lat, lng: area.lng });
     try {
+      const analysisArea = await resolveAnalysisArea(area);
+      if (analysisArea.id !== area.id) {
+        setArea(analysisArea);
+      }
       const selectedBusiness = bizTypes.find(b => b.key === bizType);
       const result = await api.analyses.create({
         businessType: bizType,
-        areaId: area.id,
-        center: { lat: area.lat, lng: area.lng },
+        areaId: analysisArea.id,
+        center: { lat: analysisArea.lat, lng: analysisArea.lng },
         radiusM: FIXED_RADIUS,
-        roadAddress: area.roadAddress,
-        displayName: area.displayName,
-        region: area.dong,
+        roadAddress: analysisArea.roadAddress,
+        displayName: analysisArea.displayName,
+        region: analysisArea.dong,
         category: selectedBusiness?.label,
         categoryEmoji: selectedBusiness?.emoji,
       });
@@ -161,12 +160,12 @@ export function Analyze() {
         businessType: bizType,
         category: selectedBusiness?.label ?? '미지정',
         categoryEmoji: selectedBusiness?.emoji ?? '📍',
-        areaId: area.id,
-        areaName: area.regionLabel,
-        region: area.gu,
-        roadAddress: area.roadAddress,
-        lat: area.lat,
-        lng: area.lng,
+        areaId: analysisArea.id,
+        areaName: analysisArea.regionLabel,
+        region: analysisArea.gu,
+        roadAddress: analysisArea.roadAddress,
+        lat: analysisArea.lat,
+        lng: analysisArea.lng,
         radius: FIXED_RADIUS,
       });
       upsertAnalysisSession(session);
@@ -175,6 +174,48 @@ export function Analyze() {
       setAnalysisError(error instanceof Error ? error.message : '분석 작업 생성에 실패했어요.');
       setPhase('failed');
     }
+  };
+
+  const resolveAnalysisArea = async (pickedArea: AnalyzeArea): Promise<AnalyzeArea> => {
+    if (USE_MOCK || !pickedArea.id.startsWith('coord:')) return pickedArea;
+
+    setAnalysisStepLabel('선택 위치의 행정동을 확인하는 중');
+    const queries = [
+      pickedArea.dong,
+      pickedArea.regionLabel,
+      `${pickedArea.gu} ${pickedArea.dong}`.trim(),
+      pickedArea.roadAddress,
+    ].filter((value, index, values) =>
+      value && value !== '미지정' && values.indexOf(value) === index
+    );
+
+    for (const query of queries) {
+      const matches = await api.catalog.searchAreas(query);
+      const match = pickAreaMatch(matches, pickedArea);
+      if (match) {
+        return {
+          ...pickedArea,
+          id: match.id,
+          roadAddress: match.fullName,
+          dong: match.name,
+          gu: match.region,
+          regionLabel: match.name,
+        };
+      }
+    }
+
+    throw new Error('선택한 위치의 행정동을 서버 지역 목록에서 찾지 못했어요. 근처 장소나 행정동을 검색해서 다시 선택해주세요.');
+  };
+
+  const pickAreaMatch = (matches: AreaSearchHit[], pickedArea: AnalyzeArea): AreaSearchHit | undefined => {
+    if (matches.length === 0) return undefined;
+    const exact = matches.find(match =>
+      match.name === pickedArea.dong
+      || match.name === pickedArea.regionLabel
+      || match.fullName.includes(pickedArea.dong)
+    );
+    if (exact) return exact;
+    return matches[0];
   };
 
   const beginProgressTracking = (id: string) => {
