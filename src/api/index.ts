@@ -11,9 +11,11 @@ import type {
   RefreshResponse,
   BusinessType,
   AreaSearchHit,
+  AnalysisRecommendation,
   AnalysisDetail,
   AnalysisEventResponse,
   AnalysisPollingResponse,
+  AnalysisRecommendationsSection,
   AnalysisSectionKey,
   AnalysisSectionTodo,
   CreateAnalysisResponse,
@@ -29,7 +31,7 @@ export { ApiError } from './types';
 export type {
   AuthUser, AuthLoginResponse, LoginRequest, SignupRequest, RefreshResponse,
   BusinessType, AreaSearchHit,
-  AnalysisDetail, AnalysisEventResponse, AnalysisPollingResponse, AnalysisSectionKey, AnalysisSectionTodo,
+  AnalysisRecommendation, AnalysisDetail, AnalysisEventResponse, AnalysisPollingResponse, AnalysisRecommendationsSection, AnalysisSectionKey, AnalysisSectionTodo,
   CreateAnalysisResponse, CreateAnalysisRequest, CreateAnalysisClientRequest, ListAnalysesQuery, ListAnalysesResponse,
   PatchAnalysisRequest, UserStats,
 } from './types';
@@ -107,6 +109,10 @@ export const analysesApi = {
   section: (id: number | string, key: AnalysisSectionKey) =>
     apiRequest<AnalysisSectionTodo>({ method: 'GET', path: `/analyses/${id}/${sectionPath(key)}` }).then(r => r.data),
 
+  /** `GET /analyses/:id/recommended-properties` */
+  recommendations: (id: number | string) =>
+    apiRequest<AnalysisRecommendationsSection>({ method: 'GET', path: `/analyses/${id}/recommended-properties` }).then(r => r.data),
+
   sections: (id: number | string) =>
     Promise.all(ANALYSIS_SECTION_KEYS.map(key => analysesApi.section(id, key))),
 
@@ -142,6 +148,10 @@ function toCreateAnalysisRequest(body: CreateAnalysisClientRequest): CreateAnaly
     businessType: body.businessType,
     areaId: body.areaId,
     budget: body.budget,
+    center: body.center,
+    x: body.x,
+    y: body.y,
+    radiusM: body.radiusM,
   };
 }
 

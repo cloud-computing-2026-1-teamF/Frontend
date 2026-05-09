@@ -82,6 +82,7 @@ export type CreateAnalysisResponse = {
     self: string;
     events: string;
   };
+  recommendations?: AnalysisRecommendation[];
 };
 
 export type AnalysisPollingResponse = {
@@ -115,19 +116,49 @@ export type AnalysisBudgetRequest = {
   maintenanceFeeMax?: number;
 };
 
+export type AnalysisLocationRequest = {
+  lat: number;
+  lng: number;
+};
+
+export type AnalysisRecommendation = {
+  rank: number;
+  vacancyId: string;
+  score: number;
+  distanceM: number;
+  areaId: string;
+  latitude: number;
+  longitude: number;
+  monthlyRent?: number | null;
+  deposit?: number | null;
+  maintenanceFee?: number | null;
+  facilityTotalSize?: number | null;
+  locationArea?: number | null;
+  category?: string | null;
+  businessMiddleCategoryName?: string | null;
+  businessSubCategoryName?: string | null;
+  floatingPopulationAnnualTotal?: number | null;
+  restaurantCount500m?: number | null;
+  cafeCount500m?: number | null;
+  industryGrowthRate500m?: number | null;
+  averageSalesPerStore?: number | null;
+};
+
 export type CreateAnalysisRequest = {
   businessType: BusinessType['key'];
   areaId: string;
   budget?: AnalysisBudgetRequest;
+  center?: AnalysisLocationRequest;
+  x?: number;
+  y?: number;
+  radiusM?: number;
 };
 
 export type CreateAnalysisClientRequest = CreateAnalysisRequest & {
-  center?: { lat: number; lng: number };
-  radiusM?: number;
   roadAddress?: string;
   displayName?: string;
-  // Mock/session convenience fields. Real backend receives only
-  // `businessType`, `areaId`, and optional `budget`.
+  // Mock/session convenience fields. Real backend receives the searchable
+  // analysis fields above; these labels stay frontend-local.
   category?: string;
   categoryEmoji?: string;
   region?: string;
@@ -148,6 +179,10 @@ export type AnalysisSectionTodo = {
   sectionLabel: string;
   todo: string;
   updatedAt: string;
+};
+
+export type AnalysisRecommendationsSection = AnalysisSectionTodo & {
+  recommendations: AnalysisRecommendation[];
 };
 
 // Shape that the UI consumes for both list-row and detail.
