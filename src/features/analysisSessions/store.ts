@@ -23,6 +23,7 @@ export type AnalysisSession = {
   budget?: {
     depositMax?: number;
     rentMax?: number;
+    maintenanceFeeMax?: number;
   };
   error?: {
     code: string;
@@ -168,10 +169,11 @@ function formatDateTime(iso: string): { date: string; time: string } {
 }
 
 function formatBudget(budget?: AnalysisSession['budget']): string {
-  if (!budget?.depositMax && !budget?.rentMax) return '예산 조건 없음';
+  if (!budget?.depositMax && !budget?.rentMax && !budget?.maintenanceFeeMax) return '예산 조건 없음';
   const deposit = budget.depositMax ? `${budget.depositMax.toLocaleString()}만원` : '미지정';
   const rent = budget.rentMax ? `${budget.rentMax.toLocaleString()}만원` : '미지정';
-  return `보증금 ${deposit} / 월세 ${rent}`;
+  const maintenance = budget.maintenanceFeeMax ? `${budget.maintenanceFeeMax.toLocaleString()}만원` : '미지정';
+  return `보증금 ${deposit} / 월세 ${rent} / 관리비 ${maintenance}`;
 }
 
 function makeTop3(lat: number, lng: number): Top3Item[] {

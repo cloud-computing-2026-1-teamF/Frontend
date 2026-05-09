@@ -73,6 +73,7 @@ export type AreaSearchHit = {
 
 export type CreateAnalysisResponse = {
   id: string;
+  vacancyId?: string;
   status: 'pending' | 'running' | 'done' | 'failed';
   progress: number;
   createdAt: string;
@@ -85,6 +86,7 @@ export type CreateAnalysisResponse = {
 
 export type AnalysisPollingResponse = {
   id: string;
+  vacancyId?: string;
   status: 'pending' | 'running' | 'done' | 'failed';
   progress: number;
   step: {
@@ -110,6 +112,7 @@ export type AnalysisEventResponse = {
 export type AnalysisBudgetRequest = {
   depositMax?: number;
   rentMax?: number;
+  maintenanceFeeMax?: number;
 };
 
 export type CreateAnalysisRequest = {

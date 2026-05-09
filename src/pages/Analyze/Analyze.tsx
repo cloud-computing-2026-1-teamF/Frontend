@@ -57,6 +57,11 @@ export function Analyze() {
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStepLabel, setAnalysisStepLabel] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [budget, setBudget] = useState({
+    depositMax: '',
+    rentMax: '',
+    maintenanceFeeMax: '',
+  });
   const trackingCleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => () => {
@@ -78,6 +83,14 @@ export function Analyze() {
   const handleBizSelect = (key: BizKey) => {
     setBizType(key);
     setStep(2);
+  };
+
+  const handleBudgetChange = (key: keyof typeof budget, value: string) => {
+    setBudget(current => ({ ...current, [key]: value }));
+  };
+
+  const clearBudget = () => {
+    setBudget({ depositMax: '', rentMax: '', maintenanceFeeMax: '' });
   };
 
   // Right-clicking the map drops a pin → reverse-geocode → set Area.
@@ -142,9 +155,11 @@ export function Analyze() {
         setArea(analysisArea);
       }
       const selectedBusiness = bizTypes.find(b => b.key === bizType);
+      const budgetRequest = toBudgetRequest(budget);
       const result = await api.analyses.create({
         businessType: bizType,
         areaId: analysisArea.id,
+        budget: budgetRequest,
         center: { lat: analysisArea.lat, lng: analysisArea.lng },
         radiusM: FIXED_RADIUS,
         roadAddress: analysisArea.roadAddress,
@@ -167,6 +182,7 @@ export function Analyze() {
         lat: analysisArea.lat,
         lng: analysisArea.lng,
         radius: FIXED_RADIUS,
+        budget: budgetRequest,
       });
       upsertAnalysisSession(session);
       beginProgressTracking(result.id);
@@ -284,6 +300,7 @@ export function Analyze() {
     setAnalysisProgress(0);
     setAnalysisStepLabel(null);
     setAnalysisError(null);
+    clearBudget();
     trackingCleanupRef.current?.();
     trackingCleanupRef.current = null;
   };
@@ -337,6 +354,9 @@ export function Analyze() {
         onBizSelect={handleBizSelect}
         bizTypes={bizTypes}
         area={area}
+        budget={budget}
+        onBudgetChange={handleBudgetChange}
+        onClearBudget={clearBudget}
         onClearArea={() => setArea(null)}
         onSearchPan={handleSearchPick}
         onRun={runAnalysis}
@@ -360,4 +380,29 @@ export function Analyze() {
       )}
     </div>
   );
+}
+
+function toBudgetRequest(budget: {
+  depositMax: string;
+  rentMax: string;
+  maintenanceFeeMax: string;
+}) {
+  const next = {
+    depositMax: toOptionalNumber(budget.depositMax),
+    rentMax: toOptionalNumber(budget.rentMax),
+    maintenanceFeeMax: toOptionalNumber(budget.maintenanceFeeMax),
+  };
+  const entries = Object.entries(next).filter(([, value]) => value !== undefined);
+  if (entries.length === 0) return undefined;
+  return Object.fromEntries(entries) as {
+    depositMax?: number;
+    rentMax?: number;
+    maintenanceFeeMax?: number;
+  };
+}
+
+function toOptionalNumber(value: string): number | undefined {
+  if (!value.trim()) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }

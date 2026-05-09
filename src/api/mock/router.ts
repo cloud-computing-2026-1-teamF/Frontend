@@ -192,8 +192,8 @@ const handleCreateAnalysis: Handler = (spec) => {
     displayName: body.displayName,
     category: body.category || biz?.label || '미지정',
     categoryEmoji: body.categoryEmoji || biz?.emoji || '📍',
-    budget: body.budget
-      ? `보증금 ${body.budget.depositMax ?? '-'} / 월세 ${body.budget.rentMax ?? '-'}`
+  budget: body.budget
+      ? `보증금 ${body.budget.depositMax ?? '-'} / 월세 ${body.budget.rentMax ?? '-'} / 관리비 ${body.budget.maintenanceFeeMax ?? '-'}`
       : '예산 조건 없음',
     topScore: top3[0].score,
     count: top3.length * 40 + 28,

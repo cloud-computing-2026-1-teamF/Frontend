@@ -18,6 +18,13 @@ type AnalyzeControlPanelProps = {
   bizTypes: BizType[];
   onBizSelect: (key: BizKey) => void;
   area: AnalyzeArea | null;
+  budget: {
+    depositMax: string;
+    rentMax: string;
+    maintenanceFeeMax: string;
+  };
+  onBudgetChange: (key: 'depositMax' | 'rentMax' | 'maintenanceFeeMax', value: string) => void;
+  onClearBudget: () => void;
   onClearArea: () => void;
   onSearchPan: (place: AreaSearchHit) => void;
   onRun: () => void;
@@ -37,6 +44,9 @@ export function AnalyzeControlPanel({
   bizTypes,
   onBizSelect,
   area,
+  budget,
+  onBudgetChange,
+  onClearBudget,
   onClearArea,
   onSearchPan,
   onRun,
@@ -46,6 +56,8 @@ export function AnalyzeControlPanel({
   analysisStepLabel,
   analysisError,
 }: AnalyzeControlPanelProps) {
+  const budgetCount = [budget.depositMax, budget.rentMax, budget.maintenanceFeeMax]
+    .filter(value => value.trim() !== '').length;
   if (phase === 'analyzing') {
     return (
       <div className="lf-widget analyzing">
@@ -193,6 +205,39 @@ export function AnalyzeControlPanel({
         </div>
 
         {bizType && area && (
+          <div className={`lf-budget ${budgetCount > 0 ? 'has-values' : ''}`}>
+            <div className="lf-budget-head">
+              <div>
+                <div className="lf-budget-title">희망 예산</div>
+                <div className="lf-budget-sub">입력한 항목만 공실 필터에 적용돼요</div>
+              </div>
+              {budgetCount > 0 && (
+                <button type="button" className="lf-budget-clear" onClick={onClearBudget}>
+                  초기화
+                </button>
+              )}
+            </div>
+            <div className="lf-budget-grid">
+              <MoneyField
+                label="보증금"
+                value={budget.depositMax}
+                onChange={value => onBudgetChange('depositMax', value)}
+              />
+              <MoneyField
+                label="월세"
+                value={budget.rentMax}
+                onChange={value => onBudgetChange('rentMax', value)}
+              />
+              <MoneyField
+                label="관리비"
+                value={budget.maintenanceFeeMax}
+                onChange={value => onBudgetChange('maintenanceFeeMax', value)}
+              />
+            </div>
+          </div>
+        )}
+
+        {bizType && area && (
           <button className="lf-cta" onClick={onRun}>
             <Icon name="sparkles" size={16} />
             상권 분석하기
@@ -201,5 +246,32 @@ export function AnalyzeControlPanel({
         )}
       </div>
     </div>
+  );
+}
+
+function MoneyField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="lf-money">
+      <span>{label}</span>
+      <div className="lf-money-input">
+        <input
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={value}
+          placeholder="선택"
+          onChange={event => onChange(event.target.value.replace(/[^\d]/g, '').slice(0, 7))}
+          aria-label={`${label} 최대 금액`}
+        />
+        <em>만원</em>
+      </div>
+    </label>
   );
 }

@@ -218,6 +218,102 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .lf-sugg-main { font-weight: 600; color: #0A0E1A; }
 .lf-sugg-sub { font-size: 10px; color: #9AA3BD; margin-top: 1px; }
 
+/* Optional budget filters */
+.lf-budget {
+  border: 1px solid #E8ECF4;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #FFFFFF, #FAFBFD);
+  padding: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+}
+.lf-budget.has-values {
+  border-color: #F3C7AA;
+  background: linear-gradient(180deg, #FFF9F4, #FFFFFF);
+}
+.lf-budget-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.lf-budget-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0A0E1A;
+}
+.lf-budget-sub {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #7A849C;
+}
+.lf-budget-clear {
+  border: 0;
+  background: #F1F3F8;
+  color: #5E687F;
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.lf-budget-clear:hover { background: #E7EAF1; color: #0A0E1A; }
+.lf-budget-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 7px;
+}
+.lf-money {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.lf-money > span {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7490;
+}
+.lf-money-input {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #E2E7F0;
+  border-radius: 9px;
+  background: #fff;
+  padding: 0 8px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.lf-money-input:focus-within {
+  border-color: #0A0E1A;
+  box-shadow: 0 0 0 3px rgba(10,14,26,.06);
+}
+.lf-money-input input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #0A0E1A;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.lf-money-input input::placeholder {
+  color: #ADB5C6;
+  font-weight: 600;
+}
+.lf-money-input em {
+  flex-shrink: 0;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8B95AA;
+}
+
 /* CTA */
 .lf-cta {
   width: 100%;
