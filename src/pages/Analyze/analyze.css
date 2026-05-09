@@ -3,10 +3,8 @@
   font-family: 'Pretendard' !important;
 }
 /* Lock the page itself — the map is the page, all scrolling happens inside
-   widgets. Prevents the sidebar from being pushed below the viewport when
-   the global `zoom: 1.25` inflates 100vh-based heights.
-   Scoped via :has() so it only applies on the Analyze route — otherwise
-   this leaks globally and breaks scrolling on Landing/History/Detail. */
+   widgets. Scoped via :has() so it only applies on the Analyze route —
+   otherwise this leaks globally and breaks scrolling on Landing/History/Detail. */
 html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 100%; }
 .analyze-shell {
   position: fixed;

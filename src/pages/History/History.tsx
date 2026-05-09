@@ -1,25 +1,13 @@
-// Analysis history list. Reads saved analyses from localStorage and merges
-// the mock seed data; the user can soft-delete seed items via a hidden-ids
-// list (so the demo data can be recovered by clearing that key).
-import { useMemo, useState } from 'react';
+// Analysis history list. All data comes from `GET /analyses` via the API
+// layer; soft-delete uses `DELETE /analyses/:id`. While USE_MOCK is on, both
+// calls are routed through the in-browser mock store.
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './history.css';
 import { Icon } from '../../shared/Icon';
 import { Footer } from '../../shared/Nav';
-import { readSavedAnalyses, writeSavedAnalyses, type SavedAnalysis } from '../../lib/savedAnalyses';
-import { HISTORY_ITEMS } from '../../data/history';
-
-const HIDDEN_KEY = 'sanggwon_hidden_history_ids';
-
-const readJSON = <T,>(key: string, fallback: T): T => {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch { return fallback; }
-};
-const writeJSON = (key: string, val: unknown): void => {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* ignore */ }
-};
+import type { SavedAnalysis } from '../../lib/savedAnalyses';
+import { api } from '../../api';
 
 const AVG_FOOT = 7500;
 const AVG_COMP = 5;
@@ -32,45 +20,41 @@ type HistoryItem = SavedAnalysis & {
 export function History() {
   const [sort, setSort] = useState<'recent' | 'score'>('recent');
   const [q, setQ] = useState('');
-  const [savedItems, setSavedItems] = useState<SavedAnalysis[]>(() => readSavedAnalyses());
-  const [hiddenIds, setHiddenIds] = useState<number[]>(() => readJSON<number[]>(HIDDEN_KEY, []));
+  const [items, setItems] = useState<SavedAnalysis[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleDelete = (id: number) => {
+  // Server-side sort/search per spec §6.3. Re-fetch whenever the toolbar
+  // changes — debounce later if the volume grows.
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    api.analyses.list({ sort, q: q || undefined })
+      .then(res => { if (!cancelled) setItems(res.items); })
+      .catch(() => { if (!cancelled) setItems([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [sort, q]);
+
+  const handleDelete = async (id: number) => {
     if (!window.confirm('이 분석 이력을 삭제할까요?')) return;
-    const inSaved = savedItems.some(it => it.id === id);
-    if (inSaved) {
-      const next = savedItems.filter(it => it.id !== id);
-      setSavedItems(next);
-      writeSavedAnalyses(next);
-    } else {
-      const next = [...hiddenIds, id];
-      setHiddenIds(next);
-      writeJSON(HIDDEN_KEY, next);
-    }
+    try {
+      await api.analyses.delete(id);
+      setItems(prev => prev.filter(it => it.id !== id));
+    } catch { /* keep current list on failure */ }
   };
 
-  const items: HistoryItem[] = useMemo(() => {
-    const merged = [...savedItems, ...HISTORY_ITEMS].filter(it => !hiddenIds.includes(it.id));
-    return merged.map(it => {
-      const topFoot = it.top3[0].foot;
-      const topComp = it.top3[0].comp;
-      return {
-        ...it,
-        title: `${it.region} ${it.category} 입지 분석`,
-        tags: [
-          { key: '유동인구', dir: topFoot >= AVG_FOOT ? 'up' as const : 'down' as const },
-          { key: '경쟁밀도', dir: topComp <= AVG_COMP ? 'up' as const : 'down' as const },
-        ],
-      };
-    });
-  }, [savedItems, hiddenIds]);
-
-  const filtered = items
-    .filter(it => !q || it.title.includes(q) || it.region.includes(q) || it.category.includes(q))
-    .sort((a, b) => {
-      if (sort === 'score') return b.topScore - a.topScore;
-      return b.date.localeCompare(a.date);
-    });
+  const decorated: HistoryItem[] = useMemo(() => items.map(it => {
+    const topFoot = it.top3[0].foot;
+    const topComp = it.top3[0].comp;
+    return {
+      ...it,
+      title: `${it.region} ${it.category} 입지 분석`,
+      tags: [
+        { key: '유동인구', dir: topFoot >= AVG_FOOT ? 'up' as const : 'down' as const },
+        { key: '경쟁밀도', dir: topComp <= AVG_COMP ? 'up' as const : 'down' as const },
+      ],
+    };
+  }), [items]);
 
   return (
     <>
@@ -106,14 +90,14 @@ export function History() {
           </div>
 
           <div className="hist-list">
-            {filtered.length === 0 && (
+            {!loading && decorated.length === 0 && (
               <div className="hist-empty">
                 <Icon name="search" size={32} />
                 <h3>일치하는 이력이 없어요</h3>
                 <p>다른 키워드로 검색하거나 필터를 바꿔보세요.</p>
               </div>
             )}
-            {filtered.map(it => (
+            {decorated.map(it => (
               <HistoryCard key={it.id} item={it} onDelete={handleDelete} />
             ))}
           </div>

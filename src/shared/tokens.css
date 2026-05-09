@@ -76,9 +76,9 @@
 html, body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, span, div, a, label, li, th, td {
   font-family: 'Pretendard' !important;
 }
-html {
-  zoom: 1.25;
-}
+/* 전역 zoom: 1.25 는 카카오맵 우클릭 좌표 hit-test가 스케일을 인지하지 못해
+   마커가 엉뚱한 위치에 찍히는 문제를 일으켜 제거. 본문 크기를 키우고 싶으면
+   루트 폰트 사이즈(rem 기반)나 개별 컴포넌트 단위로 조정. */
 html, body {
   margin: 0; padding: 0;
   font-family: 'Pretendard';

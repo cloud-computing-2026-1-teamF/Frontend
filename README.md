@@ -11,6 +11,7 @@
 - React 18 + TypeScript
 - Vite (dev server / build)
 - React Router v6
+- Kakao Maps JS SDK (`react-kakao-maps-sdk` + `kakao.maps.d.ts`)
 - localStorage (mock 저장소)
 
 ## Getting Started
@@ -25,6 +26,19 @@
 ```bash
 npm install
 ```
+
+### 환경 변수 (Kakao Maps)
+
+`Frontend/.env.local` 파일에 카카오 JavaScript 키를 넣는다 (gitignored).
+
+```
+VITE_KAKAO_MAP_KEY=발급받은_javascript_키
+```
+
+키 발급은 [developers.kakao.com](https://developers.kakao.com) → 앱 만들기 → **앱 키의 JavaScript 키**.
+해당 앱의 **플랫폼 → Web → JavaScript SDK 도메인**에 `http://localhost:5173`,
+`http://127.0.0.1:5173` 둘 다 등록해야 로컬에서 SDK가 로드된다.
+**제품 설정 → 카카오맵** 토글 ON 도 필수.
 
 ### Development
 
@@ -145,13 +159,14 @@ src/
 
 ### 5. KAKAO Map 위치 검색
 
-- `src/pages/Analyze/Analyze.tsx` — `MapPickPanel`, `SEARCH_PLACES`, `handleSearchPan`
+- `src/pages/Analyze/Analyze.tsx` — `MapPickPanel` (kakao.maps.services.Places
+  키워드 검색), `handleSearchPan`
 - `src/pages/Analyze/analyze.css` — `.lf-mapsearch-*`
 
 ### 6. 우클릭으로 위치 지정
 
-- `src/pages/Analyze/Analyze.tsx` — `KakaoMap`의 `handleContextMenu`,
-  `handlePickMarker`, `buildAreaFromPick`, `screenToLatLng`
+- `src/pages/Analyze/Analyze.tsx` — `KakaoCanvas`의 `onRightClick`,
+  `handlePickLatLng`, `reverseGeocode` (kakao.maps.services.Geocoder)
 - `src/pages/Analyze/analyze.css` — `.kakao-map`, 마커 / 반경 원
 
 ### 7. 분석중 위젯 (간소화 / SSE 미사용 / 비동기 처리)
