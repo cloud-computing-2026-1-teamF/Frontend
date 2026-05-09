@@ -75,6 +75,9 @@ src/
 ├── main.tsx                 - Vite 엔트리 포인트
 ├── App.tsx                  - 라우트 테이블
 ├── Layout.tsx               - 공통 chrome (Nav + AuthModal)
+├── app/
+│   ├── AppRoutes.tsx        - 앱 라우트 구성
+│   └── figmaViewMap.ts      - Figma 화면별 route/component/API 매핑
 │
 ├── auth/
 │   ├── AuthContext.tsx      - 로그인 상태 전역 컨텍스트
@@ -93,6 +96,10 @@ src/
 │   ├── Analyze/             - 입지 분석
 │   ├── History/             - 분석 이력 리스트
 │   └── Detail/              - 분석 상세 보기
+│
+├── features/
+│   └── analyze/
+│       └── model.ts         - 분석 화면 도메인 타입 / 지도 좌표 / fallback data
 │
 ├── data/
 │   └── history.ts           - 시드 mock 분석 이력
