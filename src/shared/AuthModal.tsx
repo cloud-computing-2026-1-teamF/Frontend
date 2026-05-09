@@ -38,7 +38,7 @@ export function AuthModal() {
     try {
       const res = isLogin
         ? await api.auth.login({ email, password: pw })
-        : await api.auth.signup({ email, password: pw, name: nick, agree_terms: agree });
+        : await api.auth.signup({ email, password: pw, name: nick });
       setUser(res.user);
       setStep('success');
       setTimeout(() => { closeAuth(); setStep('form'); }, 1200);

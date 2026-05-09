@@ -120,12 +120,12 @@ export function Analyze() {
         businessType: bizType,
         areaId: area.id,
         center: { lat: area.lat, lng: area.lng },
-        radius_m: FIXED_RADIUS,
-        road_address: area.roadAddress,
-        display_name: area.displayName,
+        radiusM: FIXED_RADIUS,
+        roadAddress: area.roadAddress,
+        displayName: area.displayName,
         region: area.dong,
         category: bizTypes.find(b => b.key === bizType)?.label,
-        category_emoji: bizTypes.find(b => b.key === bizType)?.emoji,
+        categoryEmoji: bizTypes.find(b => b.key === bizType)?.emoji,
       });
       setAnalysisId(result.id);
       setPhase('done');

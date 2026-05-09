@@ -2,18 +2,23 @@
 // whose names + URLs match `API_명세_수정본.md`. Whether the call is mocked
 // or real is decided in `client.ts` — call sites don't need to know.
 
-import { apiRequest, setAccessToken } from './client';
+import { BASE_URL, USE_MOCK, apiRequest, getAccessToken, setAccessToken } from './client';
 import type {
   AuthUser,
   AuthLoginResponse,
   LoginRequest,
   SignupRequest,
+  RefreshResponse,
   BusinessType,
   AreaSearchHit,
   AnalysisDetail,
+  AnalysisEventResponse,
   AnalysisPollingResponse,
+  AnalysisSectionKey,
+  AnalysisSectionTodo,
   CreateAnalysisResponse,
   CreateAnalysisRequest,
+  CreateAnalysisClientRequest,
   ListAnalysesQuery,
   ListAnalysesResponse,
   PatchAnalysisRequest,
@@ -22,9 +27,10 @@ import type {
 
 export { ApiError } from './types';
 export type {
-  AuthUser, AuthLoginResponse, LoginRequest, SignupRequest,
+  AuthUser, AuthLoginResponse, LoginRequest, SignupRequest, RefreshResponse,
   BusinessType, AreaSearchHit,
-  AnalysisDetail, AnalysisPollingResponse, CreateAnalysisResponse, CreateAnalysisRequest, ListAnalysesQuery, ListAnalysesResponse,
+  AnalysisDetail, AnalysisEventResponse, AnalysisPollingResponse, AnalysisSectionKey, AnalysisSectionTodo,
+  CreateAnalysisResponse, CreateAnalysisRequest, CreateAnalysisClientRequest, ListAnalysesQuery, ListAnalysesResponse,
   PatchAnalysisRequest, UserStats,
 } from './types';
 
@@ -41,6 +47,13 @@ export const authApi = {
   signup: (body: SignupRequest) =>
     apiRequest<AuthLoginResponse>({ method: 'POST', path: '/auth/signup', body }).then(r => {
       setAccessToken(r.data.tokens.accessToken);
+      return r.data;
+    }),
+
+  /** `POST /auth/refresh` */
+  refresh: () =>
+    apiRequest<RefreshResponse>({ method: 'POST', path: '/auth/refresh' }).then(r => {
+      setAccessToken(r.data.accessToken);
       return r.data;
     }),
 
@@ -69,12 +82,33 @@ export const catalogApi = {
 // ── Analyses ────────────────────────────────────────────────────────────────
 export const analysesApi = {
   /** `POST /analyses` — async 202 response in the backend */
-  create: (body: CreateAnalysisRequest) =>
-    apiRequest<CreateAnalysisResponse>({ method: 'POST', path: '/analyses', body }).then(r => r.data),
+  create: (body: CreateAnalysisClientRequest) =>
+    apiRequest<CreateAnalysisResponse>({
+      method: 'POST',
+      path: '/analyses',
+      body: USE_MOCK ? body : toCreateAnalysisRequest(body),
+    }).then(r => r.data),
 
   /** `GET /analyses/:id` — polling status from the backend */
   poll: (id: number | string) =>
     apiRequest<AnalysisPollingResponse>({ method: 'GET', path: `/analyses/${id}` }).then(r => r.data),
+
+  /** `GET /analyses/:id/events` — SSE progress stream */
+  subscribeEvents: (
+    id: number | string,
+    handlers: {
+      onEvent: (event: AnalysisEventResponse) => void;
+      onError?: (error: unknown) => void;
+      onComplete?: () => void;
+    },
+  ) => subscribeAnalysisEvents(id, handlers),
+
+  /** Section endpoints currently return TODO envelopes from the backend. */
+  section: (id: number | string, key: AnalysisSectionKey) =>
+    apiRequest<AnalysisSectionTodo>({ method: 'GET', path: `/analyses/${id}/${sectionPath(key)}` }).then(r => r.data),
+
+  sections: (id: number | string) =>
+    Promise.all(ANALYSIS_SECTION_KEYS.map(key => analysesApi.section(id, key))),
 
   /** `GET /analyses` */
   list: (query: ListAnalysesQuery = {}) =>
@@ -92,6 +126,112 @@ export const analysesApi = {
   delete: (id: number | string) =>
     apiRequest<{ ok: true }>({ method: 'DELETE', path: `/analyses/${id}` }).then(r => r.data),
 };
+
+export const ANALYSIS_SECTION_KEYS: AnalysisSectionKey[] = [
+  'recommended_properties',
+  'key_metrics',
+  'foot_traffic',
+  'competition',
+  'estimated_revenue',
+  'industry_growth',
+  'accessibility',
+];
+
+function toCreateAnalysisRequest(body: CreateAnalysisClientRequest): CreateAnalysisRequest {
+  return {
+    businessType: body.businessType,
+    areaId: body.areaId,
+    budget: body.budget,
+  };
+}
+
+function sectionPath(key: AnalysisSectionKey): string {
+  return key.replace(/_/g, '-');
+}
+
+function subscribeAnalysisEvents(
+  id: number | string,
+  handlers: {
+    onEvent: (event: AnalysisEventResponse) => void;
+    onError?: (error: unknown) => void;
+    onComplete?: () => void;
+  },
+): () => void {
+  if (USE_MOCK) {
+    let index = 0;
+    const steps: AnalysisEventResponse[] = [
+      { status: 'running', progress: 25, step: { index: 1, total: 4, label: '주변 상권 살펴보는 중' }, error: null },
+      { status: 'running', progress: 50, step: { index: 2, total: 4, label: '유동인구와 경쟁 매장 확인' }, error: null },
+      { status: 'running', progress: 75, step: { index: 3, total: 4, label: '업종별 생존율 계산' }, error: null },
+      { status: 'done', progress: 100, step: null, error: null },
+    ];
+    const timer = window.setInterval(() => {
+      const event = steps[index++];
+      if (!event) return;
+      handlers.onEvent(event);
+      if (event.status === 'done' || event.status === 'failed') {
+        window.clearInterval(timer);
+        handlers.onComplete?.();
+      }
+    }, 700);
+    return () => window.clearInterval(timer);
+  }
+
+  const controller = new AbortController();
+  readEventStream(id, controller, handlers);
+  return () => controller.abort();
+}
+
+async function readEventStream(
+  id: number | string,
+  controller: AbortController,
+  handlers: {
+    onEvent: (event: AnalysisEventResponse) => void;
+    onError?: (error: unknown) => void;
+    onComplete?: () => void;
+  },
+) {
+  try {
+    const headers: Record<string, string> = { Accept: 'text/event-stream' };
+    const accessToken = getAccessToken();
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    const res = await fetch(`${BASE_URL}/analyses/${id}/events`, {
+      headers,
+      credentials: 'include',
+      signal: controller.signal,
+    });
+    if (!res.ok || !res.body) throw new Error(`SSE failed with ${res.status}`);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const chunks = buffer.split(/\n\n/);
+      buffer = chunks.pop() ?? '';
+      for (const chunk of chunks) {
+        const data = chunk.split('\n')
+          .filter(line => line.startsWith('data:'))
+          .map(line => line.slice(5).trim())
+          .join('\n');
+        if (!data) continue;
+        const event = JSON.parse(data) as AnalysisEventResponse;
+        handlers.onEvent(event);
+        if (event.status === 'done' || event.status === 'failed') {
+          handlers.onComplete?.();
+          controller.abort();
+          return;
+        }
+      }
+    }
+    handlers.onComplete?.();
+  } catch (error) {
+    if (!controller.signal.aborted) handlers.onError?.(error);
+  }
+}
 
 // ── User ────────────────────────────────────────────────────────────────────
 export const userApi = {

@@ -9,13 +9,15 @@ import type { RequestSpec } from '../client';
 import type {
   AuthUser,
   AuthLoginResponse,
+  RefreshResponse,
   BusinessType,
   AreaSearchHit,
   AnalysisDetail,
   AnalysisPollingResponse,
+  AnalysisSectionTodo,
   AnalysisListItem,
   ListAnalysesResponse,
-  CreateAnalysisRequest,
+  CreateAnalysisClientRequest,
   PatchAnalysisRequest,
   UserStats,
 } from '../types';
@@ -88,7 +90,7 @@ const handleSignup: Handler = (spec) => {
     email: body.email,
     name: body.name,
     tier: 'pro',
-    created_at: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
   };
   store.insertAccount({ login_id: body.email, password: body.password, user });
   store.setUser(user);
@@ -103,6 +105,11 @@ const handleMe: Handler = () => {
   const u = requireUser();
   if ('error' in u) return u;
   return ok({ user: u });
+};
+
+const handleRefresh: Handler = () => {
+  const res: RefreshResponse = { accessToken: 'mock_access_token', expiresIn: 900 };
+  return ok(res);
 };
 
 const handleLogout: Handler = () => {
@@ -156,7 +163,7 @@ const FAKE_PROPERTIES: Omit<Top3Item, 'footHourly' | 'nearby'>[] = [
 const handleCreateAnalysis: Handler = (spec) => {
   const u = requireUser();
   if ('error' in u) return u;
-  const body = (spec.body || {}) as CreateAnalysisRequest;
+  const body = (spec.body || {}) as CreateAnalysisClientRequest;
   if (!body.businessType || !body.areaId) {
     return fail(422, 'validation_failed', 'businessType and areaId are required');
   }
@@ -177,16 +184,16 @@ const handleCreateAnalysis: Handler = (spec) => {
   const created: SavedAnalysis = {
     id: Date.now(),
     date, time,
-    region: body.region || body.display_name || '지정되지 않은 지역',
-    regionDetail: body.road_address,
-    radius: body.radius_m ?? 500,
+    region: body.region || body.displayName || '지정되지 않은 지역',
+    regionDetail: body.roadAddress,
+    radius: body.radiusM ?? 500,
     centerLat: center.lat,
     centerLng: center.lng,
-    displayName: body.display_name,
+    displayName: body.displayName,
     category: body.category || biz?.label || '미지정',
-    categoryEmoji: body.category_emoji || biz?.emoji || '📍',
+    categoryEmoji: body.categoryEmoji || biz?.emoji || '📍',
     budget: body.budget
-      ? `보증금 ${body.budget.deposit_max ?? '-'} / 월세 ${body.budget.rent_max ?? '-'}`
+      ? `보증금 ${body.budget.depositMax ?? '-'} / 월세 ${body.budget.rentMax ?? '-'}`
       : '예산 조건 없음',
     topScore: top3[0].score,
     count: top3.length * 40 + 28,
@@ -259,6 +266,33 @@ const handleGetAnalysis: Handler = (_spec, params) => {
   return ok(found as AnalysisDetail);
 };
 
+const handleSection: Handler = (_spec, params) => {
+  const u = requireUser();
+  if ('error' in u) return u;
+  const id = Number(params.id);
+  const found = store.findAnalysis(id);
+  if (!found) return fail(404, 'not_found', `analysis ${params.id} not found`);
+
+  const labels: Record<string, string> = {
+    'recommended-properties': '추천 매물',
+    'key-metrics': '주요 지표',
+    'foot-traffic': '유동인구',
+    competition: '경쟁 점포',
+    'estimated-revenue': '추정 매출',
+    'industry-growth': '업종 성장률',
+    accessibility: '입지 접근성',
+  };
+  const dashed = params.section;
+  const res: AnalysisSectionTodo = {
+    analysisId: params.id,
+    sectionKey: dashed.replace(/-/g, '_') as AnalysisSectionTodo['sectionKey'],
+    sectionLabel: labels[dashed] ?? dashed,
+    todo: 'TODO: 공식 API/크롤링 데이터 스키마 확정 후 상세 필드 정의 예정',
+    updatedAt: new Date().toISOString(),
+  };
+  return ok(res);
+};
+
 const handlePatchAnalysis: Handler = (spec, params) => {
   const u = requireUser();
   if ('error' in u) return u;
@@ -296,6 +330,7 @@ const handleUserStats: Handler = () => {
 const ROUTES: Route[] = [
   route('POST /auth/login',           handleLogin),
   route('POST /auth/signup',          handleSignup),
+  route('POST /auth/refresh',         handleRefresh),
   route('POST /auth/logout',          handleLogout),
   route('GET /auth/me',               handleMe),
 
@@ -304,7 +339,8 @@ const ROUTES: Route[] = [
 
   route('POST /analyses',             handleCreateAnalysis),
   route('GET /analyses',              handleListAnalyses),
-  route('GET /analyses/:id',          handleGetAnalysis),
+  route('GET /analyses/:id',          handlePollAnalysis),
+  route('GET /analyses/:id/:section', handleSection),
   route('PATCH /analyses/:id',        handlePatchAnalysis),
   route('DELETE /analyses/:id',       handleDeleteAnalysis),
 

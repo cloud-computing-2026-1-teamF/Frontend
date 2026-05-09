@@ -34,8 +34,10 @@ export async function apiRequest<T>(spec: RequestSpec): Promise<ApiEnvelope<T>> 
     return result.body as ApiEnvelope<T>;
   }
 
-  // ── Real backend path. Not exercised yet; left here so the call sites are
-  // a single boolean flip away from going live.
+  return realApiRequest<T>(spec, true);
+}
+
+async function realApiRequest<T>(spec: RequestSpec, allowRefresh: boolean): Promise<ApiEnvelope<T>> {
   const url = new URL(BASE_URL + spec.path);
   if (spec.query) {
     for (const [k, v] of Object.entries(spec.query)) {
@@ -57,13 +59,47 @@ export async function apiRequest<T>(spec: RequestSpec): Promise<ApiEnvelope<T>> 
     credentials: 'include',
   });
 
+  if (res.status === 401 && allowRefresh && spec.path !== '/auth/refresh') {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      return realApiRequest<T>(spec, false);
+    }
+  }
+
   if (!res.ok) {
-    let body: ApiErrorBody;
-    try { body = await res.json(); }
-    catch { body = { error: { code: 'http_error', message: res.statusText } }; }
-    throw new ApiError(res.status, body);
+    throw new ApiError(res.status, await parseError(res));
   }
   return res.json();
+}
+
+async function refreshAccessToken(): Promise<boolean> {
+  try {
+    const res = await fetch(BASE_URL + '/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      setAccessToken(null);
+      return false;
+    }
+    const body = await res.json() as ApiEnvelope<{ accessToken: string }>;
+    setAccessToken(body.data.accessToken);
+    return true;
+  } catch {
+    setAccessToken(null);
+    return false;
+  }
+}
+
+async function parseError(res: Response): Promise<ApiErrorBody> {
+  try {
+    const body = await res.json();
+    if (body?.error?.code && body?.error?.message) return body;
+  } catch {
+    // Fall through to a generic HTTP error body.
+  }
+  return { error: { code: 'http_error', message: res.statusText || `HTTP ${res.status}` } };
 }
 
 export const getAccessToken = (): string | null => {

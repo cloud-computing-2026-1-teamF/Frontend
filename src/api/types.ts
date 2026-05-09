@@ -33,7 +33,7 @@ export type AuthUser = {
   email: string;
   name: string;
   tier: 'free' | 'pro' | 'business';
-  created_at?: string;
+  createdAt?: string;
 };
 
 export type LoginRequest = { email: string; password: string };
@@ -41,7 +41,6 @@ export type SignupRequest = {
   email: string;
   password: string;
   name: string;
-  agree_terms?: boolean;
 };
 export type AuthLoginResponse = {
   user: AuthUser;
@@ -50,6 +49,10 @@ export type AuthLoginResponse = {
     refreshToken: string;
     expiresIn: number;
   };
+};
+export type RefreshResponse = {
+  accessToken: string;
+  expiresIn: number;
 };
 
 // ── Business types / Areas ──────────────────────────────────────────────────
@@ -96,22 +99,52 @@ export type AnalysisPollingResponse = {
     message: string;
   } | null;
 };
+export type AnalysisEventResponse = {
+  status: 'pending' | 'running' | 'done' | 'failed';
+  progress: number;
+  step: AnalysisPollingResponse['step'];
+  error: AnalysisPollingResponse['error'];
+};
 
 // ── Analyses ────────────────────────────────────────────────────────────────
+export type AnalysisBudgetRequest = {
+  depositMax?: number;
+  rentMax?: number;
+};
+
 export type CreateAnalysisRequest = {
   businessType: BusinessType['key'];
   areaId: string;
+  budget?: AnalysisBudgetRequest;
+};
+
+export type CreateAnalysisClientRequest = CreateAnalysisRequest & {
   center?: { lat: number; lng: number };
-  radius_m?: number;
-  road_address?: string;
-  display_name?: string;
-  budget?: { deposit_max?: number; rent_max?: number };
-  // Mock-only convenience fields. Real backend will derive these from
-  // `business_type` (label/emoji) and `center` → reverse-geocoded region.
-  // Kept here so the mock can echo back the same shape the UI already shows.
+  radiusM?: number;
+  roadAddress?: string;
+  displayName?: string;
+  // Mock/session convenience fields. Real backend receives only
+  // `businessType`, `areaId`, and optional `budget`.
   category?: string;
-  category_emoji?: string;
+  categoryEmoji?: string;
   region?: string;
+};
+
+export type AnalysisSectionKey =
+  | 'recommended_properties'
+  | 'key_metrics'
+  | 'foot_traffic'
+  | 'competition'
+  | 'estimated_revenue'
+  | 'industry_growth'
+  | 'accessibility';
+
+export type AnalysisSectionTodo = {
+  analysisId: string;
+  sectionKey: AnalysisSectionKey;
+  sectionLabel: string;
+  todo: string;
+  updatedAt: string;
 };
 
 // Shape that the UI consumes for both list-row and detail.

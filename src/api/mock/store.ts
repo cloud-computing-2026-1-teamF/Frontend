@@ -30,7 +30,7 @@ const SEED_ACCOUNTS: MockAccount[] = [
       email: 'qwer1234@example.com',
       name: '창업준비생',
       tier: 'pro',
-      created_at: '2026-01-01T00:00:00.000Z',
+      createdAt: '2026-01-01T00:00:00.000Z',
     },
   },
 ];
