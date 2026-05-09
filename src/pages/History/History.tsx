@@ -35,11 +35,11 @@ export function History() {
     return () => { cancelled = true; };
   }, [sort, q]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number | string) => {
     if (!window.confirm('이 분석 이력을 삭제할까요?')) return;
     try {
       await api.analyses.delete(id);
-      setItems(prev => prev.filter(it => it.id !== id));
+      setItems(prev => prev.filter(it => String(it.id) !== String(id)));
     } catch { /* keep current list on failure */ }
   };
 
@@ -108,7 +108,7 @@ export function History() {
   );
 }
 
-function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: number) => void }) {
+function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: number | string) => void }) {
   const colors = ['#E85D1F', '#F4B431', '#3B6FE8'];
   const navigate = useNavigate();
   const openDetail = () => navigate(`/detail/${item.id}`);

@@ -5,7 +5,7 @@ export const DEFAULT_CENTER = { lat: 37.5572, lng: 126.9237 };
 
 export type BizKey = 'korean' | 'cafe' | 'chicken' | 'bunsik' | 'bakery' | 'japanese' | 'bar' | 'western' | 'chinese' | 'fastfood';
 export type BizType = Pick<BusinessType, 'key' | 'label' | 'emoji'>;
-export type AnalyzePhase = 'idle' | 'analyzing' | 'done';
+export type AnalyzePhase = 'idle' | 'analyzing' | 'done' | 'failed';
 
 export type AnalyzeArea = {
   id: string;

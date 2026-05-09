@@ -23,6 +23,9 @@ type AnalyzeControlPanelProps = {
   onRun: () => void;
   onReset: () => void;
   sdkReady: boolean;
+  analysisProgress: number;
+  analysisStepLabel?: string | null;
+  analysisError?: string | null;
 };
 
 export function AnalyzeControlPanel({
@@ -39,6 +42,9 @@ export function AnalyzeControlPanel({
   onRun,
   onReset,
   sdkReady,
+  analysisProgress,
+  analysisStepLabel,
+  analysisError,
 }: AnalyzeControlPanelProps) {
   if (phase === 'analyzing') {
     return (
@@ -74,8 +80,32 @@ export function AnalyzeControlPanel({
           </div>
           <div>
             <div className="lf-analyzing-title">{selectedBiz?.emoji} {selectedBiz?.label} · {area?.displayName}</div>
-            <div className="lf-analyzing-sub">반경 {FIXED_RADIUS}m 안에서 입지를 찾고 있어요</div>
+            <div className="lf-analyzing-sub">{analysisStepLabel || `반경 ${FIXED_RADIUS}m 안에서 입지를 찾고 있어요`}</div>
+            <div className="lf-progress">
+              <div className="lf-progress-track">
+                <span style={{ width: `${Math.max(0, Math.min(100, analysisProgress))}%` }} />
+              </div>
+              <div className="lf-progress-meta">
+                <span>Backend analysis</span>
+                <b>{Math.round(analysisProgress)}%</b>
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'failed') {
+    return (
+      <div className="lf-widget">
+        <div className="lf-done lf-failed">
+          <div className="lf-done-ico"><Icon name="info" size={18} stroke={2.5} /></div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="lf-done-title">분석에 실패했어요</div>
+            <div className="lf-done-sub">{analysisError || '잠시 후 다시 시도해주세요.'}</div>
+          </div>
+          <button className="lf-done-reset" onClick={onReset}>다시</button>
         </div>
       </div>
     );

@@ -259,6 +259,35 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   font-size: 11px; color: #6B7490;
   line-height: 1.5;
 }
+.lf-progress {
+  margin-top: 12px;
+  width: 220px;
+}
+.lf-progress-track {
+  height: 7px;
+  border-radius: 999px;
+  background: #EEF1F7;
+  overflow: hidden;
+}
+.lf-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #F4B431, #E85D1F);
+  transition: width .25s ease;
+}
+.lf-progress-meta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #9AA3BD;
+}
+.lf-progress-meta b {
+  color: #0A0E1A;
+  font-variant-numeric: tabular-nums;
+}
 @keyframes pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.4); opacity: 0.6; }
@@ -287,6 +316,12 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   cursor: pointer;
 }
 .lf-done-reset:hover { background: #F4F6FB; }
+.lf-failed {
+  background: linear-gradient(135deg, #FFF0EA, #fff);
+}
+.lf-failed .lf-done-ico {
+  background: #E85D1F;
+}
 
 /* ============================================
    RIGHT WIDGET — Top 3 results

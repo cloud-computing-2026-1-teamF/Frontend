@@ -5,9 +5,16 @@
 //     or right-click to drop a marker. Radius fixed at 500m.
 //   - Pressing 분석 calls `POST /analyses` and reveals Top 3 properties
 //     overlaid on the map as numbered pins.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import './analyze.css';
 import { api, type AreaSearchHit } from '../../api';
+import { USE_MOCK } from '../../api/client';
+import {
+  createAnalysisSession,
+  patchAnalysisSessionEvent,
+  patchAnalysisSessionStatus,
+  upsertAnalysisSession,
+} from '../../features/analysisSessions/store';
 import { AnalyzeControlPanel } from '../../features/analyze/components/AnalyzeControlPanel';
 import { KakaoCanvas } from '../../features/analyze/components/KakaoCanvas';
 import { AnalyzeResultsPanel } from '../../features/analyze/components/AnalyzeResultsPanel';
@@ -47,6 +54,14 @@ export function Analyze() {
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>(DEFAULT_CENTER);
   const [showMarkers, setShowMarkers] = useState(false);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [analysisStepLabel, setAnalysisStepLabel] = useState<string | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const trackingCleanupRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => () => {
+    trackingCleanupRef.current?.();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,10 +127,22 @@ export function Analyze() {
 
   const runAnalysis = async () => {
     if (!bizType || !area) return;
+    if (!USE_MOCK && area.id.startsWith('coord:')) {
+      setAnalysisError('실서버 분석은 검색으로 나온 행정동을 선택해야 시작할 수 있어요.');
+      setPhase('failed');
+      return;
+    }
+
+    trackingCleanupRef.current?.();
+    trackingCleanupRef.current = null;
     setPhase('analyzing');
+    setAnalysisProgress(0);
+    setAnalysisStepLabel('분석 작업을 생성하는 중');
+    setAnalysisError(null);
     setShowMarkers(false);
     setMapCenter({ lat: area.lat, lng: area.lng });
     try {
+      const selectedBusiness = bizTypes.find(b => b.key === bizType);
       const result = await api.analyses.create({
         businessType: bizType,
         areaId: area.id,
@@ -124,15 +151,85 @@ export function Analyze() {
         roadAddress: area.roadAddress,
         displayName: area.displayName,
         region: area.dong,
-        category: bizTypes.find(b => b.key === bizType)?.label,
-        categoryEmoji: bizTypes.find(b => b.key === bizType)?.emoji,
+        category: selectedBusiness?.label,
+        categoryEmoji: selectedBusiness?.emoji,
       });
       setAnalysisId(result.id);
+      setAnalysisProgress(result.progress);
+      const session = createAnalysisSession({
+        response: result,
+        businessType: bizType,
+        category: selectedBusiness?.label ?? '미지정',
+        categoryEmoji: selectedBusiness?.emoji ?? '📍',
+        areaId: area.id,
+        areaName: area.regionLabel,
+        region: area.gu,
+        roadAddress: area.roadAddress,
+        lat: area.lat,
+        lng: area.lng,
+        radius: FIXED_RADIUS,
+      });
+      upsertAnalysisSession(session);
+      beginProgressTracking(result.id);
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : '분석 작업 생성에 실패했어요.');
+      setPhase('failed');
+    }
+  };
+
+  const beginProgressTracking = (id: string) => {
+    let completed = false;
+    const finish = () => {
+      completed = true;
+      setAnalysisProgress(100);
+      setAnalysisStepLabel('분석 완료');
       setPhase('done');
       setShowMarkers(true);
-    } catch {
-      setPhase('idle');
-    }
+    };
+    const fail = (message: string) => {
+      completed = true;
+      setAnalysisError(message);
+      setPhase('failed');
+      setShowMarkers(false);
+    };
+    const startPolling = () => {
+      let cancelled = false;
+      const tick = async () => {
+        if (cancelled || completed) return;
+        try {
+          const status = await api.analyses.poll(id);
+          patchAnalysisSessionStatus(id, status);
+          setAnalysisProgress(status.progress);
+          setAnalysisStepLabel(status.step?.label ?? null);
+          if (status.status === 'done') {
+            finish();
+            return;
+          }
+          if (status.status === 'failed') {
+            fail(status.error?.message ?? '분석 작업에 실패했어요.');
+            return;
+          }
+          window.setTimeout(tick, 800);
+        } catch (error) {
+          fail(error instanceof Error ? error.message : '분석 상태 조회에 실패했어요.');
+        }
+      };
+      tick();
+      trackingCleanupRef.current = () => { cancelled = true; };
+    };
+
+    trackingCleanupRef.current = api.analyses.subscribeEvents(id, {
+      onEvent: event => {
+        patchAnalysisSessionEvent(id, event);
+        setAnalysisProgress(event.progress);
+        setAnalysisStepLabel(event.step?.label ?? null);
+        if (event.status === 'done') finish();
+        if (event.status === 'failed') fail(event.error?.message ?? '분석 작업에 실패했어요.');
+      },
+      onError: () => {
+        if (!completed) startPolling();
+      },
+    });
   };
 
   const reset = () => {
@@ -143,6 +240,11 @@ export function Analyze() {
     setShowMarkers(false);
     setMapCenter(DEFAULT_CENTER);
     setAnalysisId(null);
+    setAnalysisProgress(0);
+    setAnalysisStepLabel(null);
+    setAnalysisError(null);
+    trackingCleanupRef.current?.();
+    trackingCleanupRef.current = null;
   };
 
   const selectedBiz = bizTypes.find(b => b.key === bizType);
@@ -199,6 +301,9 @@ export function Analyze() {
         onRun={runAnalysis}
         onReset={reset}
         sdkReady={!sdkLoading && !sdkError}
+        analysisProgress={analysisProgress}
+        analysisStepLabel={analysisStepLabel}
+        analysisError={analysisError}
       />
 
       {phase === 'done' && (

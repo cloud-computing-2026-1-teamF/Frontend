@@ -22,7 +22,7 @@ export type Top3Item = Property & {
 };
 
 export type SavedAnalysis = {
-  id: number;
+  id: number | string;
   date: string;
   time: string;
   region: string;

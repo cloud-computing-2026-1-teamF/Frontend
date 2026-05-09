@@ -217,8 +217,7 @@ const handleCreateAnalysis: Handler = (spec) => {
 const handlePollAnalysis: Handler = (_spec, params) => {
   const u = requireUser();
   if ('error' in u) return u;
-  const id = Number(params.id);
-  const found = store.findAnalysis(id);
+  const found = store.findAnalysis(params.id);
   if (!found) return fail(404, 'not_found', `analysis ${params.id} not found`);
   const res: AnalysisPollingResponse = {
     id: params.id,
@@ -260,8 +259,7 @@ const handleListAnalyses: Handler = (spec) => {
 const handleGetAnalysis: Handler = (_spec, params) => {
   const u = requireUser();
   if ('error' in u) return u;
-  const id = Number(params.id);
-  const found = store.findAnalysis(id);
+  const found = store.findAnalysis(params.id);
   if (!found) return fail(404, 'not_found', `analysis ${params.id} not found`);
   return ok(found as AnalysisDetail);
 };
@@ -269,8 +267,7 @@ const handleGetAnalysis: Handler = (_spec, params) => {
 const handleSection: Handler = (_spec, params) => {
   const u = requireUser();
   if ('error' in u) return u;
-  const id = Number(params.id);
-  const found = store.findAnalysis(id);
+  const found = store.findAnalysis(params.id);
   if (!found) return fail(404, 'not_found', `analysis ${params.id} not found`);
 
   const labels: Record<string, string> = {
@@ -296,9 +293,8 @@ const handleSection: Handler = (_spec, params) => {
 const handlePatchAnalysis: Handler = (spec, params) => {
   const u = requireUser();
   if ('error' in u) return u;
-  const id = Number(params.id);
   const patch = (spec.body || {}) as PatchAnalysisRequest;
-  const updated = store.patchAnalysis(id, patch);
+  const updated = store.patchAnalysis(params.id, patch);
   if (!updated) return fail(404, 'not_found', `analysis ${params.id} not found`);
   return ok(updated as AnalysisDetail);
 };
@@ -306,8 +302,7 @@ const handlePatchAnalysis: Handler = (spec, params) => {
 const handleDeleteAnalysis: Handler = (_spec, params) => {
   const u = requireUser();
   if ('error' in u) return u;
-  const id = Number(params.id);
-  if (!store.removeAnalysis(id)) return fail(404, 'not_found', `analysis ${params.id} not found`);
+  if (!store.removeAnalysis(params.id)) return fail(404, 'not_found', `analysis ${params.id} not found`);
   return ok({ ok: true });
 };
 

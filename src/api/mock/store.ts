@@ -89,20 +89,23 @@ const setHidden = (ids: number[]): void => writeJSON(KEYS.hidden, ids);
 /** Combined view across user-created + seed, with hidden IDs filtered out. */
 export const listAnalyses = (): SavedAnalysis[] => {
   const hidden = new Set(getHidden());
-  return [...getCreated(), ...HISTORY_ITEMS].filter(it => !hidden.has(it.id));
+  return [...getCreated(), ...HISTORY_ITEMS].filter(it => {
+    const numericId = Number(it.id);
+    return Number.isNaN(numericId) || !hidden.has(numericId);
+  });
 };
 
-export const findAnalysis = (id: number): SavedAnalysis | undefined =>
-  listAnalyses().find(it => it.id === id);
+export const findAnalysis = (id: number | string): SavedAnalysis | undefined =>
+  listAnalyses().find(it => String(it.id) === String(id));
 
 export const insertAnalysis = (a: SavedAnalysis): SavedAnalysis => {
   setCreated([a, ...getCreated()]);
   return a;
 };
 
-export const patchAnalysis = (id: number, patch: Partial<SavedAnalysis>): SavedAnalysis | undefined => {
+export const patchAnalysis = (id: number | string, patch: Partial<SavedAnalysis>): SavedAnalysis | undefined => {
   const created = getCreated();
-  const idx = created.findIndex(it => it.id === id);
+  const idx = created.findIndex(it => String(it.id) === String(id));
   if (idx >= 0) {
     const next = { ...created[idx], ...patch };
     const list = [...created];
@@ -112,19 +115,20 @@ export const patchAnalysis = (id: number, patch: Partial<SavedAnalysis>): SavedA
   }
   // Seed rows are read-only; we synthesise the patched view but don't persist
   // (matches what a real backend would do for "demo" rows it doesn't own).
-  const seed = HISTORY_ITEMS.find(it => it.id === id);
+  const seed = HISTORY_ITEMS.find(it => String(it.id) === String(id));
   return seed ? { ...seed, ...patch } : undefined;
 };
 
-export const removeAnalysis = (id: number): boolean => {
+export const removeAnalysis = (id: number | string): boolean => {
   const created = getCreated();
-  if (created.some(it => it.id === id)) {
-    setCreated(created.filter(it => it.id !== id));
+  if (created.some(it => String(it.id) === String(id))) {
+    setCreated(created.filter(it => String(it.id) !== String(id)));
     return true;
   }
-  if (HISTORY_ITEMS.some(it => it.id === id)) {
+  if (HISTORY_ITEMS.some(it => String(it.id) === String(id))) {
     const hidden = getHidden();
-    if (!hidden.includes(id)) setHidden([...hidden, id]);
+    const numericId = Number(id);
+    if (!Number.isNaN(numericId) && !hidden.includes(numericId)) setHidden([...hidden, numericId]);
     return true;
   }
   return false;
