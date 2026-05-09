@@ -45,8 +45,11 @@ export type SignupRequest = {
 };
 export type AuthLoginResponse = {
   user: AuthUser;
-  access_token: string;
-  expires_in: number;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+  };
 };
 
 // ── Business types / Areas ──────────────────────────────────────────────────
@@ -54,22 +57,51 @@ export type BusinessType = {
   key: 'korean' | 'cafe' | 'chicken' | 'bunsik' | 'bakery' | 'japanese' | 'bar' | 'western' | 'chinese' | 'fastfood';
   label: string;
   emoji: string;
-  sort_order: number;
+  sortOrder: number;
 };
 
 export type AreaSearchHit = {
   id: string;
   name: string;
-  address: string;
-  category: string;
+  region: string;
+  fullName: string;
   center: { lat: number; lng: number };
+};
+
+export type CreateAnalysisResponse = {
+  id: string;
+  status: 'pending' | 'running' | 'done' | 'failed';
+  progress: number;
+  createdAt: string;
+  estimatedSeconds: number;
+  links: {
+    self: string;
+    events: string;
+  };
+};
+
+export type AnalysisPollingResponse = {
+  id: string;
+  status: 'pending' | 'running' | 'done' | 'failed';
+  progress: number;
+  step: {
+    index: number;
+    total: number;
+    label: string;
+  } | null;
+  createdAt: string;
+  completedAt: string | null;
+  error: {
+    code: string;
+    message: string;
+  } | null;
 };
 
 // ── Analyses ────────────────────────────────────────────────────────────────
 export type CreateAnalysisRequest = {
-  business_type: BusinessType['key'];
-  area_id?: string;
-  center: { lat: number; lng: number };
+  businessType: BusinessType['key'];
+  areaId: string;
+  center?: { lat: number; lng: number };
   radius_m?: number;
   road_address?: string;
   display_name?: string;

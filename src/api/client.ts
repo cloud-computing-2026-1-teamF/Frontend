@@ -8,8 +8,10 @@
 import { ApiError, type ApiEnvelope, type ApiErrorBody } from './types';
 import { mockRoute } from './mock/router';
 
-export const USE_MOCK = true;
-export const BASE_URL = 'https://api.sanggwon-ai.com/v1';
+const envUseMock = import.meta.env.VITE_USE_MOCK;
+export const USE_MOCK = envUseMock === undefined ? true : envUseMock !== 'false';
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/v1';
+const ACCESS_TOKEN_KEY = 'sg_access_token';
 
 export type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
@@ -42,9 +44,15 @@ export async function apiRequest<T>(spec: RequestSpec): Promise<ApiEnvelope<T>> 
     }
   }
 
+  const headers: Record<string, string> = { 'Content-Type': 'application/json; charset=utf-8' };
+  const accessToken = getAccessToken();
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
   const res = await fetch(url.toString(), {
     method: spec.method,
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    headers,
     body: spec.body !== undefined ? JSON.stringify(spec.body) : undefined,
     credentials: 'include',
   });
@@ -57,5 +65,22 @@ export async function apiRequest<T>(spec: RequestSpec): Promise<ApiEnvelope<T>> 
   }
   return res.json();
 }
+
+export const getAccessToken = (): string | null => {
+  try {
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+};
+
+export const setAccessToken = (token: string | null): void => {
+  try {
+    if (token) localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    else localStorage.removeItem(ACCESS_TOKEN_KEY);
+  } catch {
+    // Ignore private-mode/quota failures. The in-memory auth state still works.
+  }
+};
 
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));

@@ -11,8 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './analyze.css';
 import { Icon } from '../../shared/Icon';
 import { FactorCard, buildFactorViz } from '../../shared/FactorViz';
-import type { SavedAnalysis } from '../../lib/savedAnalyses';
-import { api } from '../../api';
+import { api, type AreaSearchHit, type BusinessType } from '../../api';
 import {
   Map as KakaoMapView,
   MapMarker,
@@ -27,9 +26,9 @@ const FIXED_RADIUS = 500;
 const DEFAULT_CENTER = { lat: 37.5572, lng: 126.9237 };
 
 type BizKey = 'korean' | 'cafe' | 'chicken' | 'bunsik' | 'bakery' | 'japanese' | 'bar' | 'western' | 'chinese' | 'fastfood';
-type BizType = { key: BizKey; label: string; emoji: string };
+type BizType = Pick<BusinessType, 'key' | 'label' | 'emoji'>;
 
-const BIZ_TYPES: BizType[] = [
+const FALLBACK_BIZ_TYPES: BizType[] = [
   { key: 'korean',   label: '한식당',    emoji: '🍚' },
   { key: 'cafe',     label: '카페',       emoji: '☕' },
   { key: 'chicken',  label: '치킨집',    emoji: '🍗' },
@@ -45,6 +44,7 @@ const BIZ_TYPES: BizType[] = [
 type Phase = 'idle' | 'analyzing' | 'done';
 
 type Area = {
+  id: string;
   lat: number;
   lng: number;
   radius: number;
@@ -93,6 +93,7 @@ function reverseGeocode(
       if (--pending > 0) return;
       const regionLabel = dong || gu || '미지정';
       resolve({
+        id: `coord:${lat.toFixed(6)},${lng.toFixed(6)}`,
         lat, lng,
         radius: FIXED_RADIUS,
         roadAddress: roadAddress || `${gu} ${dong}`.trim() || '주소 정보 없음',
@@ -170,12 +171,25 @@ export function Analyze() {
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [bizType, setBizType] = useState<BizKey | null>(null);
+  const [bizTypes, setBizTypes] = useState<BizType[]>(FALLBACK_BIZ_TYPES);
   const [area, setArea] = useState<Area | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [selected, setSelected] = useState(1);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>(DEFAULT_CENTER);
   const [showMarkers, setShowMarkers] = useState(false);
-  const [analysis, setAnalysis] = useState<SavedAnalysis | null>(null);
+  const [analysisId, setAnalysisId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.catalog.listBusinessTypes()
+      .then(types => {
+        if (!cancelled && types.length > 0) setBizTypes(types);
+      })
+      .catch(() => {
+        if (!cancelled) setBizTypes(FALLBACK_BIZ_TYPES);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleBizSelect = (key: BizKey) => {
     setBizType(key);
@@ -184,7 +198,7 @@ export function Analyze() {
 
   // Right-clicking the map drops a pin → reverse-geocode → set Area.
   const handlePickLatLng = async (lat: number, lng: number) => {
-    const bizLabel = BIZ_TYPES.find(b => b.key === bizType)?.label || '';
+    const bizLabel = bizTypes.find(b => b.key === bizType)?.label || '';
     try {
       const next = await reverseGeocode(lat, lng, bizLabel);
       setArea(next);
@@ -193,6 +207,7 @@ export function Analyze() {
       // Fall back to coords-only Area when geocoding fails.
       setArea({
         lat, lng,
+        id: `coord:${lat.toFixed(6)},${lng.toFixed(6)}`,
         radius: FIXED_RADIUS,
         roadAddress: '주소 조회 실패',
         dong: '미지정', gu: '',
@@ -204,8 +219,22 @@ export function Analyze() {
 
   // 검색 결과 클릭도 우클릭과 동일하게 "지점 선택" — 마커 + 반경 원이 바로
   // 그려지고 화면은 panTo 로 부드럽게 이동한다.
-  const handleSearchPick = (place: { lat: number; lng: number }) => {
-    handlePickLatLng(place.lat, place.lng);
+  const handleSearchPick = (hit: AreaSearchHit) => {
+    const bizLabel = bizTypes.find(b => b.key === bizType)?.label || '';
+    const lat = hit.center.lat;
+    const lng = hit.center.lng;
+    setArea({
+      id: hit.id,
+      lat,
+      lng,
+      radius: FIXED_RADIUS,
+      roadAddress: hit.fullName,
+      dong: hit.name,
+      gu: hit.region,
+      displayName: bizLabel ? `${hit.name} ${bizLabel} 입지 분석` : `${hit.name} 일대`,
+      regionLabel: hit.name,
+    });
+    setMapCenter({ lat, lng });
   };
 
   // Re-label area when biz type changes after a marker is dropped — needs to
@@ -213,7 +242,7 @@ export function Analyze() {
   // the displayName label.
   useEffect(() => {
     if (!area) return;
-    const bizLabel = BIZ_TYPES.find(b => b.key === bizType)?.label || '';
+    const bizLabel = bizTypes.find(b => b.key === bizType)?.label || '';
     setArea(a => a ? {
       ...a,
       displayName: bizLabel ? `${a.regionLabel} ${bizLabel} 입지 분석` : `${a.regionLabel} 일대`,
@@ -228,16 +257,17 @@ export function Analyze() {
     setMapCenter({ lat: area.lat, lng: area.lng });
     try {
       const result = await api.analyses.create({
-        business_type: bizType,
+        businessType: bizType,
+        areaId: area.id,
         center: { lat: area.lat, lng: area.lng },
         radius_m: FIXED_RADIUS,
         road_address: area.roadAddress,
         display_name: area.displayName,
         region: area.dong,
-        category: BIZ_TYPES.find(b => b.key === bizType)?.label,
-        category_emoji: BIZ_TYPES.find(b => b.key === bizType)?.emoji,
+        category: bizTypes.find(b => b.key === bizType)?.label,
+        category_emoji: bizTypes.find(b => b.key === bizType)?.emoji,
       });
-      setAnalysis(result);
+      setAnalysisId(result.id);
       setPhase('done');
       setShowMarkers(true);
     } catch {
@@ -252,10 +282,10 @@ export function Analyze() {
     setStep(1);
     setShowMarkers(false);
     setMapCenter(DEFAULT_CENTER);
-    setAnalysis(null);
+    setAnalysisId(null);
   };
 
-  const selectedBiz = BIZ_TYPES.find(b => b.key === bizType);
+  const selectedBiz = bizTypes.find(b => b.key === bizType);
 
   // Synthesised demo coords. Memo so the same object reference is shared
   // across renders (avoids unnecessary marker re-mounts).
@@ -302,6 +332,7 @@ export function Analyze() {
         bizType={bizType}
         selectedBiz={selectedBiz}
         onBizSelect={handleBizSelect}
+        bizTypes={bizTypes}
         area={area}
         onClearArea={() => setArea(null)}
         onSearchPan={handleSearchPick}
@@ -317,7 +348,7 @@ export function Analyze() {
           setSelected={setSelected}
           selectedBiz={selectedBiz}
           area={area}
-          analysisId={analysis?.id}
+          analysisId={analysisId}
           onClose={reset}
         />
       )}
@@ -334,16 +365,17 @@ type LeftWidgetProps = {
   setStep: (s: 1 | 2) => void;
   bizType: BizKey | null;
   selectedBiz?: BizType;
+  bizTypes: BizType[];
   onBizSelect: (k: BizKey) => void;
   area: Area | null;
   onClearArea: () => void;
-  onSearchPan: (place: { lat: number; lng: number }) => void;
+  onSearchPan: (place: AreaSearchHit) => void;
   onRun: () => void;
   onReset: () => void;
   sdkReady: boolean;
 };
 
-function LeftWidget({ phase, step, setStep, bizType, selectedBiz, onBizSelect, area, onClearArea, onSearchPan, onRun, onReset, sdkReady }: LeftWidgetProps) {
+function LeftWidget({ phase, step, setStep, bizType, selectedBiz, bizTypes, onBizSelect, area, onClearArea, onSearchPan, onRun, onReset, sdkReady }: LeftWidgetProps) {
   if (phase === 'analyzing') {
     return (
       <div className="lf-widget analyzing">
@@ -414,7 +446,7 @@ function LeftWidget({ phase, step, setStep, bizType, selectedBiz, onBizSelect, a
           {step === 1 && (
             <div className="lf-step-content">
               <div className="lf-biz-grid">
-                {BIZ_TYPES.map(t => (
+                {bizTypes.map(t => (
                   <button key={t.key}
                     className={`lf-biz-btn ${bizType === t.key ? 'is-on' : ''}`}
                     onClick={() => onBizSelect(t.key)}>
@@ -468,22 +500,14 @@ function LeftWidget({ phase, step, setStep, bizType, selectedBiz, onBizSelect, a
 // =============================================================================
 //  MapPickPanel — keyword search via kakao.maps.services.Places
 // =============================================================================
-type SearchHit = {
-  name: string;
-  address: string;
-  category: string;
-  lat: number;
-  lng: number;
-};
-
 function MapPickPanel({ area, onClearArea, onSearchPan, sdkReady }: {
   area: Area | null;
   onClearArea: () => void;
-  onSearchPan: (place: { lat: number; lng: number }) => void;
+  onSearchPan: (place: AreaSearchHit) => void;
   sdkReady: boolean;
 }) {
   const [q, setQ] = useState('');
-  const [matches, setMatches] = useState<SearchHit[]>([]);
+  const [matches, setMatches] = useState<AreaSearchHit[]>([]);
 
   // Debounced live keyword search. Empty input → clear matches without
   // hitting Kakao (saves quota).
@@ -492,24 +516,21 @@ function MapPickPanel({ area, onClearArea, onSearchPan, sdkReady }: {
     if (!trimmed || !sdkReady) { setMatches([]); return; }
     let cancelled = false;
     const timer = setTimeout(() => {
-      const places = new kakao.maps.services.Places();
-      places.keywordSearch(trimmed, (data, status) => {
+      api.catalog.searchAreas(trimmed)
+        .then(data => {
+          if (cancelled) return;
+          setMatches(data.slice(0, 6));
+        })
+        .catch(() => {
         if (cancelled) return;
-        if (status !== kakao.maps.services.Status.OK) { setMatches([]); return; }
-        setMatches(data.slice(0, 6).map(d => ({
-          name: d.place_name,
-          address: d.road_address_name || d.address_name,
-          category: d.category_group_name || '장소',
-          lat: parseFloat(d.y),
-          lng: parseFloat(d.x),
-        })));
-      });
+          setMatches([]);
+        });
     }, 220);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [q, sdkReady]);
 
-  const handleSearchClick = (p: SearchHit) => {
-    onSearchPan({ lat: p.lat, lng: p.lng });
+  const handleSearchClick = (p: AreaSearchHit) => {
+    onSearchPan(p);
     setQ('');
   };
 
@@ -536,7 +557,7 @@ function MapPickPanel({ area, onClearArea, onSearchPan, sdkReady }: {
                 <div className="lf-mapsearch-ico"><Icon name="map-pin" size={12} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="lf-mapsearch-name">{p.name}</div>
-                  <div className="lf-mapsearch-meta">{p.category} · {p.address}</div>
+                  <div className="lf-mapsearch-meta">{p.region} · {p.fullName}</div>
                 </div>
               </li>
             ))}
@@ -597,7 +618,7 @@ function RightResults({ properties, selected, setSelected, selectedBiz, area, an
   setSelected: (n: number) => void;
   selectedBiz?: BizType;
   area: Area | null;
-  analysisId?: number;
+  analysisId?: string | null;
   onClose: () => void;
 }) {
   const [detailOpen, setDetailOpen] = useState(false);

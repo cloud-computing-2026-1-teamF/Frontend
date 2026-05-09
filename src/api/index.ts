@@ -2,7 +2,7 @@
 // whose names + URLs match `API_명세_수정본.md`. Whether the call is mocked
 // or real is decided in `client.ts` — call sites don't need to know.
 
-import { apiRequest } from './client';
+import { apiRequest, setAccessToken } from './client';
 import type {
   AuthUser,
   AuthLoginResponse,
@@ -11,6 +11,8 @@ import type {
   BusinessType,
   AreaSearchHit,
   AnalysisDetail,
+  AnalysisPollingResponse,
+  CreateAnalysisResponse,
   CreateAnalysisRequest,
   ListAnalysesQuery,
   ListAnalysesResponse,
@@ -22,7 +24,7 @@ export { ApiError } from './types';
 export type {
   AuthUser, AuthLoginResponse, LoginRequest, SignupRequest,
   BusinessType, AreaSearchHit,
-  AnalysisDetail, CreateAnalysisRequest, ListAnalysesQuery, ListAnalysesResponse,
+  AnalysisDetail, AnalysisPollingResponse, CreateAnalysisResponse, CreateAnalysisRequest, ListAnalysesQuery, ListAnalysesResponse,
   PatchAnalysisRequest, UserStats,
 } from './types';
 
@@ -30,19 +32,27 @@ export type {
 export const authApi = {
   /** `POST /auth/login` */
   login: (body: LoginRequest) =>
-    apiRequest<AuthLoginResponse>({ method: 'POST', path: '/auth/login', body }).then(r => r.data),
+    apiRequest<AuthLoginResponse>({ method: 'POST', path: '/auth/login', body }).then(r => {
+      setAccessToken(r.data.tokens.accessToken);
+      return r.data;
+    }),
 
   /** `POST /auth/signup` */
   signup: (body: SignupRequest) =>
-    apiRequest<AuthLoginResponse>({ method: 'POST', path: '/auth/signup', body }).then(r => r.data),
+    apiRequest<AuthLoginResponse>({ method: 'POST', path: '/auth/signup', body }).then(r => {
+      setAccessToken(r.data.tokens.accessToken);
+      return r.data;
+    }),
 
   /** `POST /auth/logout` */
-  logout: () =>
-    apiRequest<{ ok: true }>({ method: 'POST', path: '/auth/logout' }).then(r => r.data),
+  logout: () => {
+    setAccessToken(null);
+    return Promise.resolve({ ok: true });
+  },
 
   /** `GET /auth/me` */
   me: () =>
-    apiRequest<AuthUser>({ method: 'GET', path: '/auth/me' }).then(r => r.data),
+    apiRequest<{ user: AuthUser }>({ method: 'GET', path: '/auth/me' }).then(r => r.data.user),
 };
 
 // ── Catalog ─────────────────────────────────────────────────────────────────
@@ -58,9 +68,13 @@ export const catalogApi = {
 
 // ── Analyses ────────────────────────────────────────────────────────────────
 export const analysesApi = {
-  /** `POST /analyses` — synchronous 200 response per spec §3.3 */
+  /** `POST /analyses` — async 202 response in the backend */
   create: (body: CreateAnalysisRequest) =>
-    apiRequest<AnalysisDetail>({ method: 'POST', path: '/analyses', body }).then(r => r.data),
+    apiRequest<CreateAnalysisResponse>({ method: 'POST', path: '/analyses', body }).then(r => r.data),
+
+  /** `GET /analyses/:id` — polling status from the backend */
+  poll: (id: number | string) =>
+    apiRequest<AnalysisPollingResponse>({ method: 'GET', path: `/analyses/${id}` }).then(r => r.data),
 
   /** `GET /analyses` */
   list: (query: ListAnalysesQuery = {}) =>

@@ -12,6 +12,7 @@ import type {
   BusinessType,
   AreaSearchHit,
   AnalysisDetail,
+  AnalysisPollingResponse,
   AnalysisListItem,
   ListAnalysesResponse,
   CreateAnalysisRequest,
@@ -64,7 +65,10 @@ const handleLogin: Handler = (spec) => {
     return fail(401, 'invalid_credentials', '아이디 또는 비밀번호가 올바르지 않습니다');
   }
   store.setUser(acct.user);
-  const res: AuthLoginResponse = { user: acct.user, access_token: 'mock_access_token', expires_in: 900 };
+  const res: AuthLoginResponse = {
+    user: acct.user,
+    tokens: { accessToken: 'mock_access_token', refreshToken: 'mock_refresh_token', expiresIn: 900 },
+  };
   return ok(res);
 };
 
@@ -88,14 +92,17 @@ const handleSignup: Handler = (spec) => {
   };
   store.insertAccount({ login_id: body.email, password: body.password, user });
   store.setUser(user);
-  const res: AuthLoginResponse = { user, access_token: 'mock_access_token', expires_in: 900 };
+  const res: AuthLoginResponse = {
+    user,
+    tokens: { accessToken: 'mock_access_token', refreshToken: 'mock_refresh_token', expiresIn: 900 },
+  };
   return ok(res);
 };
 
 const handleMe: Handler = () => {
   const u = requireUser();
   if ('error' in u) return u;
-  return ok(u);
+  return ok({ user: u });
 };
 
 const handleLogout: Handler = () => {
@@ -105,25 +112,31 @@ const handleLogout: Handler = () => {
 
 // ── Business types / Areas ────────────────────────────────────────────────
 const BIZ_TYPES: BusinessType[] = [
-  { key: 'korean',   label: '한식당',    emoji: '🍚', sort_order: 1 },
-  { key: 'cafe',     label: '카페',      emoji: '☕', sort_order: 2 },
-  { key: 'chicken',  label: '치킨집',    emoji: '🍗', sort_order: 3 },
-  { key: 'bunsik',   label: '분식점',    emoji: '🍜', sort_order: 4 },
-  { key: 'bakery',   label: '베이커리',  emoji: '🥐', sort_order: 5 },
-  { key: 'japanese', label: '일식',      emoji: '🍣', sort_order: 6 },
-  { key: 'bar',      label: '주점',      emoji: '🍺', sort_order: 7 },
-  { key: 'western',  label: '양식',      emoji: '🍝', sort_order: 8 },
-  { key: 'chinese',  label: '중식',      emoji: '🥢', sort_order: 9 },
-  { key: 'fastfood', label: '패스트푸드', emoji: '🍔', sort_order: 10 },
+  { key: 'korean',   label: '한식당',    emoji: '🍚', sortOrder: 1 },
+  { key: 'cafe',     label: '카페',      emoji: '☕', sortOrder: 2 },
+  { key: 'chicken',  label: '치킨집',    emoji: '🍗', sortOrder: 3 },
+  { key: 'bunsik',   label: '분식점',    emoji: '🍜', sortOrder: 4 },
+  { key: 'bakery',   label: '베이커리',  emoji: '🥐', sortOrder: 5 },
+  { key: 'japanese', label: '일식',      emoji: '🍣', sortOrder: 6 },
+  { key: 'bar',      label: '주점',      emoji: '🍺', sortOrder: 7 },
+  { key: 'western',  label: '양식',      emoji: '🍝', sortOrder: 8 },
+  { key: 'chinese',  label: '중식',      emoji: '🥢', sortOrder: 9 },
+  { key: 'fastfood', label: '패스트푸드', emoji: '🍔', sortOrder: 10 },
 ];
 
 const handleListBizTypes: Handler = () => ok(BIZ_TYPES);
 
-// Empty for now; `Analyze.tsx` mocks autocomplete client-side. Kept so the
-// endpoint exists and returns the right envelope shape.
 const handleSearchAreas: Handler = (spec) => {
-  const _q = String(spec.query?.q ?? '');
-  const hits: AreaSearchHit[] = [];
+  const q = String(spec.query?.q ?? '').trim();
+  const areas: AreaSearchHit[] = [
+    { id: '11440540', name: '서교동', region: '서울 마포구', fullName: '서울특별시 마포구 서교동', center: { lat: 37.5530, lng: 126.9186 } },
+    { id: '11440660', name: '동교동', region: '서울 마포구', fullName: '서울특별시 마포구 동교동', center: { lat: 37.5578, lng: 126.9250 } },
+    { id: '11680545', name: '역삼1동', region: '서울 강남구', fullName: '서울특별시 강남구 역삼1동', center: { lat: 37.5007, lng: 127.0365 } },
+    { id: '11110615', name: '종로1.2.3.4가동', region: '서울 종로구', fullName: '서울특별시 종로구 종로1.2.3.4가동', center: { lat: 37.5701, lng: 126.9910 } },
+  ];
+  const hits = q
+    ? areas.filter(area => `${area.name} ${area.region} ${area.fullName}`.includes(q))
+    : [];
   return ok(hits);
 };
 
@@ -144,11 +157,11 @@ const handleCreateAnalysis: Handler = (spec) => {
   const u = requireUser();
   if ('error' in u) return u;
   const body = (spec.body || {}) as CreateAnalysisRequest;
-  if (!body.business_type || !body.center) {
-    return fail(422, 'validation_failed', 'business_type and center are required');
+  if (!body.businessType || !body.areaId) {
+    return fail(422, 'validation_failed', 'businessType and areaId are required');
   }
 
-  const biz = BIZ_TYPES.find(b => b.key === body.business_type);
+  const biz = BIZ_TYPES.find(b => b.key === body.businessType);
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
@@ -159,6 +172,7 @@ const handleCreateAnalysis: Handler = (spec) => {
     footHourly: makeHourly(p.foot),
     nearby: { subway: '연동 시 표시', bus: '연동 시 표시', parking: '연동 시 표시' },
   }));
+  const center = body.center ?? { lat: 37.5530, lng: 126.9186 };
 
   const created: SavedAnalysis = {
     id: Date.now(),
@@ -166,8 +180,8 @@ const handleCreateAnalysis: Handler = (spec) => {
     region: body.region || body.display_name || '지정되지 않은 지역',
     regionDetail: body.road_address,
     radius: body.radius_m ?? 500,
-    centerLat: body.center.lat,
-    centerLng: body.center.lng,
+    centerLat: center.lat,
+    centerLng: center.lng,
     displayName: body.display_name,
     category: body.category || biz?.label || '미지정',
     categoryEmoji: body.category_emoji || biz?.emoji || '📍',
@@ -180,7 +194,35 @@ const handleCreateAnalysis: Handler = (spec) => {
     top3,
   };
   store.insertAnalysis(created);
-  return ok(created as AnalysisDetail);
+  return ok({
+    id: String(created.id),
+    status: 'done',
+    progress: 100,
+    createdAt: now.toISOString(),
+    estimatedSeconds: 1,
+    links: {
+      self: `/v1/analyses/${created.id}`,
+      events: `/v1/analyses/${created.id}/events`,
+    },
+  });
+};
+
+const handlePollAnalysis: Handler = (_spec, params) => {
+  const u = requireUser();
+  if ('error' in u) return u;
+  const id = Number(params.id);
+  const found = store.findAnalysis(id);
+  if (!found) return fail(404, 'not_found', `analysis ${params.id} not found`);
+  const res: AnalysisPollingResponse = {
+    id: params.id,
+    status: 'done',
+    progress: 100,
+    step: { index: 4, total: 4, label: '분석 완료' },
+    createdAt: `${found.date}T${found.time}:00.000Z`,
+    completedAt: `${found.date}T${found.time}:01.000Z`,
+    error: null,
+  };
+  return ok(res);
 };
 
 const handleListAnalyses: Handler = (spec) => {
