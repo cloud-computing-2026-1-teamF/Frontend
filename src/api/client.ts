@@ -55,7 +55,7 @@ async function realApiRequest<T>(spec: RequestSpec, allowRefresh: boolean): Prom
   const res = await fetch(url.toString(), {
     method: spec.method,
     headers,
-    body: spec.body !== undefined ? JSON.stringify(spec.body) : undefined,
+    body: spec.body !== undefined ? JSON.stringify(toSnakeCase(spec.body)) : undefined,
     credentials: 'include',
   });
 
@@ -69,7 +69,8 @@ async function realApiRequest<T>(spec: RequestSpec, allowRefresh: boolean): Prom
   if (!res.ok) {
     throw new ApiError(res.status, await parseError(res));
   }
-  return res.json();
+  const body = await res.json();
+  return toCamelCase(body) as ApiEnvelope<T>;
 }
 
 async function refreshAccessToken(): Promise<boolean> {
@@ -83,7 +84,7 @@ async function refreshAccessToken(): Promise<boolean> {
       setAccessToken(null);
       return false;
     }
-    const body = await res.json() as ApiEnvelope<{ accessToken: string }>;
+    const body = toCamelCase(await res.json()) as ApiEnvelope<{ accessToken: string }>;
     setAccessToken(body.data.accessToken);
     return true;
   } catch {
@@ -120,3 +121,25 @@ export const setAccessToken = (token: string | null): void => {
 };
 
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
+function toCamelCase(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(toCamelCase);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, nested]) => [
+      key.replace(/_([a-z])/g, (_, char: string) => char.toUpperCase()),
+      toCamelCase(nested),
+    ]),
+  );
+}
+
+function toSnakeCase(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(toSnakeCase);
+  if (!value || typeof value !== 'object' || value instanceof Date) return value;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, nested]) => [
+      key.replace(/[A-Z]/g, char => `_${char.toLowerCase()}`),
+      toSnakeCase(nested),
+    ]),
+  );
+}
