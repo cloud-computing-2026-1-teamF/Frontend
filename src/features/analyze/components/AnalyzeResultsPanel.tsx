@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../../../api';
+import { USE_MOCK } from '../../../api/client';
 import { FactorCard, buildFactorViz } from '../../../shared/FactorViz';
 import { Icon } from '../../../shared/Icon';
 import type { AnalyzeArea, AnalyzeProperty, BizType } from '../model';
@@ -42,6 +43,10 @@ export function AnalyzeResultsPanel({
   const handleSave = async () => {
     if (saveState !== 'idle' || !analysisId) return;
     setSaveState('saving');
+    if (!USE_MOCK) {
+      setSaveState('saved');
+      return;
+    }
     try {
       await api.analyses.patch(analysisId, { saved: true });
       setSaveState('saved');
