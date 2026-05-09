@@ -6,8 +6,11 @@ import './detail.css';
 import { Icon } from '../../shared/Icon';
 import { FactorCard, buildFactorViz } from '../../shared/FactorViz';
 import { Footer } from '../../shared/Nav';
-import type { SavedAnalysis, Top3Item } from '../../lib/savedAnalyses';
+import type { SavedAnalysis } from '../../lib/savedAnalyses';
 import { api } from '../../api';
+import { HourlyChart } from '../../features/detail/components/HourlyChart';
+import { RiskSummary } from '../../features/detail/components/RiskSummary';
+import { ScoreRing } from '../../features/detail/components/ScoreRing';
 
 export function Detail() {
   const [selected, setSelected] = useState(0);
@@ -248,133 +251,8 @@ export function Detail() {
   );
 }
 
-function ScoreRing({ score, size = 160, stroke = 14, rank = 1, showLabel = false }: {
-  score: number; size?: number; stroke?: number; rank?: number; showLabel?: boolean;
-}) {
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const pct = Math.min(score / 100, 1);
-  const trackDash = c * 0.78;
-  const dash = trackDash * pct;
-  const colors: Record<number, string> = { 1: '#E85D1F', 2: '#F4B431', 3: '#3B6FE8' };
-  const color = colors[rank] || '#E85D1F';
-  return (
-    <div className="dt-ring" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-          stroke="#EEF1F7" strokeWidth={stroke}
-          strokeDasharray={`${trackDash} ${c}`} strokeLinecap="round"
-          transform={`rotate(130 ${size / 2} ${size / 2})`} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-          stroke={color} strokeWidth={stroke}
-          strokeDasharray={`${dash} ${c}`} strokeLinecap="round"
-          transform={`rotate(130 ${size / 2} ${size / 2})`} />
-      </svg>
-      <div className="dt-ring-center">
-        <div className="dt-ring-val" style={{ color, fontSize: size * 0.28 }}>
-          {score}<span style={{ fontSize: size * 0.13 }}>%</span>
-        </div>
-        {showLabel && <div className="dt-ring-lab">생존율</div>}
-      </div>
-    </div>
-  );
-}
-
-function HourlyChart({ data, color }: { data: number[]; color: string }) {
-  const max = Math.max(...data);
-  return (
-    <div className="dt-hourly">
-      <div className="dt-hourly-bars">
-        {data.map((v, i) => (
-          <div key={i} className="dt-hourly-bar-wrap">
-            <div className="dt-hourly-bar" style={{ height: `${(v / max) * 100}%`, background: color }} />
-          </div>
-        ))}
-      </div>
-      <div className="dt-hourly-axis">
-        <span>00</span><span>06</span><span>12</span><span>18</span><span>24</span>
-      </div>
-    </div>
-  );
-}
-
 function peakHour(data: number[]): string {
   let max = 0, idx = 0;
   data.forEach((v, i) => { if (v > max) { max = v; idx = i; } });
   return String(idx).padStart(2, '0');
-}
-
-function RiskSummary({ sel, selRank }: { sel: Top3Item; selRank: number }) {
-  const REFS = { foot: 7500, comp: 5, rev: 1500, growth: 5 };
-  const footDiff = Math.round((sel.foot - REFS.foot) / REFS.foot * 100);
-  const revDiff = Math.round((sel.rev - REFS.rev) / REFS.rev * 100);
-  const compGap = sel.comp - REFS.comp;
-  const growthGap = sel.growth - REFS.growth;
-
-  type Tone = 'up' | 'down';
-  const factors: { lab: string; tone: Tone; headline: string; score: number }[] = [
-    {
-      lab: '유동인구',
-      tone: footDiff >= 0 ? 'up' : 'down',
-      headline: footDiff >= 0 ? `업종 평균보다 ${footDiff}% 많아요` : `업종 평균보다 ${Math.abs(footDiff)}% 적어요`,
-      score: footDiff >= 10 ? 1 : footDiff >= -10 ? 0 : -1,
-    },
-    {
-      lab: '경쟁 밀도',
-      tone: compGap <= 0 ? 'up' : 'down',
-      headline: compGap <= 0
-        ? `분석 반경 내 ${sel.comp}곳으로 적정 수준이에요`
-        : `분석 반경 내 ${sel.comp}곳으로 다소 밀집돼 있어요`,
-      score: compGap <= 0 ? 1 : compGap <= 2 ? 0 : -1,
-    },
-    {
-      lab: '추정 매출',
-      tone: revDiff >= 0 ? 'up' : 'down',
-      headline: revDiff >= 0
-        ? `업종 평균 대비 +${revDiff}% 수준의 매출이 예상돼요`
-        : `업종 평균 대비 ${revDiff}% 낮은 매출이 예상돼요`,
-      score: revDiff >= 10 ? 1 : revDiff >= -10 ? 0 : -1,
-    },
-    {
-      lab: '업종 성장률',
-      tone: growthGap >= 0 ? 'up' : 'down',
-      headline: growthGap >= 0
-        ? `전년 대비 +${sel.growth}% 성장하는 흐름이에요`
-        : `전년 대비 +${sel.growth}%로 성장세가 둔화됐어요`,
-      score: sel.growth >= 8 ? 1 : sel.growth >= 3 ? 0 : -1,
-    },
-  ];
-
-  const totalScore = factors.reduce((s, f) => s + f.score, 0);
-  const level: 'low' | 'medium' | 'high' =
-    totalScore >= 2 ? 'low' : totalScore >= 0 ? 'medium' : 'high';
-  const title =
-    level === 'low'    ? '전반적으로 안정적인 입지예요' :
-    level === 'medium' ? '일부 주의할 요소가 있어요' :
-                         '리스크 요소가 많으니 신중하게 검토하세요';
-
-  return (
-    <div className={`dt-risk dt-risk-${level}`}>
-      <div className="dt-risk-head">
-        <div className={`dt-risk-badge dt-risk-badge-${level}`}>
-          {level === 'low' ? '낮음' : level === 'medium' ? '보통' : '높음'}
-        </div>
-        <div>
-          <div className="dt-risk-title">{title}</div>
-          <div className="dt-risk-sub">생존율 {sel.score}% · Top {selRank} 공실매물 기준 · 주요 지표 4개 요약</div>
-        </div>
-      </div>
-      <ul className="dt-risk-list">
-        {factors.map((f, i) => (
-          <li key={i} className={`dt-risk-item tone-${f.tone}`}>
-            <span className={`dt-risk-bullet tone-${f.tone}`} />
-            <div className="dt-risk-item-body">
-              <span className="dt-risk-item-lab">{f.lab}</span>
-              <span className="dt-risk-item-headline">{f.headline}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
 }
