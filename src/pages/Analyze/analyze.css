@@ -501,6 +501,30 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   display: flex; flex-direction: column; gap: 10px;
 }
 
+.rr-empty {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  min-height: 150px;
+  padding: 20px;
+  border: 1px dashed #CDD4E3;
+  border-radius: 12px;
+  background: #F8FAFD;
+  color: #596276;
+}
+.rr-empty b {
+  display: block;
+  color: #101828;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.rr-empty p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .rr-card {
   border: 1.5px solid #E3E7F0;
   border-radius: 14px;

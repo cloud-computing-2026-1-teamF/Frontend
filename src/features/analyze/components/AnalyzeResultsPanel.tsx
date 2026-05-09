@@ -29,6 +29,7 @@ export function AnalyzeResultsPanel({
   const [detailOpen, setDetailOpen] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const sel = properties.find(property => property.rank === selected) || properties[0];
+  const hasProperties = properties.length > 0;
 
   const handleCardClick = (rank: number) => {
     if (selected === rank && detailOpen) {
@@ -70,8 +71,9 @@ export function AnalyzeResultsPanel({
         </div>
 
         <div className="rr-body">
-          <div className="rr-list">
-            {properties.map(property => {
+          {hasProperties ? (
+            <div className="rr-list">
+              {properties.map(property => {
               const isSelected = property.rank === selected && detailOpen;
               return (
                 <div
@@ -112,8 +114,17 @@ export function AnalyzeResultsPanel({
                   )}
                 </div>
               );
-            })}
-          </div>
+              })}
+            </div>
+          ) : (
+            <div className="rr-empty">
+              <Icon name="database" size={18} />
+              <div>
+                <b>조건에 맞는 공실이 없어요</b>
+                <p>검색 반경이나 예산 조건을 넓혀 다시 분석해주세요.</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="rr-save-wrap">
@@ -143,7 +154,7 @@ export function AnalyzeResultsPanel({
         </div>
       </div>
 
-      {detailOpen && (
+      {detailOpen && sel && (
         <div className="rr-detail-pane">
           <PropertyDetail property={sel} onClose={() => setDetailOpen(false)} />
         </div>

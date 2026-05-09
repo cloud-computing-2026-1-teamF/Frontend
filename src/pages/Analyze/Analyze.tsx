@@ -13,6 +13,7 @@ import {
   createAnalysisSession,
   patchAnalysisSessionEvent,
   patchAnalysisSessionStatus,
+  patchAnalysisSessionTop3,
   upsertAnalysisSession,
 } from '../../features/analysisSessions/store';
 import { AnalyzeControlPanel } from '../../features/analyze/components/AnalyzeControlPanel';
@@ -24,10 +25,12 @@ import {
   FIXED_RADIUS,
   buildCompetitors,
   buildProperties,
+  buildPropertiesFromRecommendations,
   createFallbackArea,
   reverseGeocode,
   type AnalyzeArea,
   type AnalyzePhase,
+  type AnalyzeProperty,
   type BizKey,
   type BizType,
 } from '../../features/analyze/model';
@@ -57,6 +60,7 @@ export function Analyze() {
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStepLabel, setAnalysisStepLabel] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [recommendedProperties, setRecommendedProperties] = useState<AnalyzeProperty[]>([]);
   const [budget, setBudget] = useState({
     depositMax: '',
     rentMax: '',
@@ -148,6 +152,7 @@ export function Analyze() {
     setAnalysisStepLabel('분석 작업을 생성하는 중');
     setAnalysisError(null);
     setShowMarkers(false);
+    setRecommendedProperties([]);
     setMapCenter({ lat: area.lat, lng: area.lng });
     try {
       const analysisArea = await resolveAnalysisArea(area);
@@ -168,6 +173,11 @@ export function Analyze() {
         category: selectedBusiness?.label,
         categoryEmoji: selectedBusiness?.emoji,
       });
+      const nextProperties = buildPropertiesFromRecommendations(result.recommendations ?? []);
+      if (nextProperties.length > 0) {
+        setRecommendedProperties(nextProperties);
+        setSelected(nextProperties[0].rank);
+      }
       setAnalysisId(result.id);
       setAnalysisProgress(result.progress);
       const session = createAnalysisSession({
@@ -183,6 +193,7 @@ export function Analyze() {
         lng: analysisArea.lng,
         radius: FIXED_RADIUS,
         budget: budgetRequest,
+        recommendations: result.recommendations,
       });
       upsertAnalysisSession(session);
       beginProgressTracking(result.id);
@@ -242,6 +253,7 @@ export function Analyze() {
       setAnalysisStepLabel('분석 완료');
       setPhase('done');
       setShowMarkers(true);
+      void refreshRecommendations(id);
     };
     const fail = (message: string) => {
       completed = true;
@@ -289,6 +301,22 @@ export function Analyze() {
     });
   };
 
+  const refreshRecommendations = async (id: string) => {
+    if (USE_MOCK) return;
+    try {
+      const section = await api.analyses.recommendations(id);
+      const nextProperties = buildPropertiesFromRecommendations(section.recommendations);
+      if (nextProperties.length === 0) return;
+      setRecommendedProperties(nextProperties);
+      setSelected(current => nextProperties.some(property => property.rank === current)
+        ? current
+        : nextProperties[0].rank);
+      patchAnalysisSessionTop3(id, section.recommendations);
+    } catch {
+      // The create response already carries recommendations; keep those visible.
+    }
+  };
+
   const reset = () => {
     setPhase('idle');
     setBizType(null);
@@ -300,6 +328,7 @@ export function Analyze() {
     setAnalysisProgress(0);
     setAnalysisStepLabel(null);
     setAnalysisError(null);
+    setRecommendedProperties([]);
     clearBudget();
     trackingCleanupRef.current?.();
     trackingCleanupRef.current = null;
@@ -311,8 +340,11 @@ export function Analyze() {
   // across renders (avoids unnecessary marker re-mounts).
   const propertiesCenter = area ?? DEFAULT_CENTER;
   const properties = useMemo(
-    () => buildProperties(propertiesCenter),
-    [propertiesCenter.lat, propertiesCenter.lng],
+    () => {
+      if (recommendedProperties.length > 0) return recommendedProperties;
+      return USE_MOCK ? buildProperties(propertiesCenter) : [];
+    },
+    [recommendedProperties, propertiesCenter.lat, propertiesCenter.lng],
   );
   const competitors = useMemo(
     () => buildCompetitors(propertiesCenter),
