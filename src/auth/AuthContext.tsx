@@ -1,10 +1,12 @@
-// Auth state shared across the app. Pure mock — persists a fake user object
-// in localStorage so reloads keep the "logged-in" feel. Replace login() body
-// with a real API call when the backend lands.
+// Auth state shared across the app. Talks to the API layer (`src/api`) only —
+// while USE_MOCK is on the calls are routed locally; flipping the flag points
+// every endpoint at the real backend without touching this file.
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { loginRequest, signUp } from '../lib/auth';
+import { api, type AuthUser } from '../api';
 
+export type { AuthUser };
 export type AuthUser = {
   name: string;
   email: string;
@@ -17,34 +19,42 @@ export type AuthUser = {
 
 type AuthState = {
   user: AuthUser | null;
-  login: (mode?: 'login' | 'signup') => void; // demo: accepts any input
+  /** True while the initial `GET /auth/me` is still in flight. Guards must
+   *  wait on this before deciding to redirect — otherwise refreshing on a
+   *  protected route bounces the user before the session check resolves. */
+  bootstrapping: boolean;
+  login: (mode?: 'login' | 'signup') => void; // opens the modal; submit is what hits the API
   logout: () => void;
   // Auth modal control — kept here so any page can `openAuth('login')`
-  // (e.g. when a guard redirects an unauthenticated user)
+  // (e.g. when a guard redirects an unauthenticated user).
   authOpen: boolean;
   authMode: 'login' | 'signup';
   openAuth: (mode?: 'login' | 'signup') => void;
   closeAuth: () => void;
+  // Direct API setter — AuthModal calls this after `api.auth.login()` resolves
+  // so the in-memory user matches what the (mock) backend returned.
+  setUser: (u: AuthUser | null) => void;
 };
-
-const STORAGE_KEY = 'sg_user';
 
 const AuthCtx = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as AuthUser) : null;
-    } catch { return null; }
-  });
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [bootstrapping, setBootstrapping] = useState(true);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
-  const persist = useCallback((u: AuthUser | null) => {
-    setUser(u);
-    if (u) localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-    else localStorage.removeItem(STORAGE_KEY);
+  // On mount, ask the backend who we are. With USE_MOCK this just reads the
+  // localStorage-backed mock store; with the real backend it hits /auth/me.
+  // `bootstrapping` stays true until this resolves so route guards don't
+  // redirect-then-correct on every refresh.
+  useEffect(() => {
+    let cancelled = false;
+    api.auth.me()
+      .then(u => { if (!cancelled) setUser(u); })
+      .catch(() => { if (!cancelled) setUser(null); })
+      .finally(() => { if (!cancelled) setBootstrapping(false); });
+    return () => { cancelled = true; };
   }, []);
 
   const openAuth = useCallback(async (mode: 'login' | 'signup' = 'login') => {
@@ -85,7 +95,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback((mode: 'login' | 'signup' = 'login') => openAuth(mode), [openAuth]);
 
-  const logout = useCallback(() => persist(null), [persist]);
+  const logout = useCallback(() => {
+    api.auth.logout().catch(() => { /* ignore — local state is the source of truth */ });
+    setUser(null);
+  }, []);
 
   // Cross-component bridge: any descendant can dispatch CustomEvent('openAuth')
   // to trigger the modal without prop-drilling.
@@ -99,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [openAuth]);
 
   return (
-    <AuthCtx.Provider value={{ user, login, logout, authOpen, authMode, openAuth, closeAuth }}>
+    <AuthCtx.Provider value={{ user, bootstrapping, login, logout, authOpen, authMode, openAuth, closeAuth, setUser }}>
       {children}
     </AuthCtx.Provider>
   );

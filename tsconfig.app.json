@@ -12,6 +12,7 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "types": ["kakao.maps.d.ts"],
 
     "strict": false,
     "noUnusedLocals": false,

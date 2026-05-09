@@ -1,22 +1,44 @@
-// Detail page — full analysis view for one history item
-import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+// Detail page — full analysis view for one history item.
+// Loads via `GET /analyses/:id` (mock-routed while USE_MOCK is on).
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import './detail.css';
 import { Icon } from '../../shared/Icon';
 import { FactorCard, buildFactorViz } from '../../shared/FactorViz';
 import { Footer } from '../../shared/Nav';
-import { readSavedAnalyses, type SavedAnalysis, type Top3Item } from '../../lib/savedAnalyses';
-import { HISTORY_ITEMS } from '../../data/history';
+import type { SavedAnalysis, Top3Item } from '../../lib/savedAnalyses';
+import { api } from '../../api';
 
 export function Detail() {
   const [selected, setSelected] = useState(0);
   const { id: idParam } = useParams<{ id: string }>();
-  const id = parseInt(idParam || '1', 10);
 
-  const items: SavedAnalysis[] = [...readSavedAnalyses(), ...HISTORY_ITEMS];
-  const item = items.find(it => it.id === id) || items[0];
+  const [item, setItem] = useState<SavedAnalysis | null>(null);
+  const [status, setStatus] = useState<'loading' | 'ok' | 'missing'>('loading');
 
-  if (!item) {
+  useEffect(() => {
+    let cancelled = false;
+    setStatus('loading');
+    // `:id` is numeric in the current mock store but the API contract treats
+    // it as opaque — `api.analyses.get` accepts both `number | string`.
+    const id = idParam ?? '';
+    api.analyses.get(id)
+      .then(res => { if (!cancelled) { setItem(res); setStatus('ok'); } })
+      .catch(() => { if (!cancelled) setStatus('missing'); });
+    return () => { cancelled = true; };
+  }, [idParam]);
+
+  if (status === 'loading') {
+    return (
+      <div className="dt-page">
+        <div className="container">
+          <p style={{ padding: 60, textAlign: 'center' }}>분석 이력을 불러오는 중…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'missing' || !item) {
     return (
       <div className="dt-page">
         <div className="container">

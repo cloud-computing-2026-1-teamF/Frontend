@@ -1,28 +1,51 @@
 // Auth modal — Login / Signup. Reads its open/mode from AuthContext so any
 // page can pop it via useAuth().openAuth(...) or window.dispatchEvent.
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Icon } from './Icon';
 import { useAuth } from '../auth/AuthContext';
+import { api, ApiError } from '../api';
 
 type Step = 'form' | 'loading' | 'success';
 
 export function AuthModal() {
-  const { authOpen, authMode, closeAuth, openAuth } = useAuth();
+  const { authOpen, authMode, closeAuth, openAuth, setUser } = useAuth();
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [nick, setNick] = useState('');
   const [agree, setAgree] = useState(false);
   const [step, setStep] = useState<Step>('form');
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  // Reset transient form state whenever the modal closes or the user
+  // switches between login/signup. Without this, an old error or a stale
+  // password lingers when the modal is reopened.
+  useEffect(() => {
+    if (!authOpen) {
+      setEmail(''); setPw(''); setPw2(''); setNick('');
+      setAgree(false); setErrMsg(null); setStep('form');
+    }
+  }, [authOpen]);
+  useEffect(() => { setErrMsg(null); }, [authMode]);
 
   if (!authOpen) return null;
   const isLogin = authMode === 'login';
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
+    setErrMsg(null);
     setStep('loading');
-    setTimeout(() => setStep('success'), 1200);
-    setTimeout(() => { closeAuth(); setStep('form'); }, 2400);
+    try {
+      const res = isLogin
+        ? await api.auth.login({ email, password: pw })
+        : await api.auth.signup({ email, password: pw, name: nick, agree_terms: agree });
+      setUser(res.user);
+      setStep('success');
+      setTimeout(() => { closeAuth(); setStep('form'); }, 1200);
+    } catch (err) {
+      setStep('form');
+      setErrMsg(err instanceof ApiError ? err.message : '요청에 실패했어요. 잠시 후 다시 시도해주세요.');
+    }
   };
 
   return (
@@ -110,10 +133,17 @@ export function AuthModal() {
                   </div>
                 )}
                 <div className="auth-field">
-                  <label>이메일</label>
+                  <label>{isLogin ? '아이디' : '이메일'}</label>
                   <div className="auth-input">
-                    <Icon name="mail" size={14} />
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@example.com" required />
+                    <Icon name={isLogin ? 'users' : 'mail'} size={14} />
+                    <input
+                      type={isLogin ? 'text' : 'email'}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={isLogin ? 'qwer1234' : 'user@example.com'}
+                      autoComplete={isLogin ? 'username' : 'email'}
+                      required
+                    />
                   </div>
                 </div>
                 <div className="auth-field">
@@ -155,6 +185,8 @@ export function AuthModal() {
                     </label>
                   )}
                 </div>
+
+                {errMsg && <div className="auth-error" style={{ marginTop: 4 }}>{errMsg}</div>}
 
                 <button type="submit" className="btn btn-primary auth-submit" disabled={step === 'loading'}>
                   {step === 'loading' ? (
