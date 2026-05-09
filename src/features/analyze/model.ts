@@ -1,4 +1,4 @@
-import type { BusinessType } from '../../api';
+import type { AnalysisRecommendation, BusinessType } from '../../api';
 
 export const FIXED_RADIUS = 500;
 export const DEFAULT_CENTER = { lat: 37.5572, lng: 126.9237 };
@@ -20,6 +20,7 @@ export type AnalyzeArea = {
 };
 
 export type AnalyzeProperty = {
+  vacancyId?: string;
   rank: number;
   addr: string;
   floor: string;
@@ -34,6 +35,7 @@ export type AnalyzeProperty = {
   growth: number;
   lat: number;
   lng: number;
+  distanceM?: number;
 };
 
 export const FALLBACK_BIZ_TYPES: BizType[] = [
@@ -139,8 +141,56 @@ export const buildProperties = (center: { lat: number; lng: number }): AnalyzePr
     lng: center.lng + TOP3_OFFSETS[i].dLng,
   }));
 
+export const buildPropertiesFromRecommendations = (
+  recommendations: AnalysisRecommendation[],
+): AnalyzeProperty[] =>
+  recommendations
+    .slice()
+    .sort((a, b) => a.rank - b.rank)
+    .map(item => {
+      const foot = item.floatingPopulationAnnualTotal
+        ? Math.round(item.floatingPopulationAnnualTotal / 365)
+        : 0;
+      const restaurantCount = item.restaurantCount500m ?? 0;
+      const cafeCount = item.cafeCount500m ?? 0;
+      const area = item.facilityTotalSize ?? item.locationArea ?? 0;
+      const addr = readableLabel(item.businessSubCategoryName)
+        || readableLabel(item.businessMiddleCategoryName)
+        || `공실 ${item.vacancyId}`;
+
+      return {
+        vacancyId: item.vacancyId,
+        rank: item.rank,
+        addr,
+        floor: readableLabel(item.category) || '상가',
+        area: roundOne(area),
+        rent: item.monthlyRent ?? 0,
+        deposit: item.deposit ?? 0,
+        mgmt: item.maintenanceFee ?? 0,
+        score: Math.round(item.score),
+        foot,
+        comp: restaurantCount + cafeCount,
+        rev: Math.round(item.averageSalesPerStore ?? 0),
+        growth: roundOne(item.industryGrowthRate500m ?? 0),
+        lat: item.latitude,
+        lng: item.longitude,
+        distanceM: item.distanceM,
+      };
+    });
+
 export const buildCompetitors = (center: { lat: number; lng: number }) =>
   COMPETITOR_OFFSETS.map(([dLat, dLng]) => ({
     lat: center.lat + dLat,
     lng: center.lng + dLng,
   }));
+
+function roundOne(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function readableLabel(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.toLowerCase() === 'unknown') return undefined;
+  return trimmed;
+}

@@ -1,4 +1,10 @@
-import type { AnalysisEventResponse, AnalysisPollingResponse, BusinessType, CreateAnalysisResponse } from '../../api';
+import type {
+  AnalysisEventResponse,
+  AnalysisPollingResponse,
+  AnalysisRecommendation,
+  BusinessType,
+  CreateAnalysisResponse,
+} from '../../api';
 import type { SavedAnalysis, Top3Item } from '../../lib/savedAnalyses';
 
 const SESSION_KEY = 'sg_backend_analysis_sessions';
@@ -25,6 +31,7 @@ export type AnalysisSession = {
     rentMax?: number;
     maintenanceFeeMax?: number;
   };
+  top3?: Top3Item[];
   error?: {
     code: string;
     message: string;
@@ -44,6 +51,7 @@ type NewSessionInput = {
   lng: number;
   radius: number;
   budget?: AnalysisSession['budget'];
+  recommendations?: AnalysisRecommendation[];
 };
 
 export function createAnalysisSession(input: NewSessionInput): AnalysisSession {
@@ -65,6 +73,7 @@ export function createAnalysisSession(input: NewSessionInput): AnalysisSession {
     lng: input.lng,
     radius: input.radius,
     budget: input.budget,
+    top3: recommendationsToTop3(input.recommendations ?? input.response.recommendations ?? []),
     error: null,
   };
 }
@@ -112,13 +121,26 @@ export function patchAnalysisSessionEvent(id: string | number, event: AnalysisEv
   return next;
 }
 
+export function patchAnalysisSessionTop3(id: string | number, recommendations: AnalysisRecommendation[]): AnalysisSession | undefined {
+  const session = findAnalysisSession(id);
+  if (!session) return undefined;
+  const next: AnalysisSession = {
+    ...session,
+    top3: recommendationsToTop3(recommendations),
+  };
+  upsertAnalysisSession(next);
+  return next;
+}
+
 export function removeAnalysisSession(id: string | number): void {
   writeSessions(readSessions().filter(session => session.id !== String(id)));
 }
 
 export function sessionToSavedAnalysis(session: AnalysisSession): SavedAnalysis {
   const { date, time } = formatDateTime(session.createdAt);
-  const top3 = makeTop3(session.lat, session.lng);
+  const top3 = session.top3 && session.top3.length > 0
+    ? session.top3
+    : makeTop3(session.lat, session.lng);
   return {
     id: session.id,
     date,
@@ -133,7 +155,7 @@ export function sessionToSavedAnalysis(session: AnalysisSession): SavedAnalysis 
     categoryEmoji: session.categoryEmoji,
     budget: formatBudget(session.budget),
     topScore: top3[0].score,
-    count: 0,
+    count: top3.length,
     saved: true,
     top3,
   };
@@ -197,6 +219,45 @@ function makeTop3(lat: number, lng: number): Top3Item[] {
       parking: '상세 데이터 준비 중',
     },
   }));
+}
+
+function recommendationsToTop3(recommendations: AnalysisRecommendation[]): Top3Item[] | undefined {
+  if (recommendations.length === 0) return undefined;
+  return recommendations
+    .slice()
+    .sort((a, b) => a.rank - b.rank)
+    .map(item => {
+      const foot = item.floatingPopulationAnnualTotal
+        ? Math.round(item.floatingPopulationAnnualTotal / 365)
+        : 0;
+      const area = item.facilityTotalSize ?? item.locationArea ?? 0;
+      return {
+        addr: readableLabel(item.businessSubCategoryName) || readableLabel(item.businessMiddleCategoryName) || `공실 ${item.vacancyId}`,
+        floor: readableLabel(item.category) || '상가',
+        area: Math.round(area * 10) / 10,
+        rent: item.monthlyRent ?? 0,
+        deposit: item.deposit ?? 0,
+        mgmt: item.maintenanceFee ?? 0,
+        score: Math.round(item.score),
+        foot,
+        comp: (item.restaurantCount500m ?? 0) + (item.cafeCount500m ?? 0),
+        rev: Math.round(item.averageSalesPerStore ?? 0),
+        growth: Math.round((item.industryGrowthRate500m ?? 0) * 10) / 10,
+        footHourly: makeHourly(foot || 1),
+        nearby: {
+          subway: `${item.distanceM.toLocaleString()}m 이내 후보`,
+          bus: `공실 ID ${item.vacancyId}`,
+          parking: '상세 데이터 준비 중',
+        },
+      };
+    });
+}
+
+function readableLabel(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.toLowerCase() === 'unknown') return undefined;
+  return trimmed;
 }
 
 const HOURLY_BASE = [
