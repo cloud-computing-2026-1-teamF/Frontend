@@ -5,6 +5,7 @@ import {
   ApiError,
   api,
   type AreaSearchHit,
+  type BusinessType,
   type Vacancy,
   type VacancySearchQuery,
   type VacancySearchResponse,
@@ -50,10 +51,12 @@ export function Vacancies() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [collectionNotice, setCollectionNotice] = useState<string | null>(null);
   const [mapItems, setMapItems] = useState<Vacancy[]>([]);
+  const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const collections = useVacancyCollections();
 
   const searchQuery = useMemo<VacancySearchQuery>(() => ({
     areaId: selectedArea?.id,
+    categoryId: filters.categoryId || undefined,
     q: filters.q.trim() || undefined,
     rentMax: numberInput(filters.rentMax),
     depositMax: numberInput(filters.depositMax),
@@ -67,6 +70,7 @@ export function Vacancies() {
   }), [
     filters.areaMax,
     filters.areaMin,
+    filters.categoryId,
     filters.depositMax,
     filters.maintenanceFeeMax,
     filters.q,
@@ -79,6 +83,7 @@ export function Vacancies() {
 
   const mapQuery = useMemo<VacancySearchQuery>(() => ({
     areaId: selectedArea?.id,
+    categoryId: filters.categoryId || undefined,
     q: filters.q.trim() || undefined,
     rentMax: numberInput(filters.rentMax),
     depositMax: numberInput(filters.depositMax),
@@ -92,6 +97,7 @@ export function Vacancies() {
   }), [
     filters.areaMax,
     filters.areaMin,
+    filters.categoryId,
     filters.depositMax,
     filters.maintenanceFeeMax,
     filters.q,
@@ -113,6 +119,14 @@ export function Vacancies() {
     const timer = window.setTimeout(() => setDebouncedMapQuery(mapQuery), 220);
     return () => window.clearTimeout(timer);
   }, [mapQuery]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.catalog.listBusinessTypes()
+      .then(types => { if (!cancelled) setBusinessTypes(types); })
+      .catch(() => { if (!cancelled) setBusinessTypes([]); });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -194,6 +208,7 @@ export function Vacancies() {
 
   const hasFilters = selectedArea !== null ||
     filters.q.trim() !== '' ||
+    filters.categoryId !== '' ||
     filters.rentMax !== '' ||
     filters.depositMax !== '' ||
     filters.maintenanceFeeMax !== '' ||
@@ -290,6 +305,11 @@ export function Vacancies() {
               </div>
 
               <KeywordFilter value={filters.q} onChange={value => updateFilter('q', value)} />
+              <CategoryFilter
+                value={filters.categoryId}
+                options={businessTypes}
+                onChange={value => updateFilter('categoryId', value)}
+              />
               <AreaFilter
                 value={areaQuery}
                 loading={areaLoading}
@@ -454,6 +474,26 @@ function KeywordFilter({ value, onChange }: { value: string; onChange: (value: s
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function CategoryFilter({ value, options, onChange }: {
+  value: string;
+  options: BusinessType[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="vacancy-filter-group">
+      <label htmlFor="vacancy-category">업종 카테고리</label>
+      <select id="vacancy-category" value={value} onChange={event => onChange(event.target.value)}>
+        <option value="">전체 업종 점수</option>
+        {options.map(option => (
+          <option key={option.key} value={option.key}>
+            {option.emoji} {option.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

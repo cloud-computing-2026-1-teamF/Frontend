@@ -2,6 +2,7 @@ import type { VacancySearchResponse, VacancySearchSort } from '../../api';
 
 export type FilterState = {
   q: string;
+  categoryId: string;
   rentMax: string;
   depositMax: string;
   maintenanceFeeMax: string;
@@ -14,7 +15,7 @@ export type FilterState = {
 export type LoadStatus = 'loading' | 'ok' | 'error';
 
 export const PAGE_SIZE = 12;
-export const MAP_PAGE_SIZE = 300;
+export const MAP_PAGE_SIZE = 600;
 
 export const EMPTY_SUMMARY: VacancySearchResponse['summary'] = {
   total: 0,
@@ -38,6 +39,7 @@ export const SORT_OPTIONS: Array<{ value: VacancySearchSort; label: string }> = 
 
 export const defaultFilters: FilterState = {
   q: '',
+  categoryId: '',
   rentMax: '',
   depositMax: '',
   maintenanceFeeMax: '',
@@ -113,22 +115,56 @@ export function formatWon(value?: number | null): string {
   return `${Math.round(numeric).toLocaleString('ko-KR')}원`;
 }
 
-export function vacancyTitle(vacancy: { id: string; businessSubCategoryName?: string | null }): string {
-  return vacancy.businessSubCategoryName || vacancy.id;
+export function compactText(value?: string | null): string | undefined {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+}
+
+export function vacancyTitle(vacancy: {
+  id: string;
+  buildingName?: string | null;
+  roadAddress?: string | null;
+  lotAddress?: string | null;
+  businessSubCategoryName?: string | null;
+  middleBusinessCategory?: string | null;
+}): string {
+  return compactText(vacancy.buildingName)
+    || compactText(vacancy.roadAddress)
+    || compactText(vacancy.lotAddress)
+    || compactText(vacancy.businessSubCategoryName)
+    || compactText(vacancy.middleBusinessCategory)
+    || vacancy.id;
 }
 
 export function vacancySubtitle(vacancy: {
   areaId: string;
+  areaName?: string | null;
+  district?: string | null;
+  dong?: string | null;
+  roadAddress?: string | null;
   businessMiddleCategoryName?: string | null;
+  majorBusinessCategory?: string | null;
   category?: string | null;
 }): string {
-  return `${vacancy.areaId} · ${vacancy.businessMiddleCategoryName ?? vacancy.category ?? '업종 미분류'}`;
+  const area = compactText(vacancy.areaName)
+    || [vacancy.district, vacancy.dong].map(compactText).filter(Boolean).join(' ')
+    || compactText(vacancy.areaId)
+    || '행정동 미확인';
+  const category = compactText(vacancy.businessMiddleCategoryName)
+    || compactText(vacancy.majorBusinessCategory)
+    || compactText(vacancy.category)
+    || '업종 미분류';
+  return `${area} · ${category}`;
 }
 
 export function totalCompetition(vacancy: {
   restaurantCount500m?: number | null;
   cafeCount500m?: number | null;
+  sameCategoryRestaurantCount500m?: number | null;
 }): number {
+  if (vacancy.sameCategoryRestaurantCount500m !== undefined && vacancy.sameCategoryRestaurantCount500m !== null) {
+    return vacancy.sameCategoryRestaurantCount500m;
+  }
   return (vacancy.restaurantCount500m ?? 0) + (vacancy.cafeCount500m ?? 0);
 }
 
@@ -137,8 +173,8 @@ export function rentBurden(vacancy: {
   maintenanceFee?: number | null;
   averageSalesPerStore?: number | null;
 }): number | null {
-  const rent = (vacancy.monthlyRent ?? 0) + (vacancy.maintenanceFee ?? 0);
+  const rentWon = ((vacancy.monthlyRent ?? 0) + (vacancy.maintenanceFee ?? 0)) * 10000;
   const sales = vacancy.averageSalesPerStore ?? null;
   if (!sales || sales <= 0) return null;
-  return (rent / sales) * 100;
+  return (rentWon / sales) * 100;
 }
