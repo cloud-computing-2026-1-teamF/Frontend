@@ -38,7 +38,10 @@ export async function apiRequest<T>(spec: RequestSpec): Promise<ApiEnvelope<T>> 
 }
 
 async function realApiRequest<T>(spec: RequestSpec, allowRefresh: boolean): Promise<ApiEnvelope<T>> {
-  const url = new URL(BASE_URL + spec.path);
+  // Pass `location.origin` as base so relative `BASE_URL` values like "/v1"
+  // (used when Amplify proxies /v1/* to the backend) don't crash the URL
+  // constructor. For absolute URLs the second argument is ignored.
+  const url = new URL(BASE_URL + spec.path, window.location.origin);
   if (spec.query) {
     for (const [k, v] of Object.entries(spec.query)) {
       if (v === undefined || v === null) continue;
