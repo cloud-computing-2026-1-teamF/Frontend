@@ -400,7 +400,7 @@
 
 .vacancy-map-canvas {
   position: relative;
-  height: 230px;
+  height: 300px;
   margin-top: 14px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -409,6 +409,15 @@
     linear-gradient(135deg, rgba(232, 93, 31, .08), transparent 34%),
     linear-gradient(315deg, rgba(15, 181, 166, .10), transparent 36%),
     #F8FAFD;
+}
+
+.vacancy-kakao-canvas {
+  background: #EDF2F7;
+}
+
+.vacancy-kakao-canvas > div:not(.vacancy-map-empty) {
+  position: relative;
+  z-index: 1;
 }
 
 .vacancy-map-grid {
@@ -448,6 +457,8 @@
   color: var(--ink-400);
   font-size: 13px;
   font-weight: 700;
+  z-index: 2;
+  background: rgba(248, 250, 253, .88);
 }
 
 .vacancy-map-dot {
@@ -497,6 +508,117 @@
 .vacancy-score-large.score-low {
   background: var(--amber-500);
   color: var(--ink-900);
+}
+
+.vacancy-kakao-pin {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  filter: drop-shadow(0 8px 14px rgba(16, 24, 40, .22));
+  transform: translateY(-2px);
+  transition: transform .14s ease, filter .14s ease;
+}
+
+.vacancy-kakao-pin::before {
+  content: '';
+  position: absolute;
+  inset: 2px 4px 8px;
+  border: 2px solid #fff;
+  border-radius: 18px 18px 18px 5px;
+  background: var(--brand-600);
+  transform: rotate(-45deg);
+}
+
+.vacancy-kakao-pin.score-mid::before {
+  background: var(--blue-500);
+}
+
+.vacancy-kakao-pin.score-low::before {
+  background: var(--amber-500);
+}
+
+.vacancy-kakao-pin:hover,
+.vacancy-kakao-pin.is-selected {
+  transform: translateY(-6px) scale(1.07);
+  filter: drop-shadow(0 12px 20px rgba(16, 24, 40, .30));
+  z-index: 5;
+}
+
+.vacancy-kakao-pin-score {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--brand-600);
+  font-size: 10px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.vacancy-kakao-pin.score-mid .vacancy-kakao-pin-score {
+  color: var(--blue-500);
+}
+
+.vacancy-kakao-pin.score-low .vacancy-kakao-pin-score {
+  color: #9A6400;
+}
+
+.vacancy-kakao-callout {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  z-index: 6;
+  display: grid;
+  gap: 3px;
+  min-width: 190px;
+  max-width: 240px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: var(--ink-900);
+  color: #fff;
+  text-align: left;
+  transform: translateX(-50%);
+  box-shadow: 0 12px 28px rgba(16, 24, 40, .24);
+}
+
+.vacancy-kakao-callout::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 8px;
+  height: 8px;
+  background: var(--ink-900);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.vacancy-kakao-callout b {
+  overflow: hidden;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vacancy-kakao-callout em {
+  color: var(--brand-400);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
 }
 
 .vacancy-list-panel {
