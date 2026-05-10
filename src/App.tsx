@@ -3,7 +3,8 @@
 // Auth model:
 //   /            - public landing
 //   /analyze     - login required (analyze flow)
-//   /vacancies   - login required (vacancy explorer)
+//   /vacancies   - login required (vacancy explorer + detail + compare)
+//   /shortlist   - login required (saved vacancy shortlist)
 //   /history     - login required (saved + mock history list)
 //   /detail/:id  - login required (single analysis breakdown)
 //

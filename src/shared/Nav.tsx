@@ -8,7 +8,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { useAuth } from '../auth/AuthContext';
 
-type NavProps = { active?: 'home' | 'analyze' | 'vacancies' | 'history' };
+type NavProps = { active?: 'home' | 'analyze' | 'vacancies' | 'shortlist' | 'history' };
 
 export function Nav({ active = 'home' }: NavProps) {
   const { user, logout, openAuth } = useAuth();
@@ -42,6 +42,9 @@ export function Nav({ active = 'home' }: NavProps) {
           </li>
           <li className={active === 'vacancies' ? 'is-active' : ''}>
             <a href="/vacancies" onClick={guard('/vacancies')}>공실 탐색</a>
+          </li>
+          <li className={active === 'shortlist' ? 'is-active' : ''}>
+            <a href="/shortlist" onClick={guard('/shortlist')}>찜 목록</a>
           </li>
           <li className={active === 'history' ? 'is-active' : ''}>
             <a href="/history" onClick={guard('/history')}>분석 이력</a>
@@ -103,6 +106,7 @@ export function Footer() {
               <li><Link to="/analyze">입지 분석</Link></li>
               <li><a href="#">유동인구 히트맵</a></li>
               <li><Link to="/vacancies">공실 탐색</Link></li>
+              <li><Link to="/shortlist">찜 목록</Link></li>
               <li><Link to="/history">분석 이력</Link></li>
             </ul>
           </div>
