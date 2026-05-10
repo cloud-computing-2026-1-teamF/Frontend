@@ -20,6 +20,9 @@ import type {
   CreateAnalysisClientRequest,
   PatchAnalysisRequest,
   UserStats,
+  Vacancy,
+  VacancySearchResponse,
+  VacancySearchSort,
 } from '../types';
 import type { SavedAnalysis, Top3Item } from '../../lib/savedAnalyses';
 import * as store from './store';
@@ -158,6 +161,197 @@ const FAKE_PROPERTIES: Omit<Top3Item, 'footHourly' | 'nearby'>[] = [
   { addr: '서교동 367-12', floor: '1F', area: 33.5, rent: 280, deposit: 3000, mgmt: 15, score: 92, foot: 9200, comp: 3, rev: 1850, growth: 12 },
   { addr: '동교동 154-8',  floor: '1F', area: 28.0, rent: 245, deposit: 2500, mgmt: 12, score: 86, foot: 7800, comp: 5, rev: 1640, growth: 9  },
   { addr: '서교동 401-3',  floor: 'B1', area: 42.0, rent: 210, deposit: 2000, mgmt: 10, score: 79, foot: 6400, comp: 4, rev: 1380, growth: 11 },
+];
+
+const MOCK_VACANCIES: Vacancy[] = [
+  {
+    id: 'vac_mock_001',
+    areaId: '11440540',
+    monthlyRent: 280,
+    deposit: 3000,
+    maintenanceFee: 15,
+    latitude: 37.5531,
+    longitude: 126.9187,
+    survivalScore: 92.4,
+    floatingPopulationAnnualTotal: 3358000,
+    residentPopulationAnnualTotal: 52100,
+    workerPopulationAnnualTotal: 88200,
+    floatingPopulationQuarterlyAverage: 839500,
+    residentPopulationQuarterlyAverage: 13025,
+    workerPopulationQuarterlyAverage: 22050,
+    restaurantCount250m: 12,
+    cafeCount250m: 9,
+    industryGrowthRate250m: 11.2,
+    restaurantCount500m: 31,
+    cafeCount500m: 24,
+    industryGrowthRate500m: 12.1,
+    restaurantCount1000m: 84,
+    cafeCount1000m: 62,
+    industryGrowthRate1000m: 10.3,
+    category: 'food_service',
+    businessMiddleCategoryName: '음식점',
+    businessSubCategoryName: '서교동 1번 공실',
+    multiUseFacility: true,
+    facilityTotalSize: 42.1,
+    locationArea: 33.5,
+    eveningPopulationRatio: 35.2,
+    lateNightPopulationRatio: 18.4,
+    morningPopulationRatio: 12.1,
+    weekendPopulationRatio: 31.8,
+    age2030PopulationRatio: 48.6,
+    age40PlusPopulationRatio: 27.9,
+    femalePopulationRatio: 52.4,
+    residentToFloatingRatio: 0.18,
+    workerToFloatingRatio: 0.27,
+    officialLandPrice: 14100000,
+    closureRate: 6.2,
+    openingRate: 9.4,
+    averageSalesPerStore: 1850,
+    timeBasedSalesRatio: 27.5,
+    createdAt: '2026-01-05T00:00:00.000Z',
+    updatedAt: '2026-05-01T00:00:00.000Z',
+  },
+  {
+    id: 'vac_mock_002',
+    areaId: '11440660',
+    monthlyRent: 245,
+    deposit: 2500,
+    maintenanceFee: 12,
+    latitude: 37.5578,
+    longitude: 126.925,
+    survivalScore: 86.1,
+    floatingPopulationAnnualTotal: 2847000,
+    residentPopulationAnnualTotal: 48900,
+    workerPopulationAnnualTotal: 76400,
+    floatingPopulationQuarterlyAverage: 711750,
+    residentPopulationQuarterlyAverage: 12225,
+    workerPopulationQuarterlyAverage: 19100,
+    restaurantCount250m: 8,
+    cafeCount250m: 7,
+    industryGrowthRate250m: 8.1,
+    restaurantCount500m: 23,
+    cafeCount500m: 19,
+    industryGrowthRate500m: 9.4,
+    restaurantCount1000m: 69,
+    cafeCount1000m: 53,
+    industryGrowthRate1000m: 7.7,
+    category: 'food_service',
+    businessMiddleCategoryName: '음식점',
+    businessSubCategoryName: '동교동 1번 공실',
+    multiUseFacility: false,
+    facilityTotalSize: 36.8,
+    locationArea: 28,
+    eveningPopulationRatio: 32.6,
+    lateNightPopulationRatio: 13.8,
+    morningPopulationRatio: 15.5,
+    weekendPopulationRatio: 29.1,
+    age2030PopulationRatio: 44.3,
+    age40PlusPopulationRatio: 31.7,
+    femalePopulationRatio: 50.9,
+    residentToFloatingRatio: 0.2,
+    workerToFloatingRatio: 0.25,
+    officialLandPrice: 13200000,
+    closureRate: 7.4,
+    openingRate: 8.6,
+    averageSalesPerStore: 1640,
+    timeBasedSalesRatio: 24.2,
+    createdAt: '2026-01-06T00:00:00.000Z',
+    updatedAt: '2026-05-02T00:00:00.000Z',
+  },
+  {
+    id: 'vac_mock_003',
+    areaId: '11440540',
+    monthlyRent: 210,
+    deposit: 2000,
+    maintenanceFee: 10,
+    latitude: 37.5522,
+    longitude: 126.9212,
+    survivalScore: 79.5,
+    floatingPopulationAnnualTotal: 2336000,
+    residentPopulationAnnualTotal: 55200,
+    workerPopulationAnnualTotal: 61200,
+    floatingPopulationQuarterlyAverage: 584000,
+    residentPopulationQuarterlyAverage: 13800,
+    workerPopulationQuarterlyAverage: 15300,
+    restaurantCount250m: 7,
+    cafeCount250m: 4,
+    industryGrowthRate250m: 9.8,
+    restaurantCount500m: 18,
+    cafeCount500m: 13,
+    industryGrowthRate500m: 11.1,
+    restaurantCount1000m: 58,
+    cafeCount1000m: 41,
+    industryGrowthRate1000m: 8.8,
+    category: 'food_service',
+    businessMiddleCategoryName: '음식점',
+    businessSubCategoryName: '서교동 2번 공실',
+    multiUseFacility: false,
+    facilityTotalSize: 49.2,
+    locationArea: 42,
+    eveningPopulationRatio: 28.8,
+    lateNightPopulationRatio: 10.7,
+    morningPopulationRatio: 18.2,
+    weekendPopulationRatio: 34.9,
+    age2030PopulationRatio: 39.6,
+    age40PlusPopulationRatio: 35.1,
+    femalePopulationRatio: 47.5,
+    residentToFloatingRatio: 0.26,
+    workerToFloatingRatio: 0.22,
+    officialLandPrice: 11800000,
+    closureRate: 8.8,
+    openingRate: 7.5,
+    averageSalesPerStore: 1380,
+    timeBasedSalesRatio: 22.4,
+    createdAt: '2026-01-07T00:00:00.000Z',
+    updatedAt: '2026-05-03T00:00:00.000Z',
+  },
+  {
+    id: 'vac_mock_004',
+    areaId: '11680545',
+    monthlyRent: 390,
+    deposit: 5000,
+    maintenanceFee: 28,
+    latitude: 37.5009,
+    longitude: 127.0367,
+    survivalScore: 88.3,
+    floatingPopulationAnnualTotal: 3922000,
+    residentPopulationAnnualTotal: 60300,
+    workerPopulationAnnualTotal: 224000,
+    floatingPopulationQuarterlyAverage: 980500,
+    residentPopulationQuarterlyAverage: 15075,
+    workerPopulationQuarterlyAverage: 56000,
+    restaurantCount250m: 16,
+    cafeCount250m: 13,
+    industryGrowthRate250m: 6.7,
+    restaurantCount500m: 46,
+    cafeCount500m: 37,
+    industryGrowthRate500m: 7.2,
+    restaurantCount1000m: 112,
+    cafeCount1000m: 91,
+    industryGrowthRate1000m: 6.9,
+    category: 'food_service',
+    businessMiddleCategoryName: '음식점',
+    businessSubCategoryName: '역삼1동 1번 공실',
+    multiUseFacility: true,
+    facilityTotalSize: 57.4,
+    locationArea: 45.6,
+    eveningPopulationRatio: 24.5,
+    lateNightPopulationRatio: 8.9,
+    morningPopulationRatio: 21.4,
+    weekendPopulationRatio: 18.2,
+    age2030PopulationRatio: 34.7,
+    age40PlusPopulationRatio: 42.5,
+    femalePopulationRatio: 46.2,
+    residentToFloatingRatio: 0.16,
+    workerToFloatingRatio: 0.57,
+    officialLandPrice: 21300000,
+    closureRate: 5.8,
+    openingRate: 8.1,
+    averageSalesPerStore: 2360,
+    timeBasedSalesRatio: 19.8,
+    createdAt: '2026-01-08T00:00:00.000Z',
+    updatedAt: '2026-05-04T00:00:00.000Z',
+  },
 ];
 
 const handleCreateAnalysis: Handler = (spec) => {
@@ -306,6 +500,114 @@ const handleDeleteAnalysis: Handler = (_spec, params) => {
   return ok({ ok: true });
 };
 
+// ── Vacancies ─────────────────────────────────────────────────────────────
+const handleSearchVacancies: Handler = (spec) => {
+  const u = requireUser();
+  if ('error' in u) return u;
+
+  const q = String(spec.query?.q ?? '').trim().toLowerCase();
+  const areaId = String(spec.query?.areaId ?? '').trim();
+  const rentMax = numberQuery(spec.query?.rentMax);
+  const depositMax = numberQuery(spec.query?.depositMax);
+  const maintenanceFeeMax = numberQuery(spec.query?.maintenanceFeeMax);
+  const scoreMin = numberQuery(spec.query?.scoreMin);
+  const areaMin = numberQuery(spec.query?.areaMin);
+  const areaMax = numberQuery(spec.query?.areaMax);
+  const sort = (spec.query?.sort as VacancySearchSort | undefined) ?? 'score_desc';
+  const page = Math.max(0, Math.floor(numberQuery(spec.query?.page) ?? 0));
+  const size = Math.min(100, Math.max(1, Math.floor(numberQuery(spec.query?.size) ?? 20)));
+
+  const filtered = MOCK_VACANCIES.filter(vacancy => {
+    const searchable = [
+      vacancy.id,
+      vacancy.areaId,
+      vacancy.category,
+      vacancy.businessMiddleCategoryName,
+      vacancy.businessSubCategoryName,
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    return (!q || searchable.includes(q)) &&
+      (!areaId || vacancy.areaId === areaId) &&
+      (rentMax === undefined || Number(vacancy.monthlyRent ?? Infinity) <= rentMax) &&
+      (depositMax === undefined || Number(vacancy.deposit ?? Infinity) <= depositMax) &&
+      (maintenanceFeeMax === undefined || Number(vacancy.maintenanceFee ?? Infinity) <= maintenanceFeeMax) &&
+      (scoreMin === undefined || Number(vacancy.survivalScore ?? -Infinity) >= scoreMin) &&
+      (areaMin === undefined || Number(vacancy.locationArea ?? -Infinity) >= areaMin) &&
+      (areaMax === undefined || Number(vacancy.locationArea ?? Infinity) <= areaMax);
+  });
+
+  const sorted = [...filtered].sort((a, b) => compareVacancies(a, b, sort));
+  const start = page * size;
+  const items = sorted.slice(start, start + size);
+  const res: VacancySearchResponse = {
+    items,
+    total: sorted.length,
+    page,
+    size,
+    totalPages: Math.ceil(sorted.length / size),
+    summary: summarizeVacancies(sorted),
+  };
+  return ok(res);
+};
+
+const handleListVacancies: Handler = (spec) => {
+  const areaId = String(spec.query?.areaId ?? '').trim();
+  const items = areaId ? MOCK_VACANCIES.filter(vacancy => vacancy.areaId === areaId) : MOCK_VACANCIES;
+  return ok(items);
+};
+
+const handleGetVacancy: Handler = (_spec, params) => {
+  const found = MOCK_VACANCIES.find(vacancy => vacancy.id === params.id);
+  return found ? ok(found) : fail(404, 'not_found', `vacancy ${params.id} not found`);
+};
+
+function numberQuery(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function compareVacancies(a: Vacancy, b: Vacancy, sort: VacancySearchSort): number {
+  const desc = (left?: number | null, right?: number | null) => Number(right ?? -Infinity) - Number(left ?? -Infinity);
+  const asc = (left?: number | null, right?: number | null) => Number(left ?? Infinity) - Number(right ?? Infinity);
+  const id = a.id.localeCompare(b.id);
+  if (sort === 'rent_asc') return asc(a.monthlyRent, b.monthlyRent) || desc(a.survivalScore, b.survivalScore) || id;
+  if (sort === 'rent_desc') return desc(a.monthlyRent, b.monthlyRent) || desc(a.survivalScore, b.survivalScore) || id;
+  if (sort === 'deposit_asc') return asc(a.deposit, b.deposit) || desc(a.survivalScore, b.survivalScore) || id;
+  if (sort === 'area_desc') return desc(a.locationArea, b.locationArea) || desc(a.survivalScore, b.survivalScore) || id;
+  if (sort === 'updated_desc') return b.updatedAt.localeCompare(a.updatedAt) || id;
+  return desc(a.survivalScore, b.survivalScore) || id;
+}
+
+function summarizeVacancies(items: Vacancy[]): VacancySearchResponse['summary'] {
+  return {
+    total: items.length,
+    averageScore: average(items.map(item => item.survivalScore)),
+    averageRent: average(items.map(item => item.monthlyRent)),
+    averageDeposit: average(items.map(item => item.deposit)),
+    averageMaintenanceFee: average(items.map(item => item.maintenanceFee)),
+    minRent: min(items.map(item => item.monthlyRent)),
+    maxRent: max(items.map(item => item.monthlyRent)),
+    areaCount: new Set(items.map(item => item.areaId)).size,
+  };
+}
+
+function average(values: Array<number | null | undefined>): number | null {
+  const numbers = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+  if (!numbers.length) return null;
+  return Number((numbers.reduce((sum, value) => sum + value, 0) / numbers.length).toFixed(2));
+}
+
+function min(values: Array<number | null | undefined>): number | null {
+  const numbers = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+  return numbers.length ? Math.min(...numbers) : null;
+}
+
+function max(values: Array<number | null | undefined>): number | null {
+  const numbers = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+  return numbers.length ? Math.max(...numbers) : null;
+}
+
 // ── User stats ────────────────────────────────────────────────────────────
 const handleUserStats: Handler = () => {
   const u = requireUser();
@@ -338,6 +640,10 @@ const ROUTES: Route[] = [
   route('GET /analyses/:id/:section', handleSection),
   route('PATCH /analyses/:id',        handlePatchAnalysis),
   route('DELETE /analyses/:id',       handleDeleteAnalysis),
+
+  route('GET /vacancies/search',      handleSearchVacancies),
+  route('GET /vacancies',             handleListVacancies),
+  route('GET /vacancies/:id',         handleGetVacancy),
 
   route('GET /users/me/stats',        handleUserStats),
 ];

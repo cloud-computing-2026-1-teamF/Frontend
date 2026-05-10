@@ -211,6 +211,97 @@ export type PatchAnalysisRequest = {
   memo?: string;
 };
 
+// ── Vacancies ──────────────────────────────────────────────────────────────
+export type Vacancy = {
+  id: string;
+  areaId: string;
+  monthlyRent?: number | null;
+  deposit?: number | null;
+  maintenanceFee?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  survivalScore?: number | null;
+  floatingPopulationAnnualTotal?: number | null;
+  residentPopulationAnnualTotal?: number | null;
+  workerPopulationAnnualTotal?: number | null;
+  floatingPopulationQuarterlyAverage?: number | null;
+  residentPopulationQuarterlyAverage?: number | null;
+  workerPopulationQuarterlyAverage?: number | null;
+  restaurantCount250m?: number | null;
+  cafeCount250m?: number | null;
+  industryGrowthRate250m?: number | null;
+  restaurantCount500m?: number | null;
+  cafeCount500m?: number | null;
+  industryGrowthRate500m?: number | null;
+  restaurantCount1000m?: number | null;
+  cafeCount1000m?: number | null;
+  industryGrowthRate1000m?: number | null;
+  category?: string | null;
+  businessMiddleCategoryName?: string | null;
+  businessSubCategoryName?: string | null;
+  multiUseFacility?: boolean | null;
+  facilityTotalSize?: number | null;
+  locationArea?: number | null;
+  eveningPopulationRatio?: number | null;
+  lateNightPopulationRatio?: number | null;
+  morningPopulationRatio?: number | null;
+  weekendPopulationRatio?: number | null;
+  age2030PopulationRatio?: number | null;
+  age40PlusPopulationRatio?: number | null;
+  femalePopulationRatio?: number | null;
+  residentToFloatingRatio?: number | null;
+  workerToFloatingRatio?: number | null;
+  officialLandPrice?: number | null;
+  closureRate?: number | null;
+  openingRate?: number | null;
+  averageSalesPerStore?: number | null;
+  timeBasedSalesRatio?: number | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type VacancySearchSort =
+  | 'score_desc'
+  | 'rent_asc'
+  | 'rent_desc'
+  | 'deposit_asc'
+  | 'area_desc'
+  | 'updated_desc';
+
+export type VacancySearchQuery = {
+  areaId?: string;
+  q?: string;
+  rentMax?: number;
+  depositMax?: number;
+  maintenanceFeeMax?: number;
+  scoreMin?: number;
+  areaMin?: number;
+  areaMax?: number;
+  page?: number;
+  size?: number;
+  sort?: VacancySearchSort;
+};
+
+export type VacancySearchSummary = {
+  total: number;
+  averageScore?: number | null;
+  averageRent?: number | null;
+  averageDeposit?: number | null;
+  averageMaintenanceFee?: number | null;
+  minRent?: number | null;
+  maxRent?: number | null;
+  areaCount: number;
+};
+
+export type VacancySearchResponse = {
+  items: Vacancy[];
+  total: number;
+  page: number;
+  size: number;
+  totalPages: number;
+  summary: VacancySearchSummary;
+};
+
 // ── User stats ──────────────────────────────────────────────────────────────
 export type UserStats = {
   total_analyses: number;

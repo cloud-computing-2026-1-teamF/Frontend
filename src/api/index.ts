@@ -25,6 +25,11 @@ import type {
   ListAnalysesResponse,
   PatchAnalysisRequest,
   UserStats,
+  Vacancy,
+  VacancySearchQuery,
+  VacancySearchResponse,
+  VacancySearchSort,
+  VacancySearchSummary,
 } from './types';
 
 export { ApiError } from './types';
@@ -34,6 +39,7 @@ export type {
   AnalysisRecommendation, AnalysisDetail, AnalysisEventResponse, AnalysisPollingResponse, AnalysisRecommendationsSection, AnalysisSectionKey, AnalysisSectionTodo,
   CreateAnalysisResponse, CreateAnalysisRequest, CreateAnalysisClientRequest, ListAnalysesQuery, ListAnalysesResponse,
   PatchAnalysisRequest, UserStats,
+  Vacancy, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary,
 } from './types';
 
 // ── Auth ────────────────────────────────────────────────────────────────────
@@ -131,6 +137,29 @@ export const analysesApi = {
   /** `DELETE /analyses/:id` */
   delete: (id: number | string) =>
     apiRequest<{ ok: true }>({ method: 'DELETE', path: `/analyses/${id}` }).then(r => r.data),
+};
+
+// ── Vacancies ──────────────────────────────────────────────────────────────
+export const vacanciesApi = {
+  /** `GET /vacancies/search` */
+  search: (query: VacancySearchQuery = {}) =>
+    apiRequest<VacancySearchResponse>({
+      method: 'GET',
+      path: '/vacancies/search',
+      query: query as Record<string, unknown>,
+    }).then(r => r.data),
+
+  /** `GET /vacancies` */
+  list: (areaId?: string) =>
+    apiRequest<Vacancy[]>({
+      method: 'GET',
+      path: '/vacancies',
+      query: areaId ? { areaId } : undefined,
+    }).then(r => r.data),
+
+  /** `GET /vacancies/:id` */
+  get: (id: string) =>
+    apiRequest<Vacancy>({ method: 'GET', path: `/vacancies/${id}` }).then(r => r.data),
 };
 
 export const ANALYSIS_SECTION_KEYS: AnalysisSectionKey[] = [
@@ -254,5 +283,6 @@ export const api = {
   auth: authApi,
   catalog: catalogApi,
   analyses: analysesApi,
+  vacancies: vacanciesApi,
   user: userApi,
 };
