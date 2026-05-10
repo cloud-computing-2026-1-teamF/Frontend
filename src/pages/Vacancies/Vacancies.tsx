@@ -5,6 +5,7 @@ import {
   ApiError,
   api,
   type AreaSearchHit,
+  type Vacancy,
   type VacancySearchQuery,
   type VacancySearchResponse,
   type VacancySearchSort,
@@ -27,6 +28,7 @@ import {
   formatCount,
   formatManWon,
   formatScore,
+  MAP_PAGE_SIZE,
   numberInput,
   PAGE_SIZE,
   SORT_OPTIONS,
@@ -47,6 +49,7 @@ export function Vacancies() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [collectionNotice, setCollectionNotice] = useState<string | null>(null);
+  const [mapItems, setMapItems] = useState<Vacancy[]>([]);
   const collections = useVacancyCollections();
 
   const searchQuery = useMemo<VacancySearchQuery>(() => ({
@@ -74,12 +77,42 @@ export function Vacancies() {
     selectedArea?.id,
   ]);
 
+  const mapQuery = useMemo<VacancySearchQuery>(() => ({
+    areaId: selectedArea?.id,
+    q: filters.q.trim() || undefined,
+    rentMax: numberInput(filters.rentMax),
+    depositMax: numberInput(filters.depositMax),
+    maintenanceFeeMax: numberInput(filters.maintenanceFeeMax),
+    scoreMin: numberInput(filters.scoreMin),
+    areaMin: numberInput(filters.areaMin),
+    areaMax: numberInput(filters.areaMax),
+    page: 0,
+    size: MAP_PAGE_SIZE,
+    sort: filters.sort,
+  }), [
+    filters.areaMax,
+    filters.areaMin,
+    filters.depositMax,
+    filters.maintenanceFeeMax,
+    filters.q,
+    filters.rentMax,
+    filters.scoreMin,
+    filters.sort,
+    selectedArea?.id,
+  ]);
+
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+  const [debouncedMapQuery, setDebouncedMapQuery] = useState(mapQuery);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedQuery(searchQuery), 180);
     return () => window.clearTimeout(timer);
   }, [searchQuery]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedMapQuery(mapQuery), 220);
+    return () => window.clearTimeout(timer);
+  }, [mapQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +133,19 @@ export function Vacancies() {
 
     return () => { cancelled = true; };
   }, [debouncedQuery, refreshKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.vacancies.search(debouncedMapQuery)
+      .then(data => {
+        if (!cancelled) setMapItems(data.items);
+      })
+      .catch(() => {
+        if (!cancelled) setMapItems([]);
+      });
+
+    return () => { cancelled = true; };
+  }, [debouncedMapQuery, refreshKey]);
 
   useEffect(() => {
     const keyword = areaQuery.trim();
@@ -130,6 +176,7 @@ export function Vacancies() {
   }, [areaQuery, selectedArea]);
 
   const vacancies = result?.items ?? [];
+  const mapVacancies = mapItems.length > 0 ? mapItems : vacancies;
   const summary = result?.summary ?? EMPTY_SUMMARY;
   const selectedVacancy = useMemo(() => {
     return vacancies.find(vacancy => vacancy.id === selectedId) ?? vacancies[0] ?? null;
@@ -277,7 +324,7 @@ export function Vacancies() {
             </aside>
 
             <section className="vacancy-results-panel">
-              <VacancyMapPanel items={vacancies} selectedId={selectedVacancy?.id ?? null} onSelect={setSelectedId} />
+              <VacancyMapPanel items={mapVacancies} selectedId={selectedVacancy?.id ?? null} onSelect={setSelectedId} />
 
               <div className="vacancy-list-panel">
                 <div className="vacancy-list-head">

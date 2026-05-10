@@ -398,6 +398,37 @@
   font-weight: 800;
 }
 
+.vacancy-map-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  margin-top: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #FAFBFD;
+}
+
+.vacancy-map-toolbar div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vacancy-map-toolbar b {
+  color: var(--ink-900);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.vacancy-map-toolbar span {
+  color: var(--ink-400);
+  font-size: 10px;
+  font-weight: 800;
+}
+
 .vacancy-map-canvas {
   position: relative;
   height: 300px;
@@ -574,6 +605,84 @@
 
 .vacancy-kakao-pin.score-low .vacancy-kakao-pin-score {
   color: #9A6400;
+}
+
+.vacancy-area-cluster {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--brand-600);
+  color: #fff;
+  cursor: pointer;
+  box-shadow:
+    0 14px 30px rgba(16, 24, 40, .24),
+    0 0 0 8px rgba(232, 93, 31, .13);
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+
+.vacancy-area-cluster.size-sm {
+  width: 66px;
+  height: 66px;
+}
+
+.vacancy-area-cluster.size-lg {
+  width: 88px;
+  height: 88px;
+}
+
+.vacancy-area-cluster.score-mid {
+  background: var(--blue-500);
+  box-shadow:
+    0 14px 30px rgba(16, 24, 40, .22),
+    0 0 0 8px rgba(47, 111, 237, .13);
+}
+
+.vacancy-area-cluster.score-low {
+  background: var(--amber-500);
+  color: var(--ink-900);
+  box-shadow:
+    0 14px 30px rgba(16, 24, 40, .20),
+    0 0 0 8px rgba(242, 166, 35, .17);
+}
+
+.vacancy-area-cluster:hover,
+.vacancy-area-cluster.is-selected {
+  z-index: 5;
+  transform: translateY(-4px) scale(1.05);
+  box-shadow:
+    0 18px 36px rgba(16, 24, 40, .30),
+    0 0 0 10px rgba(10, 14, 26, .10);
+}
+
+.vacancy-area-cluster-count {
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 950;
+  line-height: .9;
+  font-variant-numeric: tabular-nums;
+}
+
+.vacancy-area-cluster-label {
+  max-width: 62px;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vacancy-area-cluster em {
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 850;
+  opacity: .84;
 }
 
 .vacancy-kakao-callout {
@@ -1178,6 +1287,11 @@
 
   .vacancy-map-canvas {
     height: 210px;
+  }
+
+  .vacancy-map-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .vacancy-error {

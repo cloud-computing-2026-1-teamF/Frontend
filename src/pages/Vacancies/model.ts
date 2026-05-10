@@ -14,6 +14,7 @@ export type FilterState = {
 export type LoadStatus = 'loading' | 'ok' | 'error';
 
 export const PAGE_SIZE = 12;
+export const MAP_PAGE_SIZE = 300;
 
 export const EMPTY_SUMMARY: VacancySearchResponse['summary'] = {
   total: 0,
