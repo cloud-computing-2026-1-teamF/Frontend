@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Vacancy } from '../../../api';
 import { Icon } from '../../../shared/Icon';
 import {
@@ -10,9 +11,27 @@ import {
   formatScore,
   formatWon,
   scoreClass,
+  vacancySubtitle,
+  vacancyTitle,
 } from '../model';
 
-export function VacancyInspector({ vacancy }: { vacancy: Vacancy | null }) {
+type VacancyInspectorProps = {
+  vacancy: Vacancy | null;
+  isShortlisted?: boolean;
+  isCompared?: boolean;
+  compareDisabled?: boolean;
+  onToggleShortlist?: (id: string) => void;
+  onToggleCompare?: (id: string) => void;
+};
+
+export function VacancyInspector({
+  vacancy,
+  isShortlisted = false,
+  isCompared = false,
+  compareDisabled = false,
+  onToggleShortlist,
+  onToggleCompare,
+}: VacancyInspectorProps) {
   if (!vacancy) {
     return (
       <aside className="vacancy-inspector">
@@ -39,12 +58,31 @@ export function VacancyInspector({ vacancy }: { vacancy: Vacancy | null }) {
       <div className="vacancy-inspector-head">
         <div>
           <span className="vacancy-panel-eyebrow">Selected</span>
-          <h2>{vacancy.businessSubCategoryName ?? vacancy.id}</h2>
-          <p>{vacancy.areaId} · {vacancy.businessMiddleCategoryName ?? vacancy.category ?? '업종 미분류'}</p>
+          <h2>{vacancyTitle(vacancy)}</h2>
+          <p>{vacancySubtitle(vacancy)}</p>
         </div>
         <span className={`vacancy-score-large ${scoreClass(vacancy.survivalScore)}`}>
           {formatScore(vacancy.survivalScore)}
         </span>
+      </div>
+
+      <div className="vacancy-inspector-actions">
+        <button type="button" className={`btn btn-secondary btn-sm ${isShortlisted ? 'is-on' : ''}`} onClick={() => onToggleShortlist?.(vacancy.id)}>
+          <Icon name="bookmark" size={13} />
+          {isShortlisted ? '찜 해제' : '찜하기'}
+        </button>
+        <button
+          type="button"
+          className={`btn btn-secondary btn-sm ${isCompared ? 'is-on' : ''}`}
+          disabled={compareDisabled}
+          onClick={() => onToggleCompare?.(vacancy.id)}
+        >
+          <Icon name={isCompared ? 'check' : 'plus'} size={13} />
+          {isCompared ? '비교 해제' : '비교 추가'}
+        </button>
+        <Link className="btn btn-primary btn-sm" to={`/vacancies/${vacancy.id}`}>
+          상세 보기
+        </Link>
       </div>
 
       <div className="vacancy-price-grid">
@@ -125,4 +163,3 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-

@@ -1,5 +1,8 @@
 import type { KeyboardEvent } from 'react';
+import { Link } from 'react-router-dom';
 import type { Vacancy } from '../../../api';
+import { Icon } from '../../../shared/Icon';
+import { MAX_COMPARE_VACANCIES } from '../../../features/vacancies/collections';
 import {
   formatArea,
   formatCount,
@@ -8,15 +11,29 @@ import {
   formatPeople,
   formatScore,
   scoreClass,
+  vacancySubtitle,
+  vacancyTitle,
 } from '../model';
 
 type VacancyTableProps = {
   items: Vacancy[];
   selectedId: string | null;
+  shortlistIds?: string[];
+  compareIds?: string[];
   onSelect: (id: string) => void;
+  onToggleShortlist?: (id: string) => void;
+  onToggleCompare?: (id: string) => void;
 };
 
-export function VacancyTable({ items, selectedId, onSelect }: VacancyTableProps) {
+export function VacancyTable({
+  items,
+  selectedId,
+  shortlistIds = [],
+  compareIds = [],
+  onSelect,
+  onToggleShortlist,
+  onToggleCompare,
+}: VacancyTableProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, id: string) => {
     if (event.key === 'Enter' || event.key === ' ') onSelect(id);
   };
@@ -26,17 +43,22 @@ export function VacancyTable({ items, selectedId, onSelect }: VacancyTableProps)
       <table className="vacancy-table">
         <thead>
           <tr>
+            <th>비교</th>
             <th>공실</th>
             <th>점수</th>
             <th>임대 조건</th>
             <th>면적</th>
             <th>경쟁</th>
             <th>유동</th>
+            <th>관리</th>
           </tr>
         </thead>
         <tbody>
           {items.map(item => {
             const selected = item.id === selectedId;
+            const isShortlisted = shortlistIds.includes(item.id);
+            const isCompared = compareIds.includes(item.id);
+            const compareDisabled = !isCompared && compareIds.length >= MAX_COMPARE_VACANCIES;
             return (
               <tr
                 key={item.id}
@@ -47,8 +69,23 @@ export function VacancyTable({ items, selectedId, onSelect }: VacancyTableProps)
                 onKeyDown={event => handleKeyDown(event, item.id)}
               >
                 <td>
-                  <div className="vacancy-row-title">{item.businessSubCategoryName ?? item.id}</div>
-                  <div className="vacancy-row-sub">{item.areaId} · {item.businessMiddleCategoryName ?? item.category ?? '업종 미분류'}</div>
+                  <button
+                    type="button"
+                    className={`vacancy-row-check ${isCompared ? 'is-on' : ''}`}
+                    disabled={compareDisabled}
+                    onClick={event => {
+                      event.stopPropagation();
+                      onToggleCompare?.(item.id);
+                    }}
+                    title={compareDisabled ? '비교는 최대 4개까지 가능해요' : '비교 선택'}
+                    aria-pressed={isCompared}
+                  >
+                    <Icon name={isCompared ? 'check' : 'plus'} size={12} />
+                  </button>
+                </td>
+                <td>
+                  <div className="vacancy-row-title">{vacancyTitle(item)}</div>
+                  <div className="vacancy-row-sub">{vacancySubtitle(item)}</div>
                 </td>
                 <td>
                   <span className={`vacancy-score-badge ${scoreClass(item.survivalScore)}`}>
@@ -64,6 +101,29 @@ export function VacancyTable({ items, selectedId, onSelect }: VacancyTableProps)
                 <td>{formatArea(item.locationArea)}</td>
                 <td>{formatCount((item.restaurantCount500m ?? 0) + (item.cafeCount500m ?? 0))}개</td>
                 <td>{formatPeople(item.floatingPopulationQuarterlyAverage)}</td>
+                <td>
+                  <div className="vacancy-row-actions">
+                    <button
+                      type="button"
+                      className={`vacancy-row-action ${isShortlisted ? 'is-on' : ''}`}
+                      onClick={event => {
+                        event.stopPropagation();
+                        onToggleShortlist?.(item.id);
+                      }}
+                      title={isShortlisted ? '찜 해제' : '찜하기'}
+                    >
+                      <Icon name="bookmark" size={13} />
+                    </button>
+                    <Link
+                      className="vacancy-row-action"
+                      to={`/vacancies/${item.id}`}
+                      onClick={event => event.stopPropagation()}
+                      title="상세 보기"
+                    >
+                      <Icon name="eye" size={13} />
+                    </Link>
+                  </div>
+                </td>
               </tr>
             );
           })}
@@ -72,4 +132,3 @@ export function VacancyTable({ items, selectedId, onSelect }: VacancyTableProps)
     </div>
   );
 }
-

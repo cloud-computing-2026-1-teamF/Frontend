@@ -17,6 +17,11 @@ import { VacancyInspector } from './components/VacancyInspector';
 import { VacancyMapPanel } from './components/VacancyMapPanel';
 import { VacancyTable } from './components/VacancyTable';
 import {
+  MAX_COMPARE_VACANCIES,
+  MIN_COMPARE_VACANCIES,
+  useVacancyCollections,
+} from '../../features/vacancies/collections';
+import {
   defaultFilters,
   EMPTY_SUMMARY,
   formatCount,
@@ -41,6 +46,8 @@ export function Vacancies() {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [collectionNotice, setCollectionNotice] = useState<string | null>(null);
+  const collections = useVacancyCollections();
 
   const searchQuery = useMemo<VacancySearchQuery>(() => ({
     areaId: selectedArea?.id,
@@ -175,6 +182,23 @@ export function Vacancies() {
     setPage(0);
   };
 
+  const toggleCompare = (id: string) => {
+    const result = collections.toggleCompare(id);
+    if (!result.ok && result.reason === 'compare_limit') {
+      setCollectionNotice(`비교는 최대 ${MAX_COMPARE_VACANCIES}개까지 가능해요. 기존 선택을 해제한 뒤 다시 선택하세요.`);
+      return;
+    }
+    setCollectionNotice(null);
+  };
+
+  const toggleShortlist = (id: string) => {
+    collections.toggleShortlist(id);
+    setCollectionNotice(null);
+  };
+
+  const selectedIsShortlisted = selectedVacancy ? collections.shortlistIds.includes(selectedVacancy.id) : false;
+  const selectedIsCompared = selectedVacancy ? collections.compareIds.includes(selectedVacancy.id) : false;
+
   return (
     <>
       <main className="vacancy-page">
@@ -289,7 +313,45 @@ export function Vacancies() {
 
                 {vacancies.length > 0 && (
                   <>
-                    <VacancyTable items={vacancies} selectedId={selectedVacancy?.id ?? null} onSelect={setSelectedId} />
+                    <div className="vacancy-collection-strip" aria-label="공실 컬렉션 바로가기">
+                      <div className="vacancy-collection-main">
+                        <span className="vacancy-collection-chip">
+                          <Icon name="check" size={12} />
+                          비교 {collections.compareIds.length}/{MAX_COMPARE_VACANCIES}
+                        </span>
+                        <span className="vacancy-collection-chip">
+                          <Icon name="bookmark" size={12} />
+                          찜 {collections.shortlistIds.length}
+                        </span>
+                        {collectionNotice && <p className="vacancy-collection-notice">{collectionNotice}</p>}
+                      </div>
+                      <div className="vacancy-collection-actions">
+                        <Link
+                          to="/vacancies/compare"
+                          className={`btn btn-secondary btn-sm ${collections.compareIds.length < MIN_COMPARE_VACANCIES ? 'is-disabled' : ''}`}
+                          aria-disabled={collections.compareIds.length < MIN_COMPARE_VACANCIES}
+                        >
+                          비교 보기
+                        </Link>
+                        <Link to="/shortlist" className="btn btn-secondary btn-sm">
+                          찜 목록
+                        </Link>
+                        {collections.compareIds.length > 0 && (
+                          <button type="button" className="btn btn-ghost btn-sm" onClick={collections.clearCompare}>
+                            비교 초기화
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <VacancyTable
+                      items={vacancies}
+                      selectedId={selectedVacancy?.id ?? null}
+                      shortlistIds={collections.shortlistIds}
+                      compareIds={collections.compareIds}
+                      onSelect={setSelectedId}
+                      onToggleShortlist={toggleShortlist}
+                      onToggleCompare={toggleCompare}
+                    />
                     <div className="vacancy-pagination">
                       <button type="button" className="btn btn-secondary btn-sm" disabled={page === 0} onClick={() => setPage(prev => Math.max(0, prev - 1))}>
                         <Icon name="chevron-left" size={13} />
@@ -311,7 +373,14 @@ export function Vacancies() {
               </div>
             </section>
 
-            <VacancyInspector vacancy={selectedVacancy} />
+            <VacancyInspector
+              vacancy={selectedVacancy}
+              isShortlisted={selectedIsShortlisted}
+              isCompared={selectedIsCompared}
+              compareDisabled={!selectedIsCompared && collections.compareIds.length >= MAX_COMPARE_VACANCIES}
+              onToggleShortlist={toggleShortlist}
+              onToggleCompare={toggleCompare}
+            />
           </section>
         </div>
       </main>
@@ -390,4 +459,3 @@ function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return '알 수 없는 오류가 발생했어요.';
 }
-

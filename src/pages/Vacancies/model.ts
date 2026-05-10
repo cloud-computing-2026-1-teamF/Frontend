@@ -53,11 +53,6 @@ export function numberInput(value: string): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-export function percent(value: number, min: number, max: number, low: number, high: number): number {
-  if (!Number.isFinite(min) || !Number.isFinite(max) || max - min === 0) return (low + high) / 2;
-  return low + ((value - min) / (max - min)) * (high - low);
-}
-
 export function scoreClass(score?: number | null): string {
   const value = Number(score ?? 0);
   if (value >= 88) return 'score-high';
@@ -117,3 +112,32 @@ export function formatWon(value?: number | null): string {
   return `${Math.round(numeric).toLocaleString('ko-KR')}원`;
 }
 
+export function vacancyTitle(vacancy: { id: string; businessSubCategoryName?: string | null }): string {
+  return vacancy.businessSubCategoryName || vacancy.id;
+}
+
+export function vacancySubtitle(vacancy: {
+  areaId: string;
+  businessMiddleCategoryName?: string | null;
+  category?: string | null;
+}): string {
+  return `${vacancy.areaId} · ${vacancy.businessMiddleCategoryName ?? vacancy.category ?? '업종 미분류'}`;
+}
+
+export function totalCompetition(vacancy: {
+  restaurantCount500m?: number | null;
+  cafeCount500m?: number | null;
+}): number {
+  return (vacancy.restaurantCount500m ?? 0) + (vacancy.cafeCount500m ?? 0);
+}
+
+export function rentBurden(vacancy: {
+  monthlyRent?: number | null;
+  maintenanceFee?: number | null;
+  averageSalesPerStore?: number | null;
+}): number | null {
+  const rent = (vacancy.monthlyRent ?? 0) + (vacancy.maintenanceFee ?? 0);
+  const sales = vacancy.averageSalesPerStore ?? null;
+  if (!sales || sales <= 0) return null;
+  return (rent / sales) * 100;
+}
