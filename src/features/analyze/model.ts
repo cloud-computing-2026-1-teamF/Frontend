@@ -3,7 +3,7 @@ import type { AnalysisRecommendation, BusinessType } from '../../api';
 export const FIXED_RADIUS = 500;
 export const DEFAULT_CENTER = { lat: 37.5572, lng: 126.9237 };
 
-export type BizKey = 'korean' | 'cafe' | 'chicken' | 'bunsik' | 'bakery' | 'japanese' | 'bar' | 'western' | 'chinese' | 'fastfood';
+export type BizKey = string;
 export type BizType = Pick<BusinessType, 'key' | 'label' | 'emoji'>;
 export type AnalyzePhase = 'idle' | 'analyzing' | 'done' | 'failed';
 
@@ -39,16 +39,15 @@ export type AnalyzeProperty = {
 };
 
 export const FALLBACK_BIZ_TYPES: BizType[] = [
-  { key: 'korean', label: '한식당', emoji: '🍚' },
-  { key: 'cafe', label: '카페', emoji: '☕' },
-  { key: 'chicken', label: '치킨집', emoji: '🍗' },
-  { key: 'bunsik', label: '분식점', emoji: '🍜' },
-  { key: 'bakery', label: '베이커리', emoji: '🥐' },
-  { key: 'japanese', label: '일식', emoji: '🍣' },
-  { key: 'bar', label: '주점', emoji: '🍺' },
-  { key: 'western', label: '양식', emoji: '🍝' },
-  { key: 'chinese', label: '중식', emoji: '🥢' },
-  { key: 'fastfood', label: '패스트푸드', emoji: '🍔' },
+  { key: '1', label: '한식', emoji: '🍚' },
+  { key: '2', label: '중식', emoji: '🥟' },
+  { key: '3', label: '일식', emoji: '🍣' },
+  { key: '4', label: '서양식', emoji: '🍝' },
+  { key: '5', label: '기타', emoji: '🍽️' },
+  { key: '6', label: '구내식당 및 뷔페', emoji: '🥘' },
+  { key: '7', label: '패스트푸드', emoji: '🍔' },
+  { key: '8', label: '주점업', emoji: '🍻' },
+  { key: '9', label: '카페/디저트', emoji: '☕' },
 ];
 
 export function coordAreaId(lat: number, lng: number): string {

@@ -57,7 +57,7 @@ export type RefreshResponse = {
 
 // ── Business types / Areas ──────────────────────────────────────────────────
 export type BusinessType = {
-  key: 'korean' | 'cafe' | 'chicken' | 'bunsik' | 'bakery' | 'japanese' | 'bar' | 'western' | 'chinese' | 'fastfood';
+  key: string;
   label: string;
   emoji: string;
   sortOrder: number;
@@ -215,12 +215,63 @@ export type PatchAnalysisRequest = {
 export type Vacancy = {
   id: string;
   areaId: string;
+  areaName?: string | null;
+  categoryId?: string | null;
+  category?: string | null;
+  recommended?: boolean | null;
   monthlyRent?: number | null;
   deposit?: number | null;
   maintenanceFee?: number | null;
+  premium?: number | null;
+  salePrice?: number | null;
   latitude?: number | null;
   longitude?: number | null;
   survivalScore?: number | null;
+  listingId?: string | null;
+  listingNumber?: string | null;
+  roadAddress?: string | null;
+  lotAddress?: string | null;
+  postalCode?: string | null;
+  buildingName?: string | null;
+  province?: string | null;
+  district?: string | null;
+  dong?: string | null;
+  detailAddress?: string | null;
+  transactionType?: string | null;
+  dedicatedArea?: number | null;
+  supplyArea?: number | null;
+  floor?: string | null;
+  totalFloors?: string | null;
+  basementFloors?: string | null;
+  buildingType?: string | null;
+  buildingUse?: string | null;
+  buildingGrade?: string | null;
+  approvalDate?: string | null;
+  direction?: string | null;
+  elevatorAvailable?: boolean | null;
+  elevatorCount?: number | null;
+  heatingType?: string | null;
+  restroomType?: string | null;
+  restroomCount?: number | null;
+  parkingAvailable?: boolean | null;
+  parkingCount?: number | null;
+  terrace?: boolean | null;
+  rooftop?: boolean | null;
+  interior?: boolean | null;
+  storage?: boolean | null;
+  airConditioner?: boolean | null;
+  heater?: boolean | null;
+  lateNightOperationAvailable?: boolean | null;
+  priceNegotiable?: boolean | null;
+  rentAdjustable?: boolean | null;
+  rentFreePeriodAvailable?: boolean | null;
+  subway?: string | null;
+  brokerageFee?: number | null;
+  brokerageRate?: number | null;
+  viewCount?: number | null;
+  favoriteCount?: number | null;
+  majorBusinessCategory?: string | null;
+  middleBusinessCategory?: string | null;
   floatingPopulationAnnualTotal?: number | null;
   residentPopulationAnnualTotal?: number | null;
   workerPopulationAnnualTotal?: number | null;
@@ -236,7 +287,9 @@ export type Vacancy = {
   restaurantCount1000m?: number | null;
   cafeCount1000m?: number | null;
   industryGrowthRate1000m?: number | null;
-  category?: string | null;
+  sameCategoryRestaurantCount250m?: number | null;
+  sameCategoryRestaurantCount500m?: number | null;
+  sameCategoryRestaurantCount1000m?: number | null;
   businessMiddleCategoryName?: string | null;
   businessSubCategoryName?: string | null;
   multiUseFacility?: boolean | null;
@@ -256,6 +309,15 @@ export type Vacancy = {
   openingRate?: number | null;
   averageSalesPerStore?: number | null;
   timeBasedSalesRatio?: number | null;
+  lateNightSalesRatio?: number | null;
+  weekendSalesRatio?: number | null;
+  age2030SalesRatio?: number | null;
+  femaleSalesRatio?: number | null;
+  totalSpending?: number | null;
+  foodSpending?: number | null;
+  spendingPerStore?: number | null;
+  commercialTurnoverType?: number | null;
+  commercialGrowthType?: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -270,6 +332,7 @@ export type VacancySearchSort =
 
 export type VacancySearchQuery = {
   areaId?: string;
+  categoryId?: string;
   q?: string;
   rentMax?: number;
   depositMax?: number;
