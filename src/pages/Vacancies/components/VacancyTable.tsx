@@ -11,6 +11,7 @@ import {
   formatPeople,
   formatScore,
   scoreClass,
+  totalCompetition,
   vacancySubtitle,
   vacancyTitle,
 } from '../model';
@@ -98,8 +99,8 @@ export function VacancyTable({
                     <span>보 {formatLargeManWon(item.deposit)} · 관 {formatManWon(item.maintenanceFee)}</span>
                   </div>
                 </td>
-                <td>{formatArea(item.locationArea)}</td>
-                <td>{formatCount((item.restaurantCount500m ?? 0) + (item.cafeCount500m ?? 0))}개</td>
+                <td>{formatArea(item.dedicatedArea ?? item.locationArea)}</td>
+                <td>{formatCount(totalCompetition(item))}개</td>
                 <td>{formatPeople(item.floatingPopulationQuarterlyAverage)}</td>
                 <td>
                   <div className="vacancy-row-actions">

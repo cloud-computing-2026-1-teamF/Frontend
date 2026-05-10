@@ -7,20 +7,22 @@ import {
   formatPeople,
   formatPercent,
   formatScore,
+  formatWon,
+  totalCompetition,
 } from '../model';
 
 export function VacancyMetricGrid({ vacancy }: { vacancy: Vacancy }) {
-  const competition = (vacancy.restaurantCount500m ?? 0) + (vacancy.cafeCount500m ?? 0);
+  const competition = totalCompetition(vacancy);
   return (
     <div className="vf-metric-grid">
       <MetricCard label="생존점수" value={formatScore(vacancy.survivalScore)} unit="/100" tone="brand" />
       <MetricCard label="월세" value={formatManWon(vacancy.monthlyRent)} unit="만원" tone="teal" />
       <MetricCard label="보증금" value={formatLargeManWon(vacancy.deposit)} unit="" tone="blue" />
       <MetricCard label="관리비" value={formatManWon(vacancy.maintenanceFee)} unit="만원" tone="amber" />
-      <MetricCard label="전용면적" value={formatArea(vacancy.locationArea)} unit="" />
-      <MetricCard label="경쟁 점포 500m" value={formatCount(competition)} unit="개" />
+      <MetricCard label="전용면적" value={formatArea(vacancy.dedicatedArea ?? vacancy.locationArea)} unit="" />
+      <MetricCard label="동종 경쟁 500m" value={formatCount(competition)} unit="개" />
       <MetricCard label="분기 유동" value={formatPeople(vacancy.floatingPopulationQuarterlyAverage)} unit="" />
-      <MetricCard label="가게당 평균 매출" value={formatManWon(vacancy.averageSalesPerStore)} unit="만원" />
+      <MetricCard label="가게당 평균 매출" value={formatWon(vacancy.averageSalesPerStore)} unit="" />
     </div>
   );
 }
@@ -72,4 +74,3 @@ function normalizedRatio(value: number | null | undefined, max: number): number 
   const ratio = Math.abs(value) <= 1 ? value * 100 : value;
   return Math.min(100, Math.max(0, (ratio / max) * 100));
 }
-

@@ -5,7 +5,7 @@ import {
   useKakaoLoader,
 } from 'react-kakao-maps-sdk';
 import type { Vacancy } from '../../../api';
-import { formatManWon, formatScore, scoreClass } from '../model';
+import { compactText, formatManWon, formatScore, scoreClass, vacancyTitle } from '../model';
 
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.9780 };
 const CLUSTER_LEVEL = 7;
@@ -225,12 +225,12 @@ function VacancyMapPin({ vacancy, score, selected, onClick }: {
       type="button"
       className={`vacancy-kakao-pin ${selected ? 'is-selected' : ''} ${scoreClass(score)}`}
       onClick={onClick}
-      title={vacancy.businessSubCategoryName ?? vacancy.id}
+      title={vacancyTitle(vacancy)}
     >
       <span className="vacancy-kakao-pin-score">{Math.round(score)}</span>
       {selected && (
         <span className="vacancy-kakao-callout">
-          <b>{vacancy.businessSubCategoryName ?? vacancy.id}</b>
+          <b>{vacancyTitle(vacancy)}</b>
           <em>점수 {formatScore(score)} · 월세 {formatManWon(vacancy.monthlyRent)}만</em>
         </span>
       )}
@@ -272,6 +272,11 @@ function buildAreaClusters(points: VacancyPoint[]): AreaCluster[] {
 
 function inferAreaLabel(areaId: string, vacancies: Vacancy[]): string {
   for (const vacancy of vacancies) {
+    const areaNameParts = compactText(vacancy.areaName)?.split(' ') ?? [];
+    const label = compactText(vacancy.dong)
+      || areaNameParts[areaNameParts.length - 1]
+      || compactText(vacancy.district);
+    if (label) return label;
     const match = vacancy.businessSubCategoryName?.match(/^([가-힣0-9]+동)/);
     if (match?.[1]) return match[1];
   }

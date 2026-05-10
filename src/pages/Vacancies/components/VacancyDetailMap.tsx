@@ -5,7 +5,7 @@ import {
   useKakaoLoader,
 } from 'react-kakao-maps-sdk';
 import type { Vacancy } from '../../../api';
-import { formatManWon, formatScore, scoreClass } from '../model';
+import { formatManWon, formatScore, scoreClass, vacancyTitle } from '../model';
 
 type VacancyDetailMapProps = {
   vacancies: Vacancy[];
@@ -61,12 +61,12 @@ export function VacancyDetailMap({ vacancies, selectedId, height = 360, onSelect
                 type="button"
                 className={`vf-map-pin ${vacancy.id === selectedId ? 'is-selected' : ''} ${scoreClass(vacancy.survivalScore)}`}
                 onClick={() => onSelect?.(vacancy.id)}
-                title={vacancy.businessSubCategoryName ?? vacancy.id}
+                title={vacancyTitle(vacancy)}
               >
                 <span>{Math.round(Number(vacancy.survivalScore ?? 0))}</span>
                 {vacancy.id === selectedId && (
                   <em>
-                    <b>{vacancy.businessSubCategoryName ?? vacancy.id}</b>
+                    <b>{vacancyTitle(vacancy)}</b>
                     점수 {formatScore(vacancy.survivalScore)} · 월세 {formatManWon(vacancy.monthlyRent)}만
                   </em>
                 )}

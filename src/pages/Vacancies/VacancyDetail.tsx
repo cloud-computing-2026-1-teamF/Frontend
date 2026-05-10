@@ -103,7 +103,8 @@ export function VacancyDetail() {
                 <div className="vf-tag-row">
                   <span>{vacancy.category ?? '카테고리 미분류'}</span>
                   <span>{vacancy.multiUseFacility ? '다중이용업소' : '일반 공실'}</span>
-                  <span>면적 {formatArea(vacancy.locationArea)}</span>
+                  <span>면적 {formatArea(vacancy.dedicatedArea ?? vacancy.locationArea)}</span>
+                  {vacancy.roadAddress && <span>{vacancy.roadAddress}</span>}
                 </div>
               </div>
             </div>
@@ -183,15 +184,46 @@ export function VacancyDetail() {
             </div>
 
             <aside className="vf-side-stack">
+              <Panel eyebrow="Property" title="매물 정보">
+                <div className="vf-list">
+                  <DetailRow label="도로명주소" value={vacancy.roadAddress || '-'} />
+                  <DetailRow label="지번주소" value={vacancy.lotAddress || '-'} />
+                  <DetailRow label="상세주소" value={vacancy.detailAddress || '-'} />
+                  <DetailRow label="거래유형" value={vacancy.transactionType || '-'} />
+                  <DetailRow label="층 / 총층" value={`${vacancy.floor || '-'} / ${vacancy.totalFloors || '-'}`} />
+                  <DetailRow label="건물유형" value={vacancy.buildingType || '-'} />
+                  <DetailRow label="건물용도" value={vacancy.buildingUse || '-'} />
+                  <DetailRow label="지하철" value={vacancy.subway || '-'} />
+                </div>
+              </Panel>
+
               <Panel eyebrow="Lease" title="임대 조건">
                 <div className="vf-list">
                   <DetailRow label="월세" value={`${formatManWon(vacancy.monthlyRent)}만원`} />
                   <DetailRow label="보증금" value={formatLargeManWon(vacancy.deposit)} />
                   <DetailRow label="관리비" value={`${formatManWon(vacancy.maintenanceFee)}만원`} />
+                  <DetailRow label="권리금" value={formatLargeManWon(vacancy.premium)} />
+                  <DetailRow label="매매가" value={formatLargeManWon(vacancy.salePrice)} />
                   <DetailRow label="임대 부담률" value={burden === null ? '-' : `${burden.toFixed(1)}%`} />
-                  <DetailRow label="소재지 면적" value={formatArea(vacancy.locationArea)} />
+                  <DetailRow label="전용면적" value={formatArea(vacancy.dedicatedArea ?? vacancy.locationArea)} />
+                  <DetailRow label="공급면적" value={formatArea(vacancy.supplyArea)} />
                   <DetailRow label="시설 총규모" value={formatArea(vacancy.facilityTotalSize)} />
                   <DetailRow label="공시지가" value={formatWon(vacancy.officialLandPrice)} />
+                </div>
+              </Panel>
+
+              <Panel eyebrow="Facilities" title="시설 옵션">
+                <div className="vf-list">
+                  <DetailRow label="주차" value={formatBoolean(vacancy.parkingAvailable, vacancy.parkingCount == null ? undefined : `${formatCount(vacancy.parkingCount)}면`)} />
+                  <DetailRow label="엘리베이터" value={formatBoolean(vacancy.elevatorAvailable, vacancy.elevatorCount == null ? undefined : `${formatCount(vacancy.elevatorCount)}대`)} />
+                  <DetailRow label="화장실" value={[vacancy.restroomType, vacancy.restroomCount == null ? null : `${formatCount(vacancy.restroomCount)}개`].filter(Boolean).join(' · ') || '-'} />
+                  <DetailRow label="냉난방" value={[vacancy.heatingType, vacancy.airConditioner ? '에어컨' : null, vacancy.heater ? '난방기' : null].filter(Boolean).join(' · ') || '-'} />
+                  <DetailRow label="운영 옵션" value={[
+                    vacancy.lateNightOperationAvailable ? '심야영업 가능' : null,
+                    vacancy.priceNegotiable ? '가격협의' : null,
+                    vacancy.rentAdjustable ? '임대료 조정' : null,
+                    vacancy.rentFreePeriodAvailable ? '무상임대기간' : null,
+                  ].filter(Boolean).join(' · ') || '-'} />
                 </div>
               </Panel>
 
@@ -201,6 +233,7 @@ export function VacancyDetail() {
                     <thead>
                       <tr>
                         <th>반경</th>
+                        <th>동종</th>
                         <th>식당</th>
                         <th>카페</th>
                         <th>성장률</th>
@@ -209,18 +242,21 @@ export function VacancyDetail() {
                     <tbody>
                       <tr>
                         <td>250m</td>
+                        <td>{formatCount(vacancy.sameCategoryRestaurantCount250m)}</td>
                         <td>{formatCount(vacancy.restaurantCount250m)}</td>
                         <td>{formatCount(vacancy.cafeCount250m)}</td>
                         <td>{formatPercent(vacancy.industryGrowthRate250m)}</td>
                       </tr>
                       <tr>
                         <td>500m</td>
+                        <td>{formatCount(vacancy.sameCategoryRestaurantCount500m)}</td>
                         <td>{formatCount(vacancy.restaurantCount500m)}</td>
                         <td>{formatCount(vacancy.cafeCount500m)}</td>
                         <td>{formatPercent(vacancy.industryGrowthRate500m)}</td>
                       </tr>
                       <tr>
                         <td>1000m</td>
+                        <td>{formatCount(vacancy.sameCategoryRestaurantCount1000m)}</td>
                         <td>{formatCount(vacancy.restaurantCount1000m)}</td>
                         <td>{formatCount(vacancy.cafeCount1000m)}</td>
                         <td>{formatPercent(vacancy.industryGrowthRate1000m)}</td>
@@ -229,17 +265,21 @@ export function VacancyDetail() {
                   </table>
                 </div>
                 <div className="vf-mini-summary">
-                  <DataPoint label="500m 경쟁 합계" value={`${formatCount(totalCompetition(vacancy))}개`} />
+                  <DataPoint label="500m 동종 경쟁" value={`${formatCount(totalCompetition(vacancy))}개`} />
                 </div>
               </Panel>
 
               <Panel eyebrow="Sales" title="매출과 리스크">
                 <div className="vf-list">
-                  <DetailRow label="가게당 평균 매출" value={`${formatManWon(vacancy.averageSalesPerStore)}만원`} />
+                  <DetailRow label="가게당 평균 매출" value={formatWon(vacancy.averageSalesPerStore)} />
                   <DetailRow label="업종 성장률 500m" value={formatPercent(vacancy.industryGrowthRate500m)} />
                   <DetailRow label="개업률" value={formatPercent(vacancy.openingRate)} />
                   <DetailRow label="폐업률" value={formatPercent(vacancy.closureRate)} />
-                  <DetailRow label="시간대 매출 비율" value={formatPercent(vacancy.timeBasedSalesRatio)} />
+                  <DetailRow label="저녁 매출 비율" value={formatPercent(vacancy.timeBasedSalesRatio)} />
+                  <DetailRow label="심야 매출 비율" value={formatPercent(vacancy.lateNightSalesRatio)} />
+                  <DetailRow label="주말 매출 비율" value={formatPercent(vacancy.weekendSalesRatio)} />
+                  <DetailRow label="총 지출" value={formatWon(vacancy.totalSpending)} />
+                  <DetailRow label="음식 지출" value={formatWon(vacancy.foodSpending)} />
                 </div>
               </Panel>
             </aside>
@@ -290,6 +330,12 @@ function DetailRow({ label, value }: { label: string; value: string }) {
       <b>{value}</b>
     </div>
   );
+}
+
+function formatBoolean(value?: boolean | null, detail?: string): string {
+  if (value === null || value === undefined) return '-';
+  if (!value) return '없음';
+  return detail ? `있음 · ${detail}` : '있음';
 }
 
 function EmptyState({ icon, title, description }: { icon: string; title: string; description?: string }) {

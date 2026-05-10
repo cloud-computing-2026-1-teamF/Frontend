@@ -11,6 +11,7 @@ import {
   formatScore,
   formatWon,
   scoreClass,
+  totalCompetition,
   vacancySubtitle,
   vacancyTitle,
 } from '../model';
@@ -44,7 +45,7 @@ export function VacancyInspector({
     );
   }
 
-  const competition = (vacancy.restaurantCount500m ?? 0) + (vacancy.cafeCount500m ?? 0);
+  const competition = totalCompetition(vacancy);
   const factors = [
     { label: '저녁', value: vacancy.eveningPopulationRatio, max: 60, tone: 'brand' },
     { label: '심야', value: vacancy.lateNightPopulationRatio, max: 40, tone: 'blue' },
@@ -89,15 +90,15 @@ export function VacancyInspector({
         <Metric label="월세" value={formatManWon(vacancy.monthlyRent)} unit="만원" />
         <Metric label="보증금" value={formatLargeManWon(vacancy.deposit)} unit="" />
         <Metric label="관리비" value={formatManWon(vacancy.maintenanceFee)} unit="만원" />
-        <Metric label="전용면적" value={formatArea(vacancy.locationArea)} unit="" />
+        <Metric label="전용면적" value={formatArea(vacancy.dedicatedArea ?? vacancy.locationArea)} unit="" />
       </div>
 
       <div className="vacancy-detail-section">
         <h3>상권 밀도</h3>
         <div className="vacancy-density-grid">
+          <Metric label="동종 500m" value={formatCount(vacancy.sameCategoryRestaurantCount500m)} unit="개" />
           <Metric label="식당 500m" value={formatCount(vacancy.restaurantCount500m)} unit="개" />
           <Metric label="카페 500m" value={formatCount(vacancy.cafeCount500m)} unit="개" />
-          <Metric label="경쟁 합계" value={formatCount(competition)} unit="개" />
           <Metric label="성장률" value={formatPercent(vacancy.industryGrowthRate500m)} unit="" />
         </div>
       </div>
@@ -115,7 +116,7 @@ export function VacancyInspector({
         <h3>운영 지표</h3>
         <div className="vacancy-ops-list">
           <DetailRow label="분기 유동" value={formatPeople(vacancy.floatingPopulationQuarterlyAverage)} />
-          <DetailRow label="가게당 평균 매출" value={`${formatManWon(vacancy.averageSalesPerStore)}만원`} />
+          <DetailRow label="가게당 평균 매출" value={formatWon(vacancy.averageSalesPerStore)} />
           <DetailRow label="개업률" value={formatPercent(vacancy.openingRate)} />
           <DetailRow label="폐업률" value={formatPercent(vacancy.closureRate)} />
           <DetailRow label="공시지가" value={formatWon(vacancy.officialLandPrice)} />
