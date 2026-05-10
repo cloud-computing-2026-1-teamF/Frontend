@@ -5,8 +5,9 @@ import { AuthModal } from './shared/AuthModal';
 
 export function Layout() {
   const { pathname } = useLocation();
-  // Nav highlights one of: 'home' / 'analyze' / 'history'.
+  // Nav highlights one of: 'home' / 'analyze' / 'vacancies' / 'history'.
   const active = pathname.startsWith('/analyze') ? 'analyze'
+    : pathname.startsWith('/vacancies') ? 'vacancies'
     : pathname.startsWith('/history') || pathname.startsWith('/detail') ? 'history'
     : 'home';
   return (
