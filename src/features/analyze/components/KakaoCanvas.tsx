@@ -71,10 +71,10 @@ export function KakaoCanvas({
           </CustomOverlayMap>
         ))}
 
-        {showMarkers && properties.map(p => (
+        {showMarkers && spreadDuplicates(properties).map(({ p, lat, lng }) => (
           <CustomOverlayMap
             key={p.rank}
-            position={{ lat: p.lat, lng: p.lng }}
+            position={{ lat, lng }}
             yAnchor={1}
             xAnchor={0.5}
           >
@@ -148,4 +148,35 @@ function NumberedPin({ p, isSel, onClick }: { p: AnalyzeProperty; isSel: boolean
       )}
     </div>
   );
+}
+
+// Backend recommendations can share lat/lng (multiple vacancies inside the
+// same building). Without spreading them out, stacked pins read as a single
+// marker and the user can't see ranks 1/2/3 separately. We detect identical
+// coordinate keys (rounded to ~1m) and push the duplicates onto a small
+// triangle so every pin gets its own visible patch of the map.
+//
+// 0.00006° ≈ ~6m at Seoul's latitude — small enough to stay "in front of the
+// same building" but large enough to read as distinct pins at zoom level 4.
+const COORD_KEY_PRECISION = 5;
+const SPREAD_OFFSETS: ReadonlyArray<{ dLat: number; dLng: number }> = [
+  { dLat: 0, dLng: 0 },
+  { dLat: 0.00006, dLng: 0.00006 },
+  { dLat: -0.00006, dLng: 0.00006 },
+  { dLat: 0.00006, dLng: -0.00006 },
+];
+
+function spreadDuplicates(properties: AnalyzeProperty[]): Array<{
+  p: AnalyzeProperty;
+  lat: number;
+  lng: number;
+}> {
+  const seen = new Map<string, number>();
+  return properties.map(p => {
+    const key = `${p.lat.toFixed(COORD_KEY_PRECISION)},${p.lng.toFixed(COORD_KEY_PRECISION)}`;
+    const dupIndex = seen.get(key) ?? 0;
+    seen.set(key, dupIndex + 1);
+    const offset = SPREAD_OFFSETS[dupIndex] ?? SPREAD_OFFSETS[SPREAD_OFFSETS.length - 1];
+    return { p, lat: p.lat + offset.dLat, lng: p.lng + offset.dLng };
+  });
 }
