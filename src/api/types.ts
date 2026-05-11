@@ -135,6 +135,8 @@ export type AnalysisRecommendation = {
   facilityTotalSize?: number | null;
   locationArea?: number | null;
   category?: string | null;
+  roadAddress?: string | null;
+  lotAddress?: string | null;
   businessMiddleCategoryName?: string | null;
   businessSubCategoryName?: string | null;
   floatingPopulationAnnualTotal?: number | null;

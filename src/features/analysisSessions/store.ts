@@ -232,7 +232,11 @@ function recommendationsToTop3(recommendations: AnalysisRecommendation[]): Top3I
         : 0;
       const area = item.facilityTotalSize ?? item.locationArea ?? 0;
       return {
-        addr: readableLabel(item.businessSubCategoryName) || readableLabel(item.businessMiddleCategoryName) || `공실 ${item.vacancyId}`,
+        addr: readableLabel(item.roadAddress)
+          || readableLabel(item.lotAddress)
+          || readableLabel(item.businessSubCategoryName)
+          || readableLabel(item.businessMiddleCategoryName)
+          || `공실 ${item.vacancyId}`,
         floor: readableLabel(item.category) || '상가',
         area: Math.round(area * 10) / 10,
         rent: item.monthlyRent ?? 0,

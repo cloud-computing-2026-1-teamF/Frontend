@@ -153,7 +153,13 @@ export const buildPropertiesFromRecommendations = (
       const restaurantCount = item.restaurantCount500m ?? 0;
       const cafeCount = item.cafeCount500m ?? 0;
       const area = item.facilityTotalSize ?? item.locationArea ?? 0;
-      const addr = readableLabel(item.businessSubCategoryName)
+      // Surface the actual location first — the business-category labels
+      // ("기타주점", "맥주호프점", …) describe the previous/current tenant,
+      // which is noise for someone scouting a new spot. Fall back to the
+      // legacy category labels only when no address is available.
+      const addr = readableLabel(item.roadAddress)
+        || readableLabel(item.lotAddress)
+        || readableLabel(item.businessSubCategoryName)
         || readableLabel(item.businessMiddleCategoryName)
         || `공실 ${item.vacancyId}`;
 
