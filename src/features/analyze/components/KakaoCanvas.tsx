@@ -151,19 +151,21 @@ function NumberedPin({ p, isSel, onClick }: { p: AnalyzeProperty; isSel: boolean
 }
 
 // Backend recommendations can share lat/lng (multiple vacancies inside the
-// same building). Without spreading them out, stacked pins read as a single
-// marker and the user can't see ranks 1/2/3 separately. We detect identical
-// coordinate keys (rounded to ~1m) and push the duplicates onto a small
-// triangle so every pin gets its own visible patch of the map.
+// same building) or sit within a couple meters of each other. Without
+// spreading them out they read as a single marker on the map even though the
+// side panel shows three results.
 //
-// 0.00006° ≈ ~6m at Seoul's latitude — small enough to stay "in front of the
-// same building" but large enough to read as distinct pins at zoom level 4.
-const COORD_KEY_PRECISION = 5;
+// We bucket near-duplicates at ~25m precision (≈ rounded to 4 decimals at
+// Seoul's latitude) and push the duplicates onto a triangle whose vertices
+// are ~40-55m off the base point. That keeps the pins inside the same block
+// while making each rank visually distinct at the analyze page's zoom 4
+// (~5 m / pixel — 50m is ~10 pixels of gap, more than enough).
+const COORD_KEY_PRECISION = 4;
 const SPREAD_OFFSETS: ReadonlyArray<{ dLat: number; dLng: number }> = [
   { dLat: 0, dLng: 0 },
-  { dLat: 0.00006, dLng: 0.00006 },
-  { dLat: -0.00006, dLng: 0.00006 },
-  { dLat: 0.00006, dLng: -0.00006 },
+  { dLat: 0.00045, dLng: 0.00045 },
+  { dLat: -0.00045, dLng: 0.00045 },
+  { dLat: 0.00045, dLng: -0.00045 },
 ];
 
 function spreadDuplicates(properties: AnalyzeProperty[]): Array<{
