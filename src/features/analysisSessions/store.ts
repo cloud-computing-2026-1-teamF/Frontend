@@ -245,7 +245,8 @@ function recommendationsToTop3(recommendations: AnalysisRecommendation[]): Top3I
         score: Math.round(item.score),
         foot,
         comp: (item.restaurantCount500m ?? 0) + (item.cafeCount500m ?? 0),
-        rev: Math.round(item.averageSalesPerStore ?? 0),
+        // Scale won → 만원 once so the persisted session matches the UI label.
+        rev: Math.round((item.averageSalesPerStore ?? 0) / 10000),
         growth: Math.round((item.industryGrowthRate500m ?? 0) * 10) / 10,
         footHourly: makeHourly(foot || 1),
         nearby: {

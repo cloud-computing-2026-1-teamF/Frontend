@@ -175,7 +175,10 @@ export const buildPropertiesFromRecommendations = (
         score: Math.round(item.score),
         foot,
         comp: restaurantCount + cafeCount,
-        rev: Math.round(item.averageSalesPerStore ?? 0),
+        // Backend ships average_sales_per_store in won; the UI labels this
+        // field as "만원" at every render site, so scale down by 10,000 once
+        // here instead of at each display point.
+        rev: Math.round((item.averageSalesPerStore ?? 0) / 10000),
         growth: roundOne(item.industryGrowthRate500m ?? 0),
         lat: item.latitude,
         lng: item.longitude,
