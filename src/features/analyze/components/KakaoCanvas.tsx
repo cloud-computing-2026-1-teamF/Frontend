@@ -52,7 +52,11 @@ export function KakaoCanvas({
               fillColor="#0A7A5B"
               fillOpacity={0.12}
             />
-            <MapMarker position={{ lat: area.lat, lng: area.lng }} />
+            {/* Hide the default Kakao pin once the recommendation markers are up — the
+                blue marker otherwise sits on top of the numbered pins (different render
+                layer than CustomOverlayMap) and obscures whichever rank shares the
+                center coordinate. */}
+            {!showMarkers && <MapMarker position={{ lat: area.lat, lng: area.lng }} />}
           </>
         )}
 
@@ -89,14 +93,38 @@ export function KakaoCanvas({
 function NumberedPin({ p, isSel, onClick }: { p: AnalyzeProperty; isSel: boolean; onClick: () => void }) {
   const colors = ['#F4B431', '#6B7490', '#D4986B'];
   const c = colors[p.rank - 1] || colors[0];
+  // Selected pin grows ~25% and gets a high-contrast white halo + black ring
+  // so it pops even when the other two pins share a nearby coordinate.
+  const dim = isSel ? { w: 56, h: 72 } : { w: 44, h: 56 };
   return (
-    <div onClick={onClick} style={{ cursor: 'pointer', position: 'relative' }}>
+    <div
+      onClick={onClick}
+      style={{
+        cursor: 'pointer',
+        position: 'relative',
+        transform: isSel ? 'translateY(-4px)' : 'none',
+        transition: 'transform 160ms ease',
+        zIndex: isSel ? 2 : 1,
+      }}
+    >
       <svg
-        width="44" height="56" viewBox="0 0 44 56"
-        style={{ filter: isSel ? 'drop-shadow(0 6px 12px rgba(0,0,0,.35))' : 'drop-shadow(0 3px 6px rgba(0,0,0,.2))' }}
+        width={dim.w} height={dim.h} viewBox="0 0 44 56"
+        style={{ filter: isSel ? 'drop-shadow(0 8px 16px rgba(0,0,0,.4))' : 'drop-shadow(0 3px 6px rgba(0,0,0,.2))' }}
       >
-        <path d="M22 54 Q4 32 4 20 A18 18 0 1 1 40 20 Q40 32 22 54 Z"
-          fill={c} stroke="#fff" strokeWidth="2.5" />
+        {isSel && (
+          <path
+            d="M22 54 Q4 32 4 20 A18 18 0 1 1 40 20 Q40 32 22 54 Z"
+            fill="none"
+            stroke="#0A0E1A"
+            strokeWidth="5"
+          />
+        )}
+        <path
+          d="M22 54 Q4 32 4 20 A18 18 0 1 1 40 20 Q40 32 22 54 Z"
+          fill={c}
+          stroke="#fff"
+          strokeWidth={isSel ? '3' : '2.5'}
+        />
         <circle cx="22" cy="20" r="10" fill="#fff" />
         <text x="22" y="25" textAnchor="middle" fill={c} fontSize="14" fontWeight="800">{p.rank}</text>
       </svg>
