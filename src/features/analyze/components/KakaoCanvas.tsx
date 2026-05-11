@@ -93,41 +93,39 @@ export function KakaoCanvas({
 function NumberedPin({ p, isSel, onClick }: { p: AnalyzeProperty; isSel: boolean; onClick: () => void }) {
   const colors = ['#F4B431', '#6B7490', '#D4986B'];
   const c = colors[p.rank - 1] || colors[0];
-  // Selected pin grows ~25% and gets a high-contrast white halo + black ring
-  // so it pops even when the other two pins share a nearby coordinate.
-  const dim = isSel ? { w: 56, h: 72 } : { w: 44, h: 56 };
+  // Rewritten as a plain styled div instead of an SVG teardrop. The previous
+  // SVG version rendered fine in dev but consistently disappeared for
+  // unselected pins in the deployed Kakao Maps overlay layer (likely due to a
+  // viewBox/clipping interaction with CustomOverlayMap). A simple sized div
+  // with a colored circular badge is reliably visible at every zoom level.
+  const size = isSel ? 52 : 40;
   return (
     <div
       onClick={onClick}
       style={{
         cursor: 'pointer',
         position: 'relative',
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: c,
+        color: '#fff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: isSel ? 22 : 17,
+        fontWeight: 800,
+        border: isSel ? '4px solid #0A0E1A' : '3px solid #fff',
+        boxShadow: isSel
+          ? '0 8px 18px rgba(0,0,0,0.45), 0 0 0 4px rgba(255,255,255,0.95)'
+          : '0 4px 10px rgba(0,0,0,0.3)',
         transform: isSel ? 'translateY(-4px)' : 'none',
-        transition: 'transform 160ms ease',
-        zIndex: isSel ? 2 : 1,
+        transition: 'all 160ms ease',
+        zIndex: isSel ? 10 : 4,
+        userSelect: 'none',
       }}
     >
-      <svg
-        width={dim.w} height={dim.h} viewBox="0 0 44 56"
-        style={{ filter: isSel ? 'drop-shadow(0 8px 16px rgba(0,0,0,.4))' : 'drop-shadow(0 3px 6px rgba(0,0,0,.2))' }}
-      >
-        {isSel && (
-          <path
-            d="M22 54 Q4 32 4 20 A18 18 0 1 1 40 20 Q40 32 22 54 Z"
-            fill="none"
-            stroke="#0A0E1A"
-            strokeWidth="5"
-          />
-        )}
-        <path
-          d="M22 54 Q4 32 4 20 A18 18 0 1 1 40 20 Q40 32 22 54 Z"
-          fill={c}
-          stroke="#fff"
-          strokeWidth={isSel ? '3' : '2.5'}
-        />
-        <circle cx="22" cy="20" r="10" fill="#fff" />
-        <text x="22" y="25" textAnchor="middle" fill={c} fontSize="14" fontWeight="800">{p.rank}</text>
-      </svg>
+      {p.rank}
       {isSel && (
         <div style={{
           position: 'absolute', top: -56, left: '50%', transform: 'translateX(-50%)',
