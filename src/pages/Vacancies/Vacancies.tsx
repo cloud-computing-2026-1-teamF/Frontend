@@ -192,19 +192,36 @@ export function Vacancies() {
   const vacancies = result?.items ?? [];
   const mapVacancies = mapItems.length > 0 ? mapItems : vacancies;
   const summary = result?.summary ?? EMPTY_SUMMARY;
+  // The inspector should be able to show any vacancy the user can click,
+  // including map pins that live outside the current paginated table page.
+  // Look up the selected id in both pools (table page + larger map slice)
+  // before falling back to the first table row.
   const selectedVacancy = useMemo(() => {
-    return vacancies.find(vacancy => vacancy.id === selectedId) ?? vacancies[0] ?? null;
-  }, [selectedId, vacancies]);
+    if (selectedId) {
+      const hit =
+        vacancies.find(vacancy => vacancy.id === selectedId) ??
+        mapVacancies.find(vacancy => vacancy.id === selectedId);
+      if (hit) return hit;
+    }
+    return vacancies[0] ?? mapVacancies[0] ?? null;
+  }, [selectedId, vacancies, mapVacancies]);
 
   useEffect(() => {
-    if (!vacancies.length) {
+    if (!vacancies.length && !mapVacancies.length) {
       setSelectedId(null);
       return;
     }
-    if (!selectedId || !vacancies.some(vacancy => vacancy.id === selectedId)) {
-      setSelectedId(vacancies[0].id);
+    // Keep a map-only selection (pin clicked outside the visible table page)
+    // alive — only reset when the id is missing from BOTH pools.
+    if (
+      selectedId &&
+      (vacancies.some(vacancy => vacancy.id === selectedId) ||
+        mapVacancies.some(vacancy => vacancy.id === selectedId))
+    ) {
+      return;
     }
-  }, [selectedId, vacancies]);
+    setSelectedId(vacancies[0]?.id ?? mapVacancies[0]?.id ?? null);
+  }, [selectedId, vacancies, mapVacancies]);
 
   const hasFilters = selectedArea !== null ||
     filters.q.trim() !== '' ||
