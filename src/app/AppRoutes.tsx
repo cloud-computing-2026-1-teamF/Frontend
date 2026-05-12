@@ -9,12 +9,14 @@ import { Vacancies } from '../pages/Vacancies/Vacancies';
 import { VacancyCompare } from '../pages/Vacancies/VacancyCompare';
 import { VacancyDetail } from '../pages/Vacancies/VacancyDetail';
 import { Shortlist } from '../pages/Vacancies/Shortlist';
+import { KakaoCallback } from '../auth/KakaoCallback';
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Landing />} />
+        <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/analyze" element={<Analyze />} />
           <Route path="/vacancies" element={<Vacancies />} />

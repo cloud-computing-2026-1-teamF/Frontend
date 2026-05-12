@@ -71,6 +71,13 @@ export const authApi = {
     return Promise.resolve({ ok: true });
   },
 
+  /** `POST /auth/kakao` */
+  kakaoLogin: (code: string) =>
+    apiRequest<AuthLoginResponse>({ method: 'POST', path: '/auth/kakao', body: { code } }).then(r => {
+      setAccessToken(r.data.tokens.accessToken);
+      return r.data;
+    }),
+
   /** `GET /auth/me` */
   me: () =>
     apiRequest<{ user: AuthUser }>({ method: 'GET', path: '/auth/me' }).then(r => r.data.user),

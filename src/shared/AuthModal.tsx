@@ -106,7 +106,11 @@ export function AuthModal() {
               </div>
 
               <div className="auth-social">
-                <button className="auth-social-btn">
+                <button className="auth-social-btn" onClick={() => {
+                  const kakaoClientId = import.meta.env.VITE_KAKAO_CLIENT_ID;
+                  const redirectUri = encodeURIComponent(import.meta.env.VITE_KAKAO_REDIRECT_URI || 'http://localhost:5174/auth/kakao/callback');
+                  window.location.href = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${kakaoClientId}&redirect_uri=${redirectUri}`;
+                }}>
                   <span className="auth-social-ico" style={{ background: '#FEE500' }}>
                     <svg viewBox="0 0 24 24" width="14" height="14"><path fill="#000" d="M12 3C6.48 3 2 6.48 2 10.8c0 2.74 1.79 5.14 4.5 6.54l-1.13 4.16c-.1.37.32.65.65.45L11 19.36c.33.04.66.04 1 .04 5.52 0 10-3.48 10-7.6S17.52 3 12 3z" /></svg>
                   </span>
