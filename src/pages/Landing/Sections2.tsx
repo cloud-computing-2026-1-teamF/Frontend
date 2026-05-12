@@ -81,7 +81,7 @@ export function FinalCTA() {
           <div className="cta-text">
             <div className="eyebrow" style={{ color: '#F26B2E' }}>요식업 창업, 지금 시작하세요</div>
             <h2>
-              카페·한식·치킨 어떤 업종이든<br />
+              카페/디저트·한식·패스트푸드 어떤 업종이든<br />
               지도에 위치만 찍으면 끝.
             </h2>
             <p>업종 선택 → 지도에서 마커 픽 → 마커 주변 Top 3 공실매물 추천. 독립 창업자 전용 서비스예요.</p>
