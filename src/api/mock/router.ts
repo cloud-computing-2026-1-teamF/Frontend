@@ -433,7 +433,11 @@ const handleListAnalyses: Handler = (spec) => {
   const savedFilter = spec.query?.saved as boolean | undefined;
   const limit = Number(spec.query?.limit ?? 50);
 
-  let items: AnalysisListItem[] = store.listAnalyses();
+  // The mock branch only ever returns the rich SavedAnalysis seed shape, so
+  // narrow locally to access SavedAnalysis-only fields without union noise.
+  // AnalysisListItem is widened (SavedAnalysis | AnalysisPollingResponse) to
+  // accommodate the real backend list response on the live transport.
+  let items: SavedAnalysis[] = store.listAnalyses();
   if (q) {
     items = items.filter(it =>
       it.region.includes(q) || it.category.includes(q) ||
