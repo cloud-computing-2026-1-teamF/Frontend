@@ -293,10 +293,35 @@ export const userApi = {
     apiRequest<UserStats>({ method: 'GET', path: '/users/me/stats' }).then(r => r.data),
 };
 
+// ── Shortlist ───────────────────────────────────────────────────────────────
+type ShortlistRow = { vacancyId: string; createdAt: string };
+
+export const shortlistApi = {
+  /** `GET /users/me/shortlist` */
+  list: () =>
+    apiRequest<{ items: ShortlistRow[] }>({ method: 'GET', path: '/users/me/shortlist' })
+      .then(r => r.data.items),
+
+  /** `POST /users/me/shortlist/:vacancyId` — idempotent */
+  add: (vacancyId: string) =>
+    apiRequest<ShortlistRow>({
+      method: 'POST',
+      path: `/users/me/shortlist/${encodeURIComponent(vacancyId)}`,
+    }).then(r => r.data),
+
+  /** `DELETE /users/me/shortlist/:vacancyId` — idempotent */
+  remove: (vacancyId: string) =>
+    apiRequest<{ ok: boolean }>({
+      method: 'DELETE',
+      path: `/users/me/shortlist/${encodeURIComponent(vacancyId)}`,
+    }).then(r => r.data),
+};
+
 export const api = {
   auth: authApi,
   catalog: catalogApi,
   analyses: analysesApi,
   vacancies: vacanciesApi,
   user: userApi,
+  shortlist: shortlistApi,
 };
