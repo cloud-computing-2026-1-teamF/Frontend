@@ -75,16 +75,18 @@ export function History() {
 
   const handleDelete = async (id: number | string) => {
     if (!window.confirm('이 분석 이력을 삭제할까요?')) return;
-    if (!USE_MOCK) {
-      removeAnalysisSession(id);
+    try {
+      // Hit the backend first so the row is actually gone from RDS — without
+      // this, a reload re-fetches the analysis via GET /v1/analyses and the
+      // "deleted" card reappears. The local session cache is then cleared so
+      // the optimistic UI matches.
+      await api.analyses.delete(id);
+      if (!USE_MOCK) removeAnalysisSession(id);
       setSessions(prev => prev.filter(it => it.id !== String(id)));
       setItems(prev => prev.filter(it => String(it.id) !== String(id)));
-      return;
+    } catch {
+      // Keep current list on failure; user can retry.
     }
-    try {
-      await api.analyses.delete(id);
-      setItems(prev => prev.filter(it => String(it.id) !== String(id)));
-    } catch { /* keep current list on failure */ }
   };
 
   const sessionById = useMemo(() => new Map(sessions.map(session => [session.id, session])), [sessions]);
