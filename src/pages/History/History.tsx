@@ -4,10 +4,19 @@ import './history.css';
 import { Icon } from '../../shared/Icon';
 import { Footer } from '../../shared/Nav';
 import type { SavedAnalysis } from '../../lib/savedAnalyses';
-import type { AnalysisPollingResponse } from '../../api/types';
+import type {
+  AnalysisListItem,
+  AnalysisPollingResponse,
+  BusinessType,
+} from '../../api/types';
 import { api } from '../../api';
 import { USE_MOCK } from '../../api/client';
-import { removeAnalysisSession } from '../../features/analysisSessions/store';
+import {
+  type AnalysisSession,
+  listAnalysisSessions,
+  removeAnalysisSession,
+  sessionToSavedAnalysis,
+} from '../../features/analysisSessions/store';
 
 const AVG_FOOT = 7500;
 const AVG_COMP = 5;
@@ -33,71 +42,88 @@ export function History() {
     if (USE_MOCK) {
       setPollById(new Map());
       api.analyses.list({ sort, q: q || undefined })
-        .then(res => { if (!cancelled) setItems(res.items); })
+        .then(res => { if (!cancelled) setItems(res.items as SavedAnalysis[]); })
         .catch(() => { if (!cancelled) setItems([]); })
         .finally(() => { if (!cancelled) setLoading(false); });
-      return () => { cancelled = true; };
+      return () => { cancelled = true };
     }
 
-    api.analyses.list({ sort, q: q || undefined, limit: 200 })
-      .then(async res => {
+    const localSessions = filterSessions(listAnalysisSessions(), q, sort);
+    setItems(localSessions.map(sessionToSavedAnalysis));
+    setPollById(new Map());
+    setLoading(localSessions.length === 0);
+
+    Promise.all([
+      api.analyses.list({ sort, q: q || undefined, limit: 200 }).catch(() => null),
+      api.catalog.listBusinessTypes().catch(() => [] as BusinessType[]),
+    ]).then(async ([backendList, businessTypes]) => {
+      if (cancelled) return;
+
+      if (!backendList) {
+        const polls = await Promise.all(
+          localSessions.map(s => api.analyses.poll(s.id).catch(() => null)),
+        );
         if (cancelled) return;
-        let list = res.items;
-        const keyword = q.trim();
-        if (keyword) {
-          list = list.filter(it =>
-            it.region.includes(keyword)
-            || it.category.includes(keyword)
-            || `${it.region} ${it.category} 입지 분석`.includes(keyword));
-        }
-        list = [...list].sort((a, b) =>
-          sort === 'score' ? b.topScore - a.topScore : b.date.localeCompare(a.date));
-
-        setItems(list);
-
-        const polls = await Promise.all(list.map(it =>
-          api.analyses.poll(it.id).catch(() => null)));
-
-        if (cancelled) return;
-
         const nextMap = new Map<string, AnalysisPollingResponse>();
-        list.forEach((it, i) => {
+        localSessions.forEach((session, i) => {
           const p = polls[i];
-          if (p) nextMap.set(String(it.id), p);
+          if (p) nextMap.set(String(session.id), p);
         });
         setPollById(nextMap);
         setLoading(false);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setItems([]);
-          setPollById(new Map());
-          setLoading(false);
-        }
+        return;
+      }
+
+      const backendIds = new Set(backendList.items.map(item => String(item.id)));
+      listAnalysisSessions().forEach(session => {
+        if (!backendIds.has(session.id)) removeAnalysisSession(session.id);
       });
 
-    return () => { cancelled = true; };
+      const cachedById = new Map(listAnalysisSessions().map(s => [s.id, s]));
+
+      const mergedSessions = backendList.items.map(item =>
+        listItemToSession(item, businessTypes, cachedById),
+      );
+
+      const filtered = filterSessions(mergedSessions, q, sort);
+      setItems(filtered.map(sessionToSavedAnalysis));
+      setLoading(false);
+
+      const polls = await Promise.all(
+        filtered.map(s => api.analyses.poll(s.id).catch(() => null)),
+      );
+      if (cancelled) return;
+      const nextMap = new Map<string, AnalysisPollingResponse>();
+      filtered.forEach((session, i) => {
+        const p = polls[i];
+        if (p) nextMap.set(String(session.id), p);
+      });
+      setPollById(nextMap);
+    });
+
+    return () => { cancelled = true };
   }, [sort, q]);
 
   const handleDelete = async (id: number | string) => {
     if (!window.confirm('이 분석 이력을 삭제할까요?')) return;
-    if (!USE_MOCK) {
+    const sid = String(id);
+    if (USE_MOCK) {
       try {
         await api.analyses.delete(id);
-        removeAnalysisSession(id);
-        setItems(prev => prev.filter(it => String(it.id) !== String(id)));
-        setPollById(prev => {
-          const n = new Map(prev);
-          n.delete(String(id));
-          return n;
-        });
-      } catch { /* 목록 유지 */ }
+        setItems(prev => prev.filter(it => String(it.id) !== sid));
+      } catch { /* keep list */ }
       return;
     }
     try {
       await api.analyses.delete(id);
-      setItems(prev => prev.filter(it => String(it.id) !== String(id)));
-    } catch { /* keep current list on failure */ }
+      removeAnalysisSession(id);
+      setItems(prev => prev.filter(it => String(it.id) !== sid));
+      setPollById(prev => {
+        const n = new Map(prev);
+        n.delete(sid);
+        return n;
+      });
+    } catch { /* keep list */ }
   };
 
   const decorated: HistoryItem[] = useMemo(() => items.map(it => {
@@ -129,7 +155,7 @@ export function History() {
             <div className="hist-title-row">
               <div>
                 <h1>분석 이력</h1>
-                <p>{USE_MOCK ? '지금까지 분석한 상권과 공실매물을 다시 살펴보고 비교할 수 있어요.' : '서버에 저장된 분석 이력을 불러옵니다. 진행 상태는 분석 작업 폴링으로 갱신돼요.'}</p>
+                <p>{USE_MOCK ? '지금까지 분석한 상권과 공실매물을 다시 살펴보고 비교할 수 있어요.' : '서버에 저장된 분석 이력을 불러오고, 진행 상태는 폴링으로 갱신해요.'}</p>
               </div>
               <Link to="/analyze" className="btn btn-primary">
                 <Icon name="plus" size={14} />
@@ -142,7 +168,7 @@ export function History() {
             <div className="hist-search">
               <Icon name="search" size={15} />
               <input value={q} onChange={e => setQ(e.target.value)} placeholder="상권 / 업종 / 지역으로 검색" />
-              {q && <button onClick={() => setQ('')}><Icon name="close" size={12} /></button>}
+              {q && <button type="button" onClick={() => setQ('')}><Icon name="close" size={12} /></button>}
             </div>
             <div className="hist-sort">
               <span>정렬</span>
@@ -175,6 +201,100 @@ export function History() {
       <Footer />
     </>
   );
+}
+
+function isSavedAnalysisRow(item: AnalysisListItem): item is SavedAnalysis {
+  return 'region' in item && 'top3' in item && Array.isArray((item as SavedAnalysis).top3);
+}
+
+function savedAnalysisRowToSession(row: SavedAnalysis): AnalysisSession {
+  return {
+    id: String(row.id),
+    createdAt: `${row.date}T${row.time}:00.000Z`,
+    completedAt: null,
+    status: 'done',
+    progress: 100,
+    stepLabel: null,
+    businessType: 'korean',
+    category: row.category,
+    categoryEmoji: row.categoryEmoji,
+    areaId: '',
+    areaName: row.region,
+    region: row.region,
+    roadAddress: row.regionDetail ?? '',
+    lat: row.centerLat ?? 0,
+    lng: row.centerLng ?? 0,
+    radius: row.radius ?? 500,
+    budget: undefined,
+    top3: row.top3,
+    error: null,
+  };
+}
+
+function listItemToSession(
+  item: AnalysisListItem,
+  businessTypes: BusinessType[],
+  cachedById: Map<string, AnalysisSession>,
+): AnalysisSession {
+  const id = String(item.id);
+  const cached = cachedById.get(id);
+  if (cached) return cached;
+  if (isSavedAnalysisRow(item)) {
+    return savedAnalysisRowToSession(item);
+  }
+  return buildSessionFromBackend(item as AnalysisPollingResponse, businessTypes);
+}
+
+function buildSessionFromBackend(
+  item: AnalysisPollingResponse,
+  businessTypes: BusinessType[],
+): AnalysisSession {
+  const biz = businessTypes.find(b => b.key === item.businessTypeKey);
+  return {
+    id: item.id,
+    createdAt: item.createdAt,
+    completedAt: item.completedAt ?? null,
+    status: item.status,
+    progress: item.progress,
+    stepLabel: item.step?.label ?? null,
+    businessType: (item.businessTypeKey ?? 'korean') as BusinessType['key'],
+    category: biz?.label ?? '업종 미상',
+    categoryEmoji: biz?.emoji ?? '📍',
+    areaId: '',
+    areaName: '저장된 분석',
+    region: '',
+    roadAddress: '',
+    lat: item.centerLat ?? 0,
+    lng: item.centerLng ?? 0,
+    radius: item.radiusM ?? 500,
+    budget: {
+      depositMax: item.budgetDepositMax ?? undefined,
+      rentMax: item.budgetRentMax ?? undefined,
+      maintenanceFeeMax: item.budgetMaintenanceFeeMax ?? undefined,
+    },
+    top3: item.topScore != null
+      ? [{
+        addr: '저장된 추천 매물',
+        score: item.topScore,
+        rent: 0, deposit: 0, mgmt: 0, area: 0,
+        floor: '상가',
+        foot: 0, comp: 0, rev: 0, growth: 0,
+        footHourly: [] as number[],
+        nearby: { subway: '', bus: '', parking: '' },
+      }]
+      : [],
+    error: item.error,
+  };
+}
+
+function filterSessions(sessions: AnalysisSession[], keywordRaw: string, sort: 'recent' | 'score'): AnalysisSession[] {
+  const keyword = keywordRaw.trim();
+  const filtered = keyword
+    ? sessions.filter(session =>
+      `${session.areaName} ${session.category} ${session.roadAddress}`.includes(keyword))
+    : sessions;
+  return [...filtered].sort((a, b) =>
+    sort === 'score' ? b.progress - a.progress : b.createdAt.localeCompare(a.createdAt));
 }
 
 function statusLabel(status: AnalysisPollingResponse['status']) {
@@ -228,7 +348,7 @@ function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: num
         <div className="hc-top3-lab">추천 Top 3</div>
         <div className="hc-top3">
           {item.top3.map((p, i) => (
-            <div className="hc-row" key={p.addr}>
+            <div className="hc-row" key={`${item.id}-${p.addr}-${i}`}>
               <div className="hc-rank" style={{ background: colors[i] }}>{i + 1}</div>
               <div className="hc-addr">{p.addr}</div>
               <div className="hc-score"><b className="num">{p.score}</b><span>/100</span></div>
@@ -242,10 +362,10 @@ function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: num
           <div className="hc-score-num num">{item.topScore}</div>
           <div className="hc-score-lab">최고 생존율</div>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={openDetail}>
+        <button type="button" className="btn btn-primary btn-sm" onClick={openDetail}>
           상세 보기 <Icon name="arrow-right" size={12} />
         </button>
-        <button className="hc-delete-btn" title="삭제" onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}>
+        <button type="button" className="hc-delete-btn" title="삭제" onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}>
           <Icon name="trash" size={13} />
           <span>삭제</span>
         </button>

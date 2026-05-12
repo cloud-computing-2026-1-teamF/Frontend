@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api } from '../../api';
+import { ApiError, shortlistApi } from '../../api';
 
-const SHORTLIST_KEY = 'sanggwon_shortlisted_vacancy_ids';
+// `shortlistIds` is persisted server-side via /v1/users/me/shortlist; we keep a
+// per-tab in-memory mirror that the UI subscribes to. `compareIds` stays in
+// localStorage (scratch list for the compare workflow).
+
 const COMPARE_KEY = 'sanggwon_compare_vacancy_ids';
 const COLLECTION_EVENT = 'sanggwon:vacancy-collections-changed';
 
@@ -15,52 +18,96 @@ export type VacancyCollectionState = {
 
 export type ToggleResult = {
   ok: boolean;
-  reason?: 'compare_limit';
+  reason?: 'compare_limit' | 'network_error';
 };
 
+let shortlistCache: string[] = [];
+let shortlistReady = false;
+let shortlistInFlight: Promise<string[]> | null = null;
+
+function dispatchChange() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(COLLECTION_EVENT));
+  }
+}
+
+async function fetchShortlist(): Promise<string[]> {
+  if (shortlistInFlight) return shortlistInFlight;
+  shortlistInFlight = shortlistApi.list()
+    .then(rows => {
+      shortlistCache = rows.map(r => r.vacancyId);
+      shortlistReady = true;
+      dispatchChange();
+      return shortlistCache;
+    })
+    .catch((err: unknown) => {
+      if (err instanceof ApiError && err.status === 401) {
+        shortlistCache = [];
+      }
+      shortlistReady = true;
+      dispatchChange();
+      return shortlistCache;
+    })
+    .finally(() => { shortlistInFlight = null; });
+  return shortlistInFlight;
+}
+
 export function useVacancyCollections() {
-  const [state, setState] = useState<VacancyCollectionState>(() => readVacancyCollections());
+  const [state, setState] = useState<VacancyCollectionState>(() => ({
+    shortlistIds: shortlistCache,
+    compareIds: readIds(COMPARE_KEY),
+  }));
 
   useEffect(() => {
-    const refresh = () => setState(readVacancyCollections());
+    const refresh = () => setState({
+      shortlistIds: shortlistCache,
+      compareIds: readIds(COMPARE_KEY),
+    });
     window.addEventListener('storage', refresh);
     window.addEventListener(COLLECTION_EVENT, refresh);
+    if (!shortlistReady) {
+      void fetchShortlist();
+    }
     return () => {
       window.removeEventListener('storage', refresh);
       window.removeEventListener(COLLECTION_EVENT, refresh);
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    api.vacancies.getShortlist()
-      .then(ids => {
-        if (cancelled) return;
-        writeIds(SHORTLIST_KEY, ids);
-      })
-      .catch(() => { /* 미로그인·오프라인 등은 로컬 목록 유지 */ });
-    return () => { cancelled = true };
+  const toggleShortlist = useCallback(async (id: string): Promise<ToggleResult> => {
+    const isShortlisted = shortlistCache.includes(id);
+    const previous = shortlistCache;
+    shortlistCache = isShortlisted
+      ? shortlistCache.filter(current => current !== id)
+      : [...shortlistCache, id];
+    dispatchChange();
+    try {
+      if (isShortlisted) {
+        await shortlistApi.remove(id);
+      } else {
+        await shortlistApi.add(id);
+      }
+      return { ok: true };
+    } catch (err) {
+      shortlistCache = previous;
+      dispatchChange();
+      return {
+        ok: false,
+        reason: err instanceof ApiError && err.status === 401 ? undefined : 'network_error',
+      };
+    }
   }, []);
 
-  const toggleShortlist = useCallback((id: string): ToggleResult => {
-    const prev = readIds(SHORTLIST_KEY);
-    const next = toggleId(prev, id);
-    writeIds(SHORTLIST_KEY, next);
-    void api.vacancies.putShortlist(next).catch(() => {
-      writeIds(SHORTLIST_KEY, prev);
-      window.dispatchEvent(new Event(COLLECTION_EVENT));
-    });
-    return { ok: true };
-  }, []);
-
-  const removeShortlist = useCallback((id: string) => {
-    const prev = readIds(SHORTLIST_KEY);
-    const next = prev.filter(current => current !== id);
-    writeIds(SHORTLIST_KEY, next);
-    void api.vacancies.putShortlist(next).catch(() => {
-      writeIds(SHORTLIST_KEY, prev);
-      window.dispatchEvent(new Event(COLLECTION_EVENT));
-    });
+  const removeShortlist = useCallback(async (id: string) => {
+    const previous = shortlistCache;
+    shortlistCache = shortlistCache.filter(current => current !== id);
+    dispatchChange();
+    try {
+      await shortlistApi.remove(id);
+    } catch {
+      shortlistCache = previous;
+      dispatchChange();
+    }
   }, []);
 
   const toggleCompare = useCallback((id: string): ToggleResult => {
@@ -96,13 +143,9 @@ export function useVacancyCollections() {
 
 export function readVacancyCollections(): VacancyCollectionState {
   return {
-    shortlistIds: readIds(SHORTLIST_KEY),
+    shortlistIds: shortlistCache,
     compareIds: readIds(COMPARE_KEY),
   };
-}
-
-function toggleId(ids: string[], id: string): string[] {
-  return ids.includes(id) ? ids.filter(current => current !== id) : [...ids, id];
 }
 
 function readIds(key: string): string[] {
@@ -121,9 +164,8 @@ function writeIds(key: string, ids: string[]) {
   const uniqueIds = Array.from(new Set(ids));
   try {
     localStorage.setItem(key, JSON.stringify(uniqueIds));
-    window.dispatchEvent(new Event(COLLECTION_EVENT));
+    dispatchChange();
   } catch {
-    // Keep the app usable in private mode or quota-constrained browsers.
+    // private mode / quota
   }
 }
-

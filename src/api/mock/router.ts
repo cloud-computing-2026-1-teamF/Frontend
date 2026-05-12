@@ -496,7 +496,11 @@ const handleListAnalyses: Handler = (spec) => {
   const savedFilter = spec.query?.saved as boolean | undefined;
   const limit = Number(spec.query?.limit ?? 50);
 
-  let items: AnalysisListItem[] = store.listAnalyses();
+  // The mock branch only ever returns the rich SavedAnalysis seed shape, so
+  // narrow locally to access SavedAnalysis-only fields without union noise.
+  // AnalysisListItem is widened (SavedAnalysis | AnalysisPollingResponse) to
+  // accommodate the real backend list response on the live transport.
+  let items: SavedAnalysis[] = store.listAnalyses();
   if (q) {
     items = items.filter(it =>
       it.region.includes(q) || it.category.includes(q) ||
@@ -705,6 +709,34 @@ const handleUserStats: Handler = () => {
   return ok(stats);
 };
 
+/** Aligns with `shortlistApi` — same backing store as GET/PUT /vacancies/shortlist */
+const handleListMeShortlist: Handler = () => {
+  const u = requireUser();
+  if ('error' in u) return u;
+  const ids = store.getVacancyShortlist();
+  const createdAt = new Date().toISOString();
+  return ok({
+    items: ids.map(vacancyId => ({ vacancyId, createdAt })),
+  });
+};
+
+const handlePostMeShortlist: Handler = (_spec, params) => {
+  const u = requireUser();
+  if ('error' in u) return u;
+  const vacancyId = params.vacancyId;
+  const ids = store.getVacancyShortlist();
+  if (!ids.includes(vacancyId)) store.setVacancyShortlist([...ids, vacancyId]);
+  return ok({ vacancyId, createdAt: new Date().toISOString() });
+};
+
+const handleDeleteMeShortlist: Handler = (_spec, params) => {
+  const u = requireUser();
+  if ('error' in u) return u;
+  const vacancyId = params.vacancyId;
+  store.setVacancyShortlist(store.getVacancyShortlist().filter(id => id !== vacancyId));
+  return ok({ ok: true });
+};
+
 // ── Routing table ─────────────────────────────────────────────────────────
 const ROUTES: Route[] = [
   route('POST /auth/login',           handleLogin),
@@ -728,6 +760,10 @@ const ROUTES: Route[] = [
   route('PUT /vacancies/shortlist',   handlePutVacancyShortlist),
   route('GET /vacancies',             handleListVacancies),
   route('GET /vacancies/:id',         handleGetVacancy),
+
+  route('GET /users/me/shortlist',           handleListMeShortlist),
+  route('POST /users/me/shortlist/:vacancyId', handlePostMeShortlist),
+  route('DELETE /users/me/shortlist/:vacancyId', handleDeleteMeShortlist),
 
   route('GET /users/me/stats',        handleUserStats),
 ];

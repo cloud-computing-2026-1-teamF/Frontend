@@ -66,11 +66,32 @@ export const authApi = {
       return r.data;
     }),
 
-  /** `POST /auth/logout` */
-  logout: () => {
+  /** `POST /auth/logout` — also tells the backend to expire the refresh_token
+   *  cookie so a page refresh doesn't auto-renew the session via /auth/refresh. */
+  logout: async () => {
+    try {
+      await apiRequest<{ ok: boolean }>({ method: 'POST', path: '/auth/logout' });
+    } catch {
+      // Backend may be down or the cookie is already gone — proceed with the
+      // local clear either way so the UI never gets stuck on a dead session.
+    }
     setAccessToken(null);
-    return Promise.resolve({ ok: true });
+    return { ok: true };
   },
+
+  /** `POST /auth/kakao` */
+  kakaoLogin: (code: string) =>
+    apiRequest<AuthLoginResponse>({ method: 'POST', path: '/auth/kakao', body: { code } }).then(r => {
+      setAccessToken(r.data.tokens.accessToken);
+      return r.data;
+    }),
+
+  /** `POST /auth/naver` */
+  naverLogin: (code: string, state: string) =>
+    apiRequest<AuthLoginResponse>({ method: 'POST', path: '/auth/naver', body: { code, state } }).then(r => {
+      setAccessToken(r.data.tokens.accessToken);
+      return r.data;
+    }),
 
   /** `GET /auth/me` */
   me: () =>
@@ -292,10 +313,35 @@ export const userApi = {
     apiRequest<UserStats>({ method: 'GET', path: '/users/me/stats' }).then(r => r.data),
 };
 
+// ── Shortlist ───────────────────────────────────────────────────────────────
+type ShortlistRow = { vacancyId: string; createdAt: string };
+
+export const shortlistApi = {
+  /** `GET /users/me/shortlist` */
+  list: () =>
+    apiRequest<{ items: ShortlistRow[] }>({ method: 'GET', path: '/users/me/shortlist' })
+      .then(r => r.data.items),
+
+  /** `POST /users/me/shortlist/:vacancyId` — idempotent */
+  add: (vacancyId: string) =>
+    apiRequest<ShortlistRow>({
+      method: 'POST',
+      path: `/users/me/shortlist/${encodeURIComponent(vacancyId)}`,
+    }).then(r => r.data),
+
+  /** `DELETE /users/me/shortlist/:vacancyId` — idempotent */
+  remove: (vacancyId: string) =>
+    apiRequest<{ ok: boolean }>({
+      method: 'DELETE',
+      path: `/users/me/shortlist/${encodeURIComponent(vacancyId)}`,
+    }).then(r => r.data),
+};
+
 export const api = {
   auth: authApi,
   catalog: catalogApi,
   analyses: analysesApi,
   vacancies: vacanciesApi,
   user: userApi,
+  shortlist: shortlistApi,
 };

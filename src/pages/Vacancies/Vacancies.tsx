@@ -270,8 +270,12 @@ export function Vacancies() {
     setCollectionNotice(null);
   };
 
-  const toggleShortlist = (id: string) => {
-    collections.toggleShortlist(id);
+  const toggleShortlist = async (id: string) => {
+    const result = await collections.toggleShortlist(id);
+    if (!result.ok && result.reason === 'network_error') {
+      setCollectionNotice('찜 목록을 서버에 반영하지 못했어요. 네트워크를 확인해 주세요.');
+      return;
+    }
     setCollectionNotice(null);
   };
 

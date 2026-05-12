@@ -101,6 +101,18 @@ export type AnalysisPollingResponse = {
     code: string;
     message: string;
   } | null;
+  // Summary fields, populated by GET /v1/analyses (list endpoint). Lets the
+  // History page render cards straight from the API without dipping into
+  // localStorage. The single-analysis polling endpoint leaves them undefined.
+  businessTypeKey?: string | null;
+  centerLat?: number | null;
+  centerLng?: number | null;
+  radiusM?: number | null;
+  budgetDepositMax?: number | null;
+  budgetRentMax?: number | null;
+  budgetMaintenanceFeeMax?: number | null;
+  topScore?: number | null;
+  recommendationCount?: number | null;
 };
 export type AnalysisEventResponse = {
   status: 'pending' | 'running' | 'done' | 'failed';
@@ -192,7 +204,12 @@ export type AnalysisRecommendationsSection = AnalysisSectionTodo & {
 // only, detail has full `properties[]`) — we keep both as the same `SavedAnalysis`
 // shape for simplicity since the seed data already carries Top3 inline.
 export type AnalysisDetail = SavedAnalysis;
-export type AnalysisListItem = SavedAnalysis;
+// Two shapes flow through this slot:
+//   - Mock router returns rich SavedAnalysis rows (legacy seed contract).
+//   - Real backend returns AnalysisPollingResponse rows with summary fields
+//     populated (see GET /v1/analyses on Backend).
+// Call sites discriminate via USE_MOCK or a runtime presence check.
+export type AnalysisListItem = SavedAnalysis | AnalysisPollingResponse;
 
 export type ListAnalysesQuery = {
   cursor?: string;
