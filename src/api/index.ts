@@ -78,6 +78,13 @@ export const authApi = {
       return r.data;
     }),
 
+  /** `POST /auth/naver` */
+  naverLogin: (code: string, state: string) =>
+    apiRequest<AuthLoginResponse>({ method: 'POST', path: '/auth/naver', body: { code, state } }).then(r => {
+      setAccessToken(r.data.tokens.accessToken);
+      return r.data;
+    }),
+
   /** `GET /auth/me` */
   me: () =>
     apiRequest<{ user: AuthUser }>({ method: 'GET', path: '/auth/me' }).then(r => r.data.user),

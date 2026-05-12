@@ -116,7 +116,12 @@ export function AuthModal() {
                   </span>
                   카카오로 계속하기
                 </button>
-                <button className="auth-social-btn">
+                <button className="auth-social-btn" onClick={() => {
+                  const naverClientId = import.meta.env.VITE_NAVER_CLIENT_ID;
+                  const redirectUri = encodeURIComponent(import.meta.env.VITE_NAVER_REDIRECT_URI || 'http://localhost:5174/auth/naver/callback');
+                  const state = Math.random().toString(36).substring(2);
+                  window.location.href = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${naverClientId}&redirect_uri=${redirectUri}&state=${state}`;
+                }}>
                   <span className="auth-social-ico" style={{ background: '#03C75A' }}>
                     <svg viewBox="0 0 24 24" width="14" height="14"><path fill="#fff" d="M16.7 4.5h3.8v15h-4.4l-7.1-9.7v9.7H5.2v-15h4.4l7.1 9.7V4.5z" /></svg>
                   </span>
