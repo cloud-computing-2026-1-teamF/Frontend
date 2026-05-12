@@ -57,10 +57,24 @@ export function History() {
     // created on another machine (or after a localStorage wipe) still show
     // up; cached items keep their contextual labels (areaName, top3, etc.).
     Promise.all([
-      api.analyses.list({ limit: 50 }).catch(() => ({ items: [] as AnalysisPollingResponse[] })),
+      api.analyses.list({ limit: 50 }).catch(() => null),
       api.catalog.listBusinessTypes().catch(() => [] as BusinessType[]),
     ]).then(([backendList, businessTypes]) => {
       if (cancelled) return;
+      // If the backend call failed (null), keep the local cache visible
+      // rather than wiping the UI to empty — networks come and go.
+      if (!backendList) {
+        setLoading(false);
+        return;
+      }
+      const backendIds = new Set(backendList.items.map(item => item.id));
+      // Evict localStorage rows the backend no longer has. Without this the
+      // first paint on every visit flashes stale entries (rows the user
+      // deleted from another device or that the backend never had) until
+      // the network response arrives. Now the local cache stays in sync.
+      listAnalysisSessions().forEach(session => {
+        if (!backendIds.has(session.id)) removeAnalysisSession(session.id);
+      });
       const cachedById = new Map(listAnalysisSessions().map(s => [s.id, s]));
       const merged = backendList.items.map((item: AnalysisPollingResponse) =>
         cachedById.get(item.id) ?? buildSessionFromBackend(item, businessTypes));
