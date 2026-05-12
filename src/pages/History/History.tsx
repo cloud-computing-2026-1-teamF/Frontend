@@ -4,12 +4,11 @@ import './history.css';
 import { Icon } from '../../shared/Icon';
 import { Footer } from '../../shared/Nav';
 import type { SavedAnalysis } from '../../lib/savedAnalyses';
-import { api } from '../../api';
+import { api, type AnalysisPollingResponse, type BusinessType } from '../../api';
 import { USE_MOCK } from '../../api/client';
 import {
   type AnalysisSession,
   listAnalysisSessions,
-  patchAnalysisSessionStatus,
   removeAnalysisSession,
   sessionToSavedAnalysis,
 } from '../../features/analysisSessions/store';
@@ -43,21 +42,29 @@ export function History() {
       return () => { cancelled = true; };
     }
 
+    // First paint: show whatever the local cache has so users on the same
+    // browser see results instantly.
     const localSessions = filterSessions(listAnalysisSessions(), q, sort);
     setSessions(localSessions);
     setItems(localSessions.map(sessionToSavedAnalysis));
-    setLoading(false);
+    setLoading(localSessions.length === 0);
 
-    Promise.all(localSessions.map(session =>
-      api.analyses.poll(session.id)
-        .then(status => patchAnalysisSessionStatus(session.id, status))
-        .catch(() => session),
-    )).then(next => {
+    // Backend is the source of truth — it lists every analysis the user has
+    // ever run from any device. Merge with the local cache so analyses
+    // created on another machine (or after a localStorage wipe) still show
+    // up; cached items keep their contextual labels (areaName, top3, etc.).
+    Promise.all([
+      api.analyses.list({ limit: 50 }).catch(() => ({ items: [] as AnalysisPollingResponse[] })),
+      api.catalog.listBusinessTypes().catch(() => [] as BusinessType[]),
+    ]).then(([backendList, businessTypes]) => {
       if (cancelled) return;
-      const refreshed = next.filter(Boolean) as AnalysisSession[];
-      const filtered = filterSessions(refreshed, q, sort);
+      const cachedById = new Map(listAnalysisSessions().map(s => [s.id, s]));
+      const merged = backendList.items.map((item: AnalysisPollingResponse) =>
+        cachedById.get(item.id) ?? buildSessionFromBackend(item, businessTypes));
+      const filtered = filterSessions(merged, q, sort);
       setSessions(filtered);
       setItems(filtered.map(sessionToSavedAnalysis));
+      setLoading(false);
     });
 
     return () => { cancelled = true; };
@@ -154,6 +161,52 @@ export function History() {
       <Footer />
     </>
   );
+}
+
+// Build an AnalysisSession stub from the backend list payload for cases
+// where the local cache doesn't have the analysis (different device, cache
+// wipe, etc.). Falls back to neutral labels — the detail page can still
+// fetch the full recommendations via api.analyses.recommendations(id).
+function buildSessionFromBackend(
+  item: AnalysisPollingResponse,
+  businessTypes: BusinessType[],
+): AnalysisSession {
+  const biz = businessTypes.find(b => b.key === item.businessTypeKey);
+  return {
+    id: item.id,
+    createdAt: item.createdAt,
+    completedAt: item.completedAt ?? null,
+    status: item.status,
+    progress: item.progress,
+    stepLabel: item.step?.label ?? null,
+    businessType: (item.businessTypeKey ?? '') as BusinessType['key'],
+    category: biz?.label ?? '업종 미상',
+    categoryEmoji: biz?.emoji ?? '📍',
+    areaId: '',
+    areaName: '저장된 분석',
+    region: '',
+    roadAddress: '',
+    lat: item.centerLat ?? 0,
+    lng: item.centerLng ?? 0,
+    radius: item.radiusM ?? 500,
+    budget: {
+      depositMax: item.budgetDepositMax ?? undefined,
+      rentMax: item.budgetRentMax ?? undefined,
+      maintenanceFeeMax: item.budgetMaintenanceFeeMax ?? undefined,
+    },
+    top3: item.topScore != null
+      ? [{
+        addr: '저장된 추천 매물',
+        score: item.topScore,
+        rent: 0, deposit: 0, mgmt: 0, area: 0,
+        floor: '상가',
+        foot: 0, comp: 0, rev: 0, growth: 0,
+        footHourly: [] as number[],
+        nearby: { subway: '', bus: '', parking: '' },
+      }]
+      : [],
+    error: item.error,
+  };
 }
 
 function filterSessions(sessions: AnalysisSession[], q: string, sort: 'recent' | 'score'): AnalysisSession[] {

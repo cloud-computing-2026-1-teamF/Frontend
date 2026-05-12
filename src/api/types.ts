@@ -101,6 +101,18 @@ export type AnalysisPollingResponse = {
     code: string;
     message: string;
   } | null;
+  // Summary fields, populated by GET /v1/analyses (list endpoint). Lets the
+  // History page render cards straight from the API without dipping into
+  // localStorage. The single-analysis polling endpoint leaves them undefined.
+  businessTypeKey?: string | null;
+  centerLat?: number | null;
+  centerLng?: number | null;
+  radiusM?: number | null;
+  budgetDepositMax?: number | null;
+  budgetRentMax?: number | null;
+  budgetMaintenanceFeeMax?: number | null;
+  topScore?: number | null;
+  recommendationCount?: number | null;
 };
 export type AnalysisEventResponse = {
   status: 'pending' | 'running' | 'done' | 'failed';
