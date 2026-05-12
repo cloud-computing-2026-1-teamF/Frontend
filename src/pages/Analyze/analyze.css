@@ -79,6 +79,13 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   color: #0A0E1A;
 }
 .lf-title b { color: var(--brand-600); }
+.lf-header-analyzing {
+  justify-content: center;
+}
+.lf-header-analyzing .lf-title {
+  flex: none;
+  text-align: center;
+}
 .lf-body {
   padding: 16px 18px;
   display: flex; flex-direction: column; gap: 14px;
@@ -332,6 +339,10 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .lf-cta:disabled { cursor: not-allowed; opacity: .5; transform: none; }
 
 /* Analyzing state */
+@keyframes lf-analyzing-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .lf-analyzing {
   padding: 20px 18px;
   display: flex; flex-direction: column; align-items: center; gap: 14px;
@@ -342,11 +353,8 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 }
 .lf-analyzing-ring svg {
   width: 100%; height: 100%;
-  animation: spin 1.2s linear infinite;
-}
-.lf-analyzing-ring .inner {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
+  animation: lf-analyzing-spin 1.2s linear infinite;
+  transform-origin: center center;
 }
 .lf-analyzing-title {
   font-size: 14px; font-weight: 700; color: #0A0E1A;

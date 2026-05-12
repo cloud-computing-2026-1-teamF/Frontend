@@ -61,12 +61,11 @@ export function AnalyzeControlPanel({
   if (phase === 'analyzing') {
     return (
       <div className="lf-widget analyzing">
-        <div className="lf-header">
-          <div className="lf-logo"><Icon name="sparkles" size={16} /></div>
+        <div className="lf-header lf-header-analyzing">
           <div className="lf-title"><b>분석 중</b></div>
         </div>
         <div className="lf-analyzing">
-          <div className="lf-analyzing-ring">
+          <div className="lf-analyzing-ring" aria-hidden>
             <svg viewBox="0 0 56 56">
               <circle cx="28" cy="28" r="22" fill="none" stroke="#F7F8FB" strokeWidth="4" />
               <circle
@@ -74,7 +73,7 @@ export function AnalyzeControlPanel({
                 cy="28"
                 r="22"
                 fill="none"
-                stroke="url(#lfgrad)"
+                stroke="url(#lf-analyzing-grad)"
                 strokeWidth="4"
                 strokeLinecap="round"
                 strokeDasharray="138"
@@ -82,13 +81,12 @@ export function AnalyzeControlPanel({
                 transform="rotate(-90 28 28)"
               />
               <defs>
-                <linearGradient id="lfgrad" x1="0" y1="0" x2="1" y2="1">
+                <linearGradient id="lf-analyzing-grad" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stopColor="#F26B2E" />
                   <stop offset="100%" stopColor="#E85D1F" />
                 </linearGradient>
               </defs>
             </svg>
-            <div className="inner"><Icon name="cpu" size={20} stroke={2} /></div>
           </div>
           <div>
             <div className="lf-analyzing-title">{selectedBiz?.emoji} {selectedBiz?.label} · {area?.displayName}</div>
