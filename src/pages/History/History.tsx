@@ -36,7 +36,10 @@ export function History() {
 
     if (USE_MOCK) {
       api.analyses.list({ sort, q: q || undefined })
-        .then(res => { if (!cancelled) setItems(res.items); })
+        // Mock router only ever hands back the rich SavedAnalysis seed shape;
+        // the union widening (AnalysisListItem) on the contract is for the
+        // live backend variant. Narrow locally so setItems is happy.
+        .then(res => { if (!cancelled) setItems(res.items as SavedAnalysis[]); })
         .catch(() => { if (!cancelled) setItems([]); })
         .finally(() => { if (!cancelled) setLoading(false); });
       return () => { cancelled = true; };
