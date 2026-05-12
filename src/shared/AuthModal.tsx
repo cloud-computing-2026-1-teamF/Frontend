@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthContext';
 import { api, ApiError } from '../api';
 
 type Step = 'form' | 'loading' | 'success';
+const OAUTH_STATE_KEY = 'sg_oauth_state';
 
 export function AuthModal() {
   const { authOpen, authMode, closeAuth, openAuth, setUser } = useAuth();
@@ -108,8 +109,13 @@ export function AuthModal() {
               <div className="auth-social">
                 <button className="auth-social-btn" onClick={() => {
                   const kakaoClientId = import.meta.env.VITE_KAKAO_CLIENT_ID;
-                  const redirectUri = encodeURIComponent(import.meta.env.VITE_KAKAO_REDIRECT_URI || 'http://localhost:5174/auth/kakao/callback');
-                  window.location.href = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${kakaoClientId}&redirect_uri=${redirectUri}`;
+                  if (!isConfigured(kakaoClientId)) {
+                    setErrMsg('카카오 REST API 키가 설정되지 않았어요.');
+                    return;
+                  }
+                  const state = createOAuthState('kakao');
+                  const redirectUri = encodeURIComponent(import.meta.env.VITE_KAKAO_REDIRECT_URI || `${window.location.origin}/auth/kakao/callback`);
+                  window.location.href = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${kakaoClientId}&redirect_uri=${redirectUri}&state=${encodeURIComponent(state)}`;
                 }}>
                   <span className="auth-social-ico" style={{ background: '#FEE500' }}>
                     <svg viewBox="0 0 24 24" width="14" height="14"><path fill="#000" d="M12 3C6.48 3 2 6.48 2 10.8c0 2.74 1.79 5.14 4.5 6.54l-1.13 4.16c-.1.37.32.65.65.45L11 19.36c.33.04.66.04 1 .04 5.52 0 10-3.48 10-7.6S17.52 3 12 3z" /></svg>
@@ -118,8 +124,12 @@ export function AuthModal() {
                 </button>
                 <button className="auth-social-btn" onClick={() => {
                   const naverClientId = import.meta.env.VITE_NAVER_CLIENT_ID;
-                  const redirectUri = encodeURIComponent(import.meta.env.VITE_NAVER_REDIRECT_URI || 'http://localhost:5174/auth/naver/callback');
-                  const state = Math.random().toString(36).substring(2);
+                  if (!isConfigured(naverClientId)) {
+                    setErrMsg('네이버 Client ID가 설정되지 않았어요.');
+                    return;
+                  }
+                  const redirectUri = encodeURIComponent(import.meta.env.VITE_NAVER_REDIRECT_URI || `${window.location.origin}/auth/naver/callback`);
+                  const state = createOAuthState('naver');
                   window.location.href = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${naverClientId}&redirect_uri=${redirectUri}&state=${state}`;
                 }}>
                   <span className="auth-social-ico" style={{ background: '#03C75A' }}>
@@ -218,4 +228,24 @@ export function AuthModal() {
       </div>
     </div>
   );
+}
+
+function isConfigured(value: unknown): value is string {
+  return typeof value === 'string'
+    && value.trim() !== ''
+    && !value.includes('your_')
+    && !value.includes('replace-this');
+}
+
+function createOAuthState(provider: 'kakao' | 'naver'): string {
+  const random = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
+  const state = `${provider}:${random}`;
+  try {
+    localStorage.setItem(OAUTH_STATE_KEY, state);
+  } catch {
+    // OAuth still works; callback just cannot perform the CSRF state check.
+  }
+  return state;
 }

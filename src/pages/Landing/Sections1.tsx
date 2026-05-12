@@ -76,3 +76,75 @@ export function Features() {
     </section>
   );
 }
+
+export function ProductTour() {
+  const pages = [
+    {
+      icon: 'map-pin',
+      title: '입지분석',
+      tag: '반경 기반 추천',
+      desc: '지도에서 후보 지점을 고르고 업종·거래유형·예산·반경을 조절하면 조건 안의 공실만 먼저 확인한 뒤 Top 3를 평가해요.',
+      bullets: ['반경 내 공실 마커 미리보기', '임대·전세·매매 조건 분리', '추천/비추천 근거 표시'],
+      tone: 'orange',
+    },
+    {
+      icon: 'building',
+      title: '공실탐색',
+      tag: '매물 인벤토리',
+      desc: '서울 공실을 지도와 표로 동시에 살펴보고 업종 점수, 임대 부담, 유동인구, 접근성 데이터를 빠르게 비교해요.',
+      bullets: ['행정동 클러스터 지도', '월세·보증금·면적 필터', '상권 지표 상세 보기'],
+      tone: 'teal',
+    },
+    {
+      icon: 'bookmark',
+      title: '찜목록',
+      tag: '후보 저장',
+      desc: '관심 공실을 계정에 저장해두고 다시 방문해도 같은 후보를 이어서 검토할 수 있어요.',
+      bullets: ['서버 저장형 찜', '후보별 핵심 KPI', '비교 후보로 전환'],
+      tone: 'blue',
+    },
+    {
+      icon: 'clock',
+      title: '분석이력',
+      tag: '의사결정 로그',
+      desc: '언제 어떤 조건으로 분석했는지 남기고, 추천 공실의 유동 패턴과 접근성 결과를 상세 페이지에서 다시 확인해요.',
+      bullets: ['분석 조건 기록', 'Top 3 결과 보존', '상세 리포트 재열람'],
+      tone: 'violet',
+    },
+  ];
+
+  return (
+    <section className="section section-product" style={{ fontFamily: 'Pretendard' }}>
+      <div className="container">
+        <div className="section-head">
+          <div className="eyebrow">Service Map</div>
+          <h2 className="sec-title">
+            창업 입지 선택에 필요한 화면을<br />
+            <span className="tx-brand">하나의 흐름으로 연결했어요.</span>
+          </h2>
+          <p className="sec-sub">
+            추천 결과만 보여주는 도구가 아니라, 후보 탐색부터 저장·비교·이력 관리까지 이어지는 작업 공간입니다.
+          </p>
+        </div>
+
+        <div className="product-tour-grid">
+          {pages.map(page => (
+            <article key={page.title} className={`product-card tone-${page.tone}`}>
+              <div className="product-card-head">
+                <div className="product-icon"><Icon name={page.icon} size={20} /></div>
+                <span>{page.tag}</span>
+              </div>
+              <h3>{page.title}</h3>
+              <p>{page.desc}</p>
+              <ul>
+                {page.bullets.map(bullet => (
+                  <li key={bullet}><Icon name="check" size={12} />{bullet}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

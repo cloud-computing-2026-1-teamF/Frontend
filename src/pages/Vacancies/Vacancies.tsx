@@ -54,6 +54,13 @@ export function Vacancies() {
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const collections = useVacancyCollections();
 
+  useEffect(() => {
+    collections.clearCompare();
+    // Compare is a scratch workflow. Entering the explorer starts a fresh set
+    // so old localStorage selections do not leak into a new search session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const searchQuery = useMemo<VacancySearchQuery>(() => ({
     areaId: selectedArea?.id,
     categoryId: filters.categoryId || undefined,
@@ -391,7 +398,11 @@ export function Vacancies() {
                   </div>
                 )}
 
-                {status !== 'error' && vacancies.length === 0 && (
+                {status === 'loading' && vacancies.length === 0 && (
+                  <VacancyLoadingState />
+                )}
+
+                {status === 'ok' && vacancies.length === 0 && (
                   <div className="vacancy-empty">
                     <Icon name="search" size={30} />
                     <h3>조건에 맞는 공실이 없어요</h3>
@@ -474,6 +485,24 @@ export function Vacancies() {
       </main>
       <Footer />
     </>
+  );
+}
+
+function VacancyLoadingState() {
+  return (
+    <div className="vacancy-loading" aria-label="공실 데이터를 불러오는 중">
+      <div className="vacancy-loading-mapline" />
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div className="vacancy-loading-row" key={index}>
+          <span />
+          <div>
+            <b />
+            <em />
+          </div>
+          <i />
+        </div>
+      ))}
+    </div>
   );
 }
 

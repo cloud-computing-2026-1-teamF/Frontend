@@ -78,7 +78,7 @@ export function VacancyMapPanel({ items, selectedId, onSelect }: VacancyMapPanel
   const visiblePoints = focusedCluster
     ? points.filter(point => point.item.areaId === focusedCluster.areaId)
     : points;
-  const showAreaClusters = !focusedCluster && mapLevel >= CLUSTER_LEVEL && areaClusters.length > 1;
+  const showAreaClusters = !focusedCluster && areaClusters.length > 1 && (mapLevel >= CLUSTER_LEVEL || points.length > 140);
 
   useEffect(() => {
     const firstTick = window.setTimeout(() => {

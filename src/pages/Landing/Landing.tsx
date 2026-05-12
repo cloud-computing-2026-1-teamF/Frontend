@@ -1,7 +1,7 @@
 import './landing.css';
 import './landing-font-override.css';
 import { Hero } from './Hero';
-import { PainPoints, Features } from './Sections1';
+import { PainPoints, Features, ProductTour } from './Sections1';
 import { Algorithm } from './Algorithm';
 import { LivePreview } from './LivePreview';
 import { DataSources, FinalCTA } from './Sections2';
@@ -13,6 +13,7 @@ export function Landing() {
       <Hero />
       <PainPoints />
       <Features />
+      <ProductTour />
       <Algorithm />
       <LivePreview />
       <DataSources />

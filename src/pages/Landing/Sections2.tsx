@@ -75,9 +75,6 @@ export function FinalCTA() {
     <section className="section section-cta" style={{ fontFamily: 'Pretendard' }}>
       <div className="container">
         <div className="cta-wrap">
-          <div className="cta-orbs">
-            <span className="orb orb-1" /><span className="orb orb-2" /><span className="orb orb-3" />
-          </div>
           <div className="cta-text">
             <div className="eyebrow" style={{ color: '#F26B2E' }}>요식업 창업, 지금 시작하세요</div>
             <h2>
