@@ -65,10 +65,17 @@ export const authApi = {
       return r.data;
     }),
 
-  /** `POST /auth/logout` */
-  logout: () => {
+  /** `POST /auth/logout` — also tells the backend to expire the refresh_token
+   *  cookie so a page refresh doesn't auto-renew the session via /auth/refresh. */
+  logout: async () => {
+    try {
+      await apiRequest<{ ok: boolean }>({ method: 'POST', path: '/auth/logout' });
+    } catch {
+      // Backend may be down or the cookie is already gone — proceed with the
+      // local clear either way so the UI never gets stuck on a dead session.
+    }
     setAccessToken(null);
-    return Promise.resolve({ ok: true });
+    return { ok: true };
   },
 
   /** `POST /auth/kakao` */
