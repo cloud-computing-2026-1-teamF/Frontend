@@ -13,6 +13,7 @@ import { api } from '../../api';
 import { USE_MOCK } from '../../api/client';
 import {
   type AnalysisSession,
+  buildSessionFromBackend,
   listAnalysisSessions,
   removeAnalysisSession,
   sessionToSavedAnalysis,
@@ -243,48 +244,6 @@ function listItemToSession(
     return savedAnalysisRowToSession(item);
   }
   return buildSessionFromBackend(item as AnalysisPollingResponse, businessTypes);
-}
-
-function buildSessionFromBackend(
-  item: AnalysisPollingResponse,
-  businessTypes: BusinessType[],
-): AnalysisSession {
-  const biz = businessTypes.find(b => b.key === item.businessTypeKey);
-  return {
-    id: item.id,
-    createdAt: item.createdAt,
-    completedAt: item.completedAt ?? null,
-    status: item.status,
-    progress: item.progress,
-    stepLabel: item.step?.label ?? null,
-    businessType: (item.businessTypeKey ?? 'korean') as BusinessType['key'],
-    category: biz?.label ?? '업종 미상',
-    categoryEmoji: biz?.emoji ?? '📍',
-    areaId: '',
-    areaName: '저장된 분석',
-    region: '',
-    roadAddress: '',
-    lat: item.centerLat ?? 0,
-    lng: item.centerLng ?? 0,
-    radius: item.radiusM ?? 500,
-    budget: {
-      depositMax: item.budgetDepositMax ?? undefined,
-      rentMax: item.budgetRentMax ?? undefined,
-      maintenanceFeeMax: item.budgetMaintenanceFeeMax ?? undefined,
-    },
-    top3: item.topScore != null
-      ? [{
-        addr: '저장된 추천 매물',
-        score: item.topScore,
-        rent: 0, deposit: 0, mgmt: 0, area: 0,
-        floor: '상가',
-        foot: 0, comp: 0, rev: 0, growth: 0,
-        footHourly: [] as number[],
-        nearby: { subway: '', bus: '', parking: '' },
-      }]
-      : [],
-    error: item.error,
-  };
 }
 
 function filterSessions(sessions: AnalysisSession[], keywordRaw: string, sort: 'recent' | 'score'): AnalysisSession[] {

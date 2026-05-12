@@ -5,14 +5,17 @@ import { Icon } from '../../shared/Icon';
 import { FactorCard, buildFactorViz } from '../../shared/FactorViz';
 import { Footer } from '../../shared/Nav';
 import type { SavedAnalysis } from '../../lib/savedAnalyses';
-import { api, type AnalysisSectionTodo } from '../../api';
+import { api, type AnalysisPollingResponse, type AnalysisSectionTodo, type BusinessType } from '../../api';
 import { USE_MOCK } from '../../api/client';
 import { HISTORY_ITEMS } from '../../data/history';
 import { readSavedAnalyses } from '../../lib/savedAnalyses';
 import {
+  buildSessionFromBackend,
   findAnalysisSession,
   patchAnalysisSessionStatus,
+  patchAnalysisSessionTop3,
   sessionToSavedAnalysis,
+  upsertAnalysisSession,
 } from '../../features/analysisSessions/store';
 import { HourlyChart } from '../../features/detail/components/HourlyChart';
 import { RiskSummary } from '../../features/detail/components/RiskSummary';
@@ -60,6 +63,17 @@ export function Detail() {
         .catch(error => {
           if (!cancelled) setSectionError(error instanceof Error ? error.message : '상세 섹션을 불러오지 못했어요.');
         });
+
+      // Refresh top3 from the authoritative source — this is the only path
+      // that hydrates cross-laptop analyses (the local stub session built
+      // from list summary only has a placeholder top3).
+      api.analyses.recommendations(id)
+        .then(res => {
+          if (cancelled) return;
+          const next = patchAnalysisSessionTop3(id, res.recommendations);
+          if (next) setItem(sessionToSavedAnalysis(next));
+        })
+        .catch(() => { /* Keep whatever top3 we already have. */ });
     };
 
     if (session) {
@@ -69,21 +83,31 @@ export function Detail() {
       return () => { cancelled = true };
     }
 
-    api.analyses.list({ sort: 'recent', limit: 400 })
-      .then(res => {
-        if (cancelled) return;
-        const row = res.items.find(it => String(it.id) === id);
-        if (!row) {
-          setStatus('missing');
-          return;
-        }
-        setItem(row);
-        setStatus('ok');
-        loadFollowUps();
-      })
-      .catch(() => {
-        if (!cancelled) setStatus('missing');
-      });
+    // No local cache — analysis was created on another device or after a
+    // localStorage wipe. Pull a summary row from the backend list, build a
+    // stub session, persist it locally so subsequent visits on this device
+    // hit the fast path, then let loadFollowUps fill in the real top3.
+    Promise.all([
+      api.analyses.list({ sort: 'recent', limit: 400 }).catch(() => null),
+      api.catalog.listBusinessTypes().catch(() => [] as BusinessType[]),
+    ]).then(([listRes, businessTypes]) => {
+      if (cancelled) return;
+      if (!listRes) { setStatus('missing'); return; }
+      const row = listRes.items.find(it => String(it.id) === id);
+      if (!row) { setStatus('missing'); return; }
+      // The mock router still returns SavedAnalysis seed rows on this slot;
+      // they already render fine. Real backend hands back the polling-shape
+      // row, which needs stub conversion before the JSX touches it.
+      if ((row as { top3?: unknown }).top3 !== undefined) {
+        setItem(row as SavedAnalysis);
+      } else {
+        const stub = buildSessionFromBackend(row as AnalysisPollingResponse, businessTypes);
+        upsertAnalysisSession(stub);
+        setItem(sessionToSavedAnalysis(stub));
+      }
+      setStatus('ok');
+      loadFollowUps();
+    });
 
     return () => { cancelled = true };
   }, [idParam]);
