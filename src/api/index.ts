@@ -210,6 +210,7 @@ function toCreateAnalysisRequest(body: CreateAnalysisClientRequest): CreateAnaly
   return {
     businessType: body.businessType,
     areaId: body.areaId,
+    transactionType: body.transactionType,
     budget: body.budget,
     center: body.center,
     x: body.x,

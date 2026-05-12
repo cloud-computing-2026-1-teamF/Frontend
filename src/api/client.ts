@@ -13,7 +13,7 @@ export const USE_MOCK = envUseMock === undefined ? true : envUseMock !== 'false'
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/v1';
 const ACCESS_TOKEN_KEY = 'sg_access_token';
 
-export type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export type RequestSpec = {
   method: Method;

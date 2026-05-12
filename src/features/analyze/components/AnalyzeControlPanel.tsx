@@ -3,10 +3,15 @@ import { Icon } from '../../../shared/Icon';
 import { AreaSearchPanel } from './AreaSearchPanel';
 import {
   FIXED_RADIUS,
+  MAX_RADIUS,
+  MIN_RADIUS,
+  RADIUS_STEP,
   type AnalyzeArea,
+  type CandidateStatus,
   type AnalyzePhase,
   type BizKey,
   type BizType,
+  type VacancyTransactionType,
 } from '../model';
 
 type AnalyzeControlPanelProps = {
@@ -22,14 +27,22 @@ type AnalyzeControlPanelProps = {
     depositMax: string;
     rentMax: string;
     maintenanceFeeMax: string;
+    premiumMax: string;
+    salePriceMax: string;
   };
-  onBudgetChange: (key: 'depositMax' | 'rentMax' | 'maintenanceFeeMax', value: string) => void;
+  transactionType: VacancyTransactionType;
+  onTransactionTypeChange: (type: VacancyTransactionType) => void;
+  onBudgetChange: (key: 'depositMax' | 'rentMax' | 'maintenanceFeeMax' | 'premiumMax' | 'salePriceMax', value: string) => void;
   onClearBudget: () => void;
+  onRadiusChange: (radius: number) => void;
   onClearArea: () => void;
   onSearchPan: (place: AreaSearchHit) => void;
   onRun: () => void;
+  canRun: boolean;
+  candidateStatus: CandidateStatus;
+  candidateCount: number;
+  candidateError?: string | null;
   onReset: () => void;
-  sdkReady: boolean;
   analysisProgress: number;
   analysisStepLabel?: string | null;
   analysisError?: string | null;
@@ -45,18 +58,26 @@ export function AnalyzeControlPanel({
   onBizSelect,
   area,
   budget,
+  transactionType,
+  onTransactionTypeChange,
   onBudgetChange,
   onClearBudget,
+  onRadiusChange,
   onClearArea,
   onSearchPan,
   onRun,
+  canRun,
+  candidateStatus,
+  candidateCount,
+  candidateError,
   onReset,
-  sdkReady,
   analysisProgress,
   analysisStepLabel,
   analysisError,
 }: AnalyzeControlPanelProps) {
-  const budgetCount = [budget.depositMax, budget.rentMax, budget.maintenanceFeeMax]
+  const activeBudgetFields = budgetFieldsFor(transactionType);
+  const budgetCount = activeBudgetFields
+    .map(field => budget[field.key])
     .filter(value => value.trim() !== '').length;
   if (phase === 'analyzing') {
     return (
@@ -90,7 +111,7 @@ export function AnalyzeControlPanel({
           </div>
           <div>
             <div className="lf-analyzing-title">{selectedBiz?.emoji} {selectedBiz?.label} · {area?.displayName}</div>
-            <div className="lf-analyzing-sub">{analysisStepLabel || `반경 ${FIXED_RADIUS}m 안에서 입지를 찾고 있어요`}</div>
+            <div className="lf-analyzing-sub">{analysisStepLabel || `반경 ${area?.radius ?? FIXED_RADIUS}m 안에서 입지를 찾고 있어요`}</div>
             <div className="lf-progress">
               <div className="lf-progress-track">
                 <span style={{ width: `${Math.max(0, Math.min(100, analysisProgress))}%` }} />
@@ -196,8 +217,28 @@ export function AnalyzeControlPanel({
                 area={area}
                 onClearArea={onClearArea}
                 onSearchPan={onSearchPan}
-                sdkReady={sdkReady}
               />
+              {area && (
+                <div className="lf-radius">
+                  <div className="lf-radius-head">
+                    <span>분석 반경</span>
+                    <b>{area.radius.toLocaleString()}m</b>
+                  </div>
+                  <input
+                    type="range"
+                    min={MIN_RADIUS}
+                    max={MAX_RADIUS}
+                    step={RADIUS_STEP}
+                    value={area.radius}
+                    onChange={event => onRadiusChange(Number(event.target.value))}
+                    aria-label="분석 반경 조절"
+                  />
+                  <div className="lf-radius-scale">
+                    <span>{MIN_RADIUS}m</span>
+                    <span>{MAX_RADIUS.toLocaleString()}m</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -206,8 +247,8 @@ export function AnalyzeControlPanel({
           <div className={`lf-budget ${budgetCount > 0 ? 'has-values' : ''}`}>
             <div className="lf-budget-head">
               <div>
-                <div className="lf-budget-title">희망 예산</div>
-                <div className="lf-budget-sub">입력한 항목만 공실 필터에 적용돼요</div>
+                <div className="lf-budget-title">거래 유형 · 희망 조건</div>
+                <div className="lf-budget-sub">선택한 거래 유형에 필요한 금액만 필터에 적용돼요</div>
               </div>
               {budgetCount > 0 && (
                 <button type="button" className="lf-budget-clear" onClick={onClearBudget}>
@@ -215,30 +256,45 @@ export function AnalyzeControlPanel({
                 </button>
               )}
             </div>
-            <div className="lf-budget-grid">
-              <MoneyField
-                label="보증금"
-                value={budget.depositMax}
-                onChange={value => onBudgetChange('depositMax', value)}
-              />
-              <MoneyField
-                label="월세"
-                value={budget.rentMax}
-                onChange={value => onBudgetChange('rentMax', value)}
-              />
-              <MoneyField
-                label="관리비"
-                value={budget.maintenanceFeeMax}
-                onChange={value => onBudgetChange('maintenanceFeeMax', value)}
-              />
+            <div className="lf-transaction-tabs" role="tablist" aria-label="거래 유형">
+              {(['임대', '전세', '매매'] as VacancyTransactionType[]).map(type => (
+                <button
+                  key={type}
+                  type="button"
+                  className={transactionType === type ? 'is-on' : ''}
+                  onClick={() => onTransactionTypeChange(type)}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+            <div className={`lf-budget-grid fields-${activeBudgetFields.length}`}>
+              {activeBudgetFields.map(field => (
+                <MoneyField
+                  key={field.key}
+                  label={field.label}
+                  value={budget[field.key]}
+                  onChange={value => onBudgetChange(field.key, value)}
+                />
+              ))}
             </div>
           </div>
         )}
 
         {bizType && area && (
-          <button className="lf-cta" onClick={onRun}>
+          <CandidateGate
+            status={candidateStatus}
+            count={candidateCount}
+            radius={area.radius}
+            transactionType={transactionType}
+            error={candidateError}
+          />
+        )}
+
+        {bizType && area && (
+          <button className="lf-cta" onClick={onRun} disabled={!canRun}>
             <Icon name="sparkles" size={16} />
-            상권 분석하기
+            {canRun ? '상권 분석하기' : candidateStatus === 'loading' ? '조건 확인 중' : '조건 조정 필요'}
             <Icon name="arrow-right" size={14} />
           </button>
         )}
@@ -271,5 +327,76 @@ function MoneyField({
         <em>만원</em>
       </div>
     </label>
+  );
+}
+
+type BudgetFieldKey = 'depositMax' | 'rentMax' | 'maintenanceFeeMax' | 'premiumMax' | 'salePriceMax';
+
+function budgetFieldsFor(transactionType: VacancyTransactionType): Array<{ key: BudgetFieldKey; label: string }> {
+  if (transactionType === '매매') {
+    return [
+      { key: 'salePriceMax', label: '매매가' },
+      { key: 'maintenanceFeeMax', label: '관리비' },
+    ];
+  }
+  if (transactionType === '전세') {
+    return [
+      { key: 'depositMax', label: '전세 보증금' },
+      { key: 'maintenanceFeeMax', label: '관리비' },
+      { key: 'premiumMax', label: '권리금' },
+    ];
+  }
+  return [
+    { key: 'depositMax', label: '보증금' },
+    { key: 'rentMax', label: '월세' },
+    { key: 'maintenanceFeeMax', label: '관리비' },
+    { key: 'premiumMax', label: '권리금' },
+  ];
+}
+
+function CandidateGate({
+  status,
+  count,
+  radius,
+  transactionType,
+  error,
+}: {
+  status: CandidateStatus;
+  count: number;
+  radius: number;
+  transactionType: VacancyTransactionType;
+  error?: string | null;
+}) {
+  const isLoading = status === 'loading';
+  const isError = status === 'error';
+  const hasMatches = status === 'ok' && count > 0;
+  const className = `lf-candidate ${isLoading ? 'is-loading' : isError ? 'is-error' : hasMatches ? 'is-good' : 'is-empty'}`;
+
+  return (
+    <div className={className}>
+      <div className="lf-candidate-icon">
+        <Icon name={isLoading ? 'clock' : hasMatches ? 'check' : 'info'} size={14} />
+      </div>
+      <div className="lf-candidate-copy">
+        <b>
+          {isLoading
+            ? '조건에 맞는 공실 확인 중'
+            : isError
+              ? '공실 확인 실패'
+              : hasMatches
+                ? `${count.toLocaleString()}개 공실이 분석 가능`
+                : '조건에 맞는 공실이 없어요'}
+        </b>
+        <span>
+          {isLoading
+            ? `반경 ${radius.toLocaleString()}m · ${transactionType} 조건을 반영하고 있어요`
+            : isError
+              ? error || '잠시 후 다시 시도하거나 조건을 바꿔주세요'
+              : hasMatches
+                ? '지도 마커를 확인한 뒤 바로 평가를 시작할 수 있어요'
+                : '반경을 넓히거나 금액 조건을 완화하면 평가를 시작할 수 있어요'}
+        </span>
+      </div>
+    </div>
   );
 }

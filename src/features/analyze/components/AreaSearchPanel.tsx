@@ -1,22 +1,21 @@
 import { useEffect, useState } from 'react';
 import { api, type AreaSearchHit } from '../../../api';
 import { Icon } from '../../../shared/Icon';
-import { FIXED_RADIUS, type AnalyzeArea } from '../model';
+import { type AnalyzeArea } from '../model';
 
 type AreaSearchPanelProps = {
   area: AnalyzeArea | null;
   onClearArea: () => void;
   onSearchPan: (place: AreaSearchHit) => void;
-  sdkReady: boolean;
 };
 
-export function AreaSearchPanel({ area, onClearArea, onSearchPan, sdkReady }: AreaSearchPanelProps) {
+export function AreaSearchPanel({ area, onClearArea, onSearchPan }: AreaSearchPanelProps) {
   const [q, setQ] = useState('');
   const [matches, setMatches] = useState<AreaSearchHit[]>([]);
 
   useEffect(() => {
     const trimmed = q.trim();
-    if (!trimmed || !sdkReady) {
+    if (!trimmed) {
       setMatches([]);
       return;
     }
@@ -38,7 +37,7 @@ export function AreaSearchPanel({ area, onClearArea, onSearchPan, sdkReady }: Ar
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [q, sdkReady]);
+  }, [q]);
 
   const handleSearchClick = (place: AreaSearchHit) => {
     onSearchPan(place);
@@ -102,7 +101,7 @@ export function AreaSearchPanel({ area, onClearArea, onSearchPan, sdkReady }: Ar
           </div>
           <div className="lf-pick-summary-row">
             <span className="lf-pick-summary-lab">분석 반경</span>
-            <span className="lf-pick-summary-val">{FIXED_RADIUS}m</span>
+            <span className="lf-pick-summary-val">{area.radius.toLocaleString()}m</span>
           </div>
           <button className="lf-pick-clear" onClick={onClearArea}>
             <Icon name="close" size={11} /> 마커 다시 찍기
@@ -112,7 +111,7 @@ export function AreaSearchPanel({ area, onClearArea, onSearchPan, sdkReady }: Ar
 
       <div style={{ fontSize: 10, color: '#9AA3BD', marginTop: 10, display: 'flex', alignItems: 'center', gap: 4, lineHeight: 1.5 }}>
         <Icon name="info" size={11} />
-        도로명 주소·실좌표로 거리 계산 → 반경 {FIXED_RADIUS}m 내 공실매물만 분석해요
+        도로명 주소·실좌표로 거리 계산 → 선택한 반경 내 공실매물만 분석해요
       </div>
     </>
   );

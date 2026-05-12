@@ -30,6 +30,8 @@ export type AnalysisSession = {
     depositMax?: number;
     rentMax?: number;
     maintenanceFeeMax?: number;
+    premiumMax?: number;
+    salePriceMax?: number;
   };
   top3?: Top3Item[];
   error?: {
@@ -152,6 +154,8 @@ export function buildSessionFromBackend(
       depositMax: item.budgetDepositMax ?? undefined,
       rentMax: item.budgetRentMax ?? undefined,
       maintenanceFeeMax: item.budgetMaintenanceFeeMax ?? undefined,
+      premiumMax: item.budgetPremiumMax ?? undefined,
+      salePriceMax: item.budgetSalePriceMax ?? undefined,
     },
     top3: item.topScore != null
       ? [{
@@ -238,11 +242,21 @@ function formatDateTime(iso: string): { date: string; time: string } {
 }
 
 function formatBudget(budget?: AnalysisSession['budget']): string {
-  if (!budget?.depositMax && !budget?.rentMax && !budget?.maintenanceFeeMax) return '예산 조건 없음';
+  if (!budget?.depositMax
+    && !budget?.rentMax
+    && !budget?.maintenanceFeeMax
+    && !budget?.premiumMax
+    && !budget?.salePriceMax) {
+    return '예산 조건 없음';
+  }
   const deposit = budget.depositMax ? `${budget.depositMax.toLocaleString()}만원` : '미지정';
   const rent = budget.rentMax ? `${budget.rentMax.toLocaleString()}만원` : '미지정';
   const maintenance = budget.maintenanceFeeMax ? `${budget.maintenanceFeeMax.toLocaleString()}만원` : '미지정';
-  return `보증금 ${deposit} / 월세 ${rent} / 관리비 ${maintenance}`;
+  const premium = budget.premiumMax ? `${budget.premiumMax.toLocaleString()}만원` : '미지정';
+  const salePrice = budget.salePriceMax ? `${budget.salePriceMax.toLocaleString()}만원` : '미지정';
+  if (budget.salePriceMax) return `매매가 ${salePrice} / 관리비 ${maintenance}`;
+  if (budget.rentMax) return `보증금 ${deposit} / 월세 ${rent} / 관리비 ${maintenance} / 권리금 ${premium}`;
+  return `보증금 ${deposit} / 관리비 ${maintenance} / 권리금 ${premium}`;
 }
 
 function makeTop3(lat: number, lng: number): Top3Item[] {
@@ -289,17 +303,21 @@ function recommendationsToTop3(recommendations: AnalysisRecommendation[]): Top3I
         rent: item.monthlyRent ?? 0,
         deposit: item.deposit ?? 0,
         mgmt: item.maintenanceFee ?? 0,
+        premium: item.premium ?? 0,
+        salePrice: item.salePrice ?? 0,
+        transactionType: item.transactionType,
         score: Math.round(item.score),
+        recommended: item.recommended,
         foot,
         comp: (item.restaurantCount500m ?? 0) + (item.cafeCount500m ?? 0),
         // Scale won → 만원 once so the persisted session matches the UI label.
         rev: Math.round((item.averageSalesPerStore ?? 0) / 10000),
         growth: Math.round((item.industryGrowthRate500m ?? 0) * 10) / 10,
-        footHourly: makeHourly(foot || 1),
+        footHourly: item.hourlyFloatingPopulation?.map(value => Math.round(value)) ?? makeHourly(foot || 1),
         nearby: {
-          subway: `${item.distanceM.toLocaleString()}m 이내 후보`,
-          bus: `공실 ID ${item.vacancyId}`,
-          parking: '상세 데이터 준비 중',
+          subway: summarizePlaces(item.subwayStationInfo, `${item.distanceM.toLocaleString()}m 이내 후보`),
+          bus: summarizePlaces(item.busStopInfo, `공실 ID ${item.vacancyId}`),
+          parking: summarizePlaces(item.parkingInfo, '주차장 정보 없음'),
         },
       };
     });
@@ -310,6 +328,14 @@ function readableLabel(value?: string | null): string | undefined {
   const trimmed = value.trim();
   if (!trimmed || trimmed.toLowerCase() === 'unknown') return undefined;
   return trimmed;
+}
+
+function summarizePlaces(value: string | null | undefined, fallback: string): string {
+  const trimmed = readableLabel(value);
+  if (!trimmed) return fallback;
+  const parts = trimmed.split(';').map(part => part.trim()).filter(Boolean);
+  if (parts.length <= 2) return parts.join(' · ') || trimmed;
+  return `${parts[0]} 외 ${parts.length - 1}곳`;
 }
 
 const HOURLY_BASE = [

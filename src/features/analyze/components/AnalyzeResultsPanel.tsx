@@ -75,15 +75,19 @@ export function AnalyzeResultsPanel({
             <div className="rr-list">
               {properties.map(property => {
               const isSelected = property.rank === selected && detailOpen;
+              const recommended = property.recommended !== false;
               return (
                 <div
                   key={property.rank}
-                  className={`rr-card ${isSelected ? 'is-sel' : ''}`}
+                  className={`rr-card ${isSelected ? 'is-sel' : ''} ${recommended ? 'is-recommended' : 'is-not-recommended'}`}
                   onClick={() => handleCardClick(property.rank)}
                 >
                   <div className="rr-card-main">
                     <div className={`rr-rank r${property.rank}`}>{property.rank}</div>
                     <div className="rr-info">
+                      <div className={`rr-rec-badge ${recommended ? 'is-good' : 'is-caution'}`}>
+                        {recommended ? '추천' : '비추천'}
+                      </div>
                       <div className="rr-addr">{property.addr}</div>
                       <div className="rr-sub">{property.floor} · {property.area}㎡ · 상가</div>
                     </div>
@@ -94,8 +98,8 @@ export function AnalyzeResultsPanel({
                   </div>
                   <div className="rr-kpis">
                     <div className="rr-kpi">
-                      <div className="rr-kpi-lab">월세</div>
-                      <div className="rr-kpi-val">{property.rent}<span className="unit">만</span></div>
+                      <div className="rr-kpi-lab">{property.transactionType === '매매' ? '매매가' : '월세'}</div>
+                      <div className="rr-kpi-val">{property.transactionType === '매매' ? property.salePrice ?? 0 : property.rent}<span className="unit">만</span></div>
                     </div>
                     <div className="rr-kpi">
                       <div className="rr-kpi-lab">보증금</div>

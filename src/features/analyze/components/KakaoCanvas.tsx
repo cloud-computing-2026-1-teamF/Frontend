@@ -4,12 +4,14 @@ import {
   Map as KakaoMapView,
   MapMarker,
 } from 'react-kakao-maps-sdk';
-import type { AnalyzeArea, AnalyzePhase, AnalyzeProperty } from '../model';
+import type { AnalyzeArea, AnalyzePhase, AnalyzeProperty, CandidateStatus } from '../model';
 
 type KakaoCanvasProps = {
   center: { lat: number; lng: number };
   area: AnalyzeArea | null;
   properties: AnalyzeProperty[];
+  candidateProperties: AnalyzeProperty[];
+  candidateStatus: CandidateStatus;
   competitors: { lat: number; lng: number }[];
   showMarkers: boolean;
   selected: number;
@@ -21,10 +23,11 @@ type KakaoCanvasProps = {
 };
 
 export function KakaoCanvas({
-  center, area, properties, competitors, showMarkers, selected, setSelected,
+  center, area, properties, candidateProperties, candidateStatus, competitors, showMarkers, selected, setSelected,
   phase, step, bizTypeReady, onPickLatLng,
 }: KakaoCanvasProps) {
   const pickEnabled = phase === 'idle' && step === 2 && bizTypeReady;
+  const showCandidateMarkers = phase === 'idle' && candidateStatus === 'ok' && candidateProperties.length > 0;
   return (
     <div className="kakao-map">
       <KakaoMapView
@@ -60,6 +63,17 @@ export function KakaoCanvas({
           </>
         )}
 
+        {showCandidateMarkers && candidateProperties.map((p) => (
+          <CustomOverlayMap
+            key={p.vacancyId ?? `candidate-${p.rank}`}
+            position={{ lat: p.lat, lng: p.lng }}
+            yAnchor={0.5}
+            xAnchor={0.5}
+          >
+            <CandidateDot property={p} dense={candidateProperties.length > 60} />
+          </CustomOverlayMap>
+        ))}
+
         {showMarkers && competitors.map((c, i) => (
           <CustomOverlayMap key={`c${i}`} position={c} yAnchor={0.5} xAnchor={0.5}>
             <div className="km-comp-fade" style={{ animationDelay: `${0.6 + i * 0.05}s` }}>
@@ -90,9 +104,23 @@ export function KakaoCanvas({
   );
 }
 
+function CandidateDot({ property, dense }: { property: AnalyzeProperty; dense: boolean }) {
+  const recommended = property.recommended !== false;
+  const size = dense ? 9 : 12;
+  const title = `${property.addr} · 생존율 ${property.score}%`;
+  return (
+    <div
+      className={`km-candidate-dot ${recommended ? 'is-recommended' : 'is-caution'}`}
+      title={title}
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
 function NumberedPin({ p, isSel, onClick }: { p: AnalyzeProperty; isSel: boolean; onClick: () => void }) {
   const colors = ['#F4B431', '#6B7490', '#D4986B'];
-  const c = colors[p.rank - 1] || colors[0];
+  const recommended = p.recommended !== false;
+  const c = recommended ? (colors[p.rank - 1] || colors[0]) : '#6B7490';
   // Rewritten as a plain styled div instead of an SVG teardrop. The previous
   // SVG version rendered fine in dev but consistently disappeared for
   // unselected pins in the deployed Kakao Maps overlay layer (likely due to a
@@ -135,7 +163,7 @@ function NumberedPin({ p, isSel, onClick }: { p: AnalyzeProperty; isSel: boolean
         }}>
           <div style={{ fontSize: 11 }}>{p.addr}</div>
           <div style={{ fontSize: 10, color: c, fontWeight: 700, marginTop: 2 }}>
-            생존율 {p.score}% · 월세 {p.rent}만
+            {recommended ? '추천' : '비추천'} · 생존율 {p.score}% · 월세 {p.rent}만
           </div>
           <div style={{
             position: 'absolute', bottom: -4, left: '50%',

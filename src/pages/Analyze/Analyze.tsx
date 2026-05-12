@@ -25,14 +25,17 @@ import {
   FIXED_RADIUS,
   buildCompetitors,
   buildProperties,
+  buildPropertiesFromVacancies,
   buildPropertiesFromRecommendations,
   createFallbackArea,
   reverseGeocode,
   type AnalyzeArea,
+  type CandidateStatus,
   type AnalyzePhase,
   type AnalyzeProperty,
   type BizKey,
   type BizType,
+  type VacancyTransactionType,
 } from '../../features/analyze/model';
 import {
   useKakaoLoader,
@@ -61,10 +64,17 @@ export function Analyze() {
   const [analysisStepLabel, setAnalysisStepLabel] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [recommendedProperties, setRecommendedProperties] = useState<AnalyzeProperty[]>([]);
+  const [candidateProperties, setCandidateProperties] = useState<AnalyzeProperty[]>([]);
+  const [candidateStatus, setCandidateStatus] = useState<CandidateStatus>('idle');
+  const [candidateTotal, setCandidateTotal] = useState(0);
+  const [candidateError, setCandidateError] = useState<string | null>(null);
+  const [transactionType, setTransactionType] = useState<VacancyTransactionType>('임대');
   const [budget, setBudget] = useState({
     depositMax: '',
     rentMax: '',
     maintenanceFeeMax: '',
+    premiumMax: '',
+    salePriceMax: '',
   });
   const trackingCleanupRef = useRef<(() => void) | null>(null);
 
@@ -94,18 +104,28 @@ export function Analyze() {
   };
 
   const clearBudget = () => {
-    setBudget({ depositMax: '', rentMax: '', maintenanceFeeMax: '' });
+    setBudget({ depositMax: '', rentMax: '', maintenanceFeeMax: '', premiumMax: '', salePriceMax: '' });
+  };
+
+  const handleTransactionTypeChange = (nextType: VacancyTransactionType) => {
+    setTransactionType(nextType);
+    clearBudget();
+  };
+
+  const handleRadiusChange = (radius: number) => {
+    setArea(current => current ? { ...current, radius } : current);
   };
 
   // Right-clicking the map drops a pin → reverse-geocode → set Area.
   const handlePickLatLng = async (lat: number, lng: number) => {
     const bizLabel = bizTypes.find(b => b.key === bizType)?.label || '';
+    const radius = area?.radius ?? FIXED_RADIUS;
     try {
       const next = await reverseGeocode(lat, lng, bizLabel);
-      setArea(next);
+      setArea({ ...next, radius });
       setMapCenter({ lat, lng });
     } catch {
-      setArea(createFallbackArea(lat, lng, bizLabel));
+      setArea({ ...createFallbackArea(lat, lng, bizLabel), radius });
     }
   };
 
@@ -119,7 +139,7 @@ export function Analyze() {
       id: hit.id,
       lat,
       lng,
-      radius: FIXED_RADIUS,
+      radius: area?.radius ?? FIXED_RADIUS,
       roadAddress: hit.fullName,
       dong: hit.name,
       gu: hit.region,
@@ -142,8 +162,79 @@ export function Analyze() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bizType]);
 
+  useEffect(() => {
+    if (!bizType || !area || phase !== 'idle') {
+      setCandidateProperties([]);
+      setCandidateTotal(0);
+      setCandidateStatus('idle');
+      setCandidateError(null);
+      return;
+    }
+
+    if (USE_MOCK) {
+      const mockProperties = buildProperties(area).map(property => ({
+        ...property,
+        transactionType,
+        recommended: property.rank <= 2,
+      }));
+      setCandidateProperties(mockProperties);
+      setCandidateTotal(mockProperties.length);
+      setCandidateStatus('ok');
+      setCandidateError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setCandidateStatus('loading');
+    setCandidateError(null);
+    const timer = window.setTimeout(() => {
+      api.vacancies.search({
+        categoryId: bizType,
+        transactionType,
+        latitude: area.lat,
+        longitude: area.lng,
+        radiusM: area.radius,
+        ...toVacancySearchBudget(budget, transactionType),
+        page: 0,
+        size: 120,
+        sort: 'score_desc',
+      })
+        .then(result => {
+          if (cancelled) return;
+          setCandidateProperties(buildPropertiesFromVacancies(result.items));
+          setCandidateTotal(result.total);
+          setCandidateStatus('ok');
+        })
+        .catch(error => {
+          if (cancelled) return;
+          setCandidateProperties([]);
+          setCandidateTotal(0);
+          setCandidateStatus('error');
+          setCandidateError(error instanceof Error ? error.message : '조건에 맞는 공실을 확인하지 못했어요.');
+        });
+    }, 220);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [
+    area?.id,
+    area?.lat,
+    area?.lng,
+    area?.radius,
+    bizType,
+    budget.depositMax,
+    budget.maintenanceFeeMax,
+    budget.premiumMax,
+    budget.rentMax,
+    budget.salePriceMax,
+    phase,
+    transactionType,
+  ]);
+
   const runAnalysis = async () => {
-    if (!bizType || !area) return;
+    if (!bizType || !area || candidateStatus !== 'ok' || candidateTotal === 0) return;
 
     trackingCleanupRef.current?.();
     trackingCleanupRef.current = null;
@@ -160,13 +251,14 @@ export function Analyze() {
         setArea(analysisArea);
       }
       const selectedBusiness = bizTypes.find(b => b.key === bizType);
-      const budgetRequest = toBudgetRequest(budget);
+      const budgetRequest = toBudgetRequest(budget, transactionType);
       const result = await api.analyses.create({
         businessType: bizType,
         areaId: analysisArea.id,
+        transactionType,
         budget: budgetRequest,
         center: { lat: analysisArea.lat, lng: analysisArea.lng },
-        radiusM: FIXED_RADIUS,
+        radiusM: analysisArea.radius,
         roadAddress: analysisArea.roadAddress,
         displayName: analysisArea.displayName,
         region: analysisArea.dong,
@@ -191,7 +283,7 @@ export function Analyze() {
         roadAddress: analysisArea.roadAddress,
         lat: analysisArea.lat,
         lng: analysisArea.lng,
-        radius: FIXED_RADIUS,
+        radius: analysisArea.radius,
         budget: budgetRequest,
         recommendations: result.recommendations,
       });
@@ -329,6 +421,11 @@ export function Analyze() {
     setAnalysisStepLabel(null);
     setAnalysisError(null);
     setRecommendedProperties([]);
+    setCandidateProperties([]);
+    setCandidateTotal(0);
+    setCandidateStatus('idle');
+    setCandidateError(null);
+    setTransactionType('임대');
     clearBudget();
     trackingCleanupRef.current?.();
     trackingCleanupRef.current = null;
@@ -350,6 +447,7 @@ export function Analyze() {
     () => buildCompetitors(propertiesCenter),
     [propertiesCenter.lat, propertiesCenter.lng],
   );
+  const canRunAnalysis = !!bizType && !!area && candidateStatus === 'ok' && candidateTotal > 0;
 
   return (
     <div className="analyze-shell">
@@ -366,6 +464,8 @@ export function Analyze() {
           center={mapCenter}
           area={area}
           properties={properties}
+          candidateProperties={phase === 'idle' ? candidateProperties : []}
+          candidateStatus={candidateStatus}
           competitors={competitors}
           showMarkers={showMarkers}
           selected={selected}
@@ -387,13 +487,19 @@ export function Analyze() {
         bizTypes={bizTypes}
         area={area}
         budget={budget}
+        transactionType={transactionType}
+        onTransactionTypeChange={handleTransactionTypeChange}
         onBudgetChange={handleBudgetChange}
         onClearBudget={clearBudget}
+        onRadiusChange={handleRadiusChange}
         onClearArea={() => setArea(null)}
         onSearchPan={handleSearchPick}
         onRun={runAnalysis}
+        canRun={canRunAnalysis}
+        candidateStatus={candidateStatus}
+        candidateCount={candidateTotal}
+        candidateError={candidateError}
         onReset={reset}
-        sdkReady={!sdkLoading && !sdkError}
         analysisProgress={analysisProgress}
         analysisStepLabel={analysisStepLabel}
         analysisError={analysisError}
@@ -418,11 +524,15 @@ function toBudgetRequest(budget: {
   depositMax: string;
   rentMax: string;
   maintenanceFeeMax: string;
-}) {
+  premiumMax: string;
+  salePriceMax: string;
+}, transactionType: VacancyTransactionType = '임대') {
   const next = {
-    depositMax: toOptionalNumber(budget.depositMax),
-    rentMax: toOptionalNumber(budget.rentMax),
+    depositMax: transactionType !== '매매' ? toOptionalNumber(budget.depositMax) : undefined,
+    rentMax: transactionType === '임대' ? toOptionalNumber(budget.rentMax) : undefined,
     maintenanceFeeMax: toOptionalNumber(budget.maintenanceFeeMax),
+    premiumMax: transactionType !== '매매' ? toOptionalNumber(budget.premiumMax) : undefined,
+    salePriceMax: transactionType === '매매' ? toOptionalNumber(budget.salePriceMax) : undefined,
   };
   const entries = Object.entries(next).filter(([, value]) => value !== undefined);
   if (entries.length === 0) return undefined;
@@ -430,7 +540,22 @@ function toBudgetRequest(budget: {
     depositMax?: number;
     rentMax?: number;
     maintenanceFeeMax?: number;
+    premiumMax?: number;
+    salePriceMax?: number;
   };
+}
+
+function toVacancySearchBudget(
+  budget: {
+    depositMax: string;
+    rentMax: string;
+    maintenanceFeeMax: string;
+    premiumMax: string;
+    salePriceMax: string;
+  },
+  transactionType: VacancyTransactionType,
+) {
+  return toBudgetRequest(budget, transactionType) ?? {};
 }
 
 function toOptionalNumber(value: string): number | undefined {

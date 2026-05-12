@@ -105,12 +105,15 @@ export type AnalysisPollingResponse = {
   // History page render cards straight from the API without dipping into
   // localStorage. The single-analysis polling endpoint leaves them undefined.
   businessTypeKey?: string | null;
+  transactionType?: string | null;
   centerLat?: number | null;
   centerLng?: number | null;
   radiusM?: number | null;
   budgetDepositMax?: number | null;
   budgetRentMax?: number | null;
   budgetMaintenanceFeeMax?: number | null;
+  budgetPremiumMax?: number | null;
+  budgetSalePriceMax?: number | null;
   topScore?: number | null;
   recommendationCount?: number | null;
 };
@@ -126,6 +129,8 @@ export type AnalysisBudgetRequest = {
   depositMax?: number;
   rentMax?: number;
   maintenanceFeeMax?: number;
+  premiumMax?: number;
+  salePriceMax?: number;
 };
 
 export type AnalysisLocationRequest = {
@@ -136,6 +141,7 @@ export type AnalysisLocationRequest = {
 export type AnalysisRecommendation = {
   rank: number;
   vacancyId: string;
+  recommended?: boolean | null;
   score: number;
   distanceM: number;
   areaId: string;
@@ -144,6 +150,9 @@ export type AnalysisRecommendation = {
   monthlyRent?: number | null;
   deposit?: number | null;
   maintenanceFee?: number | null;
+  premium?: number | null;
+  salePrice?: number | null;
+  transactionType?: string | null;
   facilityTotalSize?: number | null;
   locationArea?: number | null;
   category?: string | null;
@@ -156,11 +165,16 @@ export type AnalysisRecommendation = {
   cafeCount500m?: number | null;
   industryGrowthRate500m?: number | null;
   averageSalesPerStore?: number | null;
+  busStopInfo?: string | null;
+  subwayStationInfo?: string | null;
+  parkingInfo?: string | null;
+  hourlyFloatingPopulation?: number[] | null;
 };
 
 export type CreateAnalysisRequest = {
   businessType: BusinessType['key'];
   areaId: string;
+  transactionType?: string;
   budget?: AnalysisBudgetRequest;
   center?: AnalysisLocationRequest;
   x?: number;
@@ -290,6 +304,10 @@ export type Vacancy = {
   rentAdjustable?: boolean | null;
   rentFreePeriodAvailable?: boolean | null;
   subway?: string | null;
+  busStopInfo?: string | null;
+  subwayStationInfo?: string | null;
+  parkingInfo?: string | null;
+  hourlyFloatingPopulation?: number[] | null;
   brokerageFee?: number | null;
   brokerageRate?: number | null;
   viewCount?: number | null;
@@ -357,10 +375,16 @@ export type VacancySearchSort =
 export type VacancySearchQuery = {
   areaId?: string;
   categoryId?: string;
+  transactionType?: string;
   q?: string;
+  latitude?: number;
+  longitude?: number;
+  radiusM?: number;
   rentMax?: number;
   depositMax?: number;
   maintenanceFeeMax?: number;
+  premiumMax?: number;
+  salePriceMax?: number;
   scoreMin?: number;
   areaMin?: number;
   areaMax?: number;

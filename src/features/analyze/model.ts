@@ -1,11 +1,17 @@
-import type { AnalysisRecommendation, BusinessType } from '../../api';
+import type { AnalysisRecommendation, BusinessType, Vacancy } from '../../api';
 
-export const FIXED_RADIUS = 500;
+export const DEFAULT_RADIUS = 500;
+export const MIN_RADIUS = 200;
+export const MAX_RADIUS = 2000;
+export const RADIUS_STEP = 100;
+export const FIXED_RADIUS = DEFAULT_RADIUS;
 export const DEFAULT_CENTER = { lat: 37.5572, lng: 126.9237 };
 
 export type BizKey = string;
 export type BizType = Pick<BusinessType, 'key' | 'label' | 'emoji'>;
 export type AnalyzePhase = 'idle' | 'analyzing' | 'done' | 'failed';
+export type VacancyTransactionType = '임대' | '전세' | '매매';
+export type CandidateStatus = 'idle' | 'loading' | 'ok' | 'error';
 
 export type AnalyzeArea = {
   id: string;
@@ -22,12 +28,16 @@ export type AnalyzeArea = {
 export type AnalyzeProperty = {
   vacancyId?: string;
   rank: number;
+  recommended?: boolean | null;
   addr: string;
   floor: string;
   area: number;
   rent: number;
   deposit: number;
   mgmt: number;
+  premium?: number;
+  salePrice?: number;
+  transactionType?: string | null;
   score: number;
   foot: number;
   comp: number;
@@ -36,6 +46,12 @@ export type AnalyzeProperty = {
   lat: number;
   lng: number;
   distanceM?: number;
+  hourlyFloatingPopulation?: number[];
+  nearby?: {
+    subway: string;
+    bus: string;
+    parking: string;
+  };
 };
 
 export const FALLBACK_BIZ_TYPES: BizType[] = [
@@ -59,7 +75,7 @@ export function createFallbackArea(lat: number, lng: number, bizLabel: string): 
     id: coordAreaId(lat, lng),
     lat,
     lng,
-    radius: FIXED_RADIUS,
+    radius: DEFAULT_RADIUS,
     roadAddress: '주소 조회 실패',
     dong: '미지정',
     gu: '',
@@ -86,7 +102,7 @@ export function reverseGeocode(
         id: coordAreaId(lat, lng),
         lat,
         lng,
-        radius: FIXED_RADIUS,
+        radius: DEFAULT_RADIUS,
         roadAddress: roadAddress || `${gu} ${dong}`.trim() || '주소 정보 없음',
         dong: regionLabel,
         gu,
@@ -166,12 +182,16 @@ export const buildPropertiesFromRecommendations = (
       return {
         vacancyId: item.vacancyId,
         rank: item.rank,
+        recommended: item.recommended,
         addr,
         floor: readableLabel(item.category) || '상가',
         area: roundOne(area),
         rent: item.monthlyRent ?? 0,
         deposit: item.deposit ?? 0,
         mgmt: item.maintenanceFee ?? 0,
+        premium: item.premium ?? 0,
+        salePrice: item.salePrice ?? 0,
+        transactionType: item.transactionType,
         score: Math.round(item.score),
         foot,
         comp: restaurantCount + cafeCount,
@@ -183,6 +203,52 @@ export const buildPropertiesFromRecommendations = (
         lat: item.latitude,
         lng: item.longitude,
         distanceM: item.distanceM,
+        hourlyFloatingPopulation: item.hourlyFloatingPopulation?.map(value => Math.round(value)) ?? undefined,
+        nearby: {
+          subway: summarizePlaces(item.subwayStationInfo, '지하철 정보 없음'),
+          bus: summarizePlaces(item.busStopInfo, '버스 정류장 정보 없음'),
+          parking: summarizePlaces(item.parkingInfo, '주차장 정보 없음'),
+        },
+      };
+    });
+
+export const buildPropertiesFromVacancies = (vacancies: Vacancy[]): AnalyzeProperty[] =>
+  vacancies
+    .filter(vacancy => typeof vacancy.latitude === 'number' && typeof vacancy.longitude === 'number')
+    .map((vacancy, index) => {
+      const foot = vacancy.floatingPopulationAnnualTotal
+        ? Math.round(vacancy.floatingPopulationAnnualTotal / 365)
+        : Math.round((vacancy.hourlyFloatingPopulation?.reduce((sum, value) => sum + value, 0) ?? 0) / 24);
+      const area = vacancy.facilityTotalSize ?? vacancy.locationArea ?? vacancy.dedicatedArea ?? 0;
+      return {
+        vacancyId: vacancy.id,
+        rank: index + 1,
+        recommended: vacancy.recommended,
+        addr: readableLabel(vacancy.roadAddress)
+          || readableLabel(vacancy.lotAddress)
+          || readableLabel(vacancy.businessSubCategoryName)
+          || vacancy.id,
+        floor: readableLabel(vacancy.floor) || readableLabel(vacancy.category) || '상가',
+        area: roundOne(area),
+        rent: vacancy.monthlyRent ?? 0,
+        deposit: vacancy.deposit ?? 0,
+        mgmt: vacancy.maintenanceFee ?? 0,
+        premium: vacancy.premium ?? 0,
+        salePrice: vacancy.salePrice ?? 0,
+        transactionType: vacancy.transactionType,
+        score: Math.round(vacancy.survivalScore ?? 0),
+        foot,
+        comp: (vacancy.restaurantCount500m ?? 0) + (vacancy.cafeCount500m ?? 0),
+        rev: Math.round((vacancy.averageSalesPerStore ?? 0) / 10000),
+        growth: roundOne(vacancy.industryGrowthRate500m ?? 0),
+        lat: vacancy.latitude as number,
+        lng: vacancy.longitude as number,
+        hourlyFloatingPopulation: vacancy.hourlyFloatingPopulation?.map(value => Math.round(value)) ?? undefined,
+        nearby: {
+          subway: summarizePlaces(vacancy.subwayStationInfo || vacancy.subway, '지하철 정보 없음'),
+          bus: summarizePlaces(vacancy.busStopInfo, '버스 정류장 정보 없음'),
+          parking: summarizePlaces(vacancy.parkingInfo, '주차장 정보 없음'),
+        },
       };
     });
 
@@ -201,4 +267,12 @@ function readableLabel(value?: string | null): string | undefined {
   const trimmed = value.trim();
   if (!trimmed || trimmed.toLowerCase() === 'unknown') return undefined;
   return trimmed;
+}
+
+function summarizePlaces(value: string | null | undefined, fallback: string): string {
+  const trimmed = readableLabel(value);
+  if (!trimmed) return fallback;
+  const parts = trimmed.split(';').map(part => part.trim()).filter(Boolean);
+  if (parts.length <= 2) return parts.join(' · ') || trimmed;
+  return `${parts[0]} 외 ${parts.length - 1}곳`;
 }

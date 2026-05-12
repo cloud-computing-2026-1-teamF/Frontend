@@ -186,6 +186,9 @@ export function Detail() {
                     onClick={() => setSelected(i)}>
                     <div className="dt-top3-head">
                       <span className={`dt-top3-rank r${i + 1}`}>TOP {i + 1}</span>
+                      <span className={`dt-top3-rec ${p.recommended === false ? 'is-caution' : 'is-good'}`}>
+                        {p.recommended === false ? '비추천' : '추천'}
+                      </span>
                       {isSel && <span className="dt-top3-check"><Icon name="check" size={11} stroke={3} /></span>}
                     </div>
                     <div className="dt-top3-addr">{p.addr}</div>
@@ -208,6 +211,9 @@ export function Detail() {
             <div className="dt-hero-left">
               <div className="dt-hero-tag-row">
                 <span className={`dt-hero-rank r${selRank}`}>TOP {selRank}</span>
+                <span className={`dt-hero-tag ${sel.recommended === false ? 'is-caution' : 'is-good'}`}>
+                  {sel.recommended === false ? '비추천' : '추천'}
+                </span>
                 <span className="dt-hero-tag">{sel.floor}</span>
                 <span className="dt-hero-tag">{sel.area}㎡</span>
                 <span className="dt-hero-tag">상가 · 전용</span>

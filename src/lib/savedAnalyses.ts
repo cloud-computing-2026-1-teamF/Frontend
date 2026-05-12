@@ -5,10 +5,14 @@ import type { Property } from '../shared/FactorViz';
 
 export type Top3Item = Property & {
   addr: string;
+  recommended?: boolean | null;
   score: number;
   rent: number;
   deposit: number;
   mgmt: number;
+  premium?: number;
+  salePrice?: number;
+  transactionType?: string | null;
   area: number;
   floor: string;
   footHourly: number[];
