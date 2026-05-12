@@ -2,16 +2,19 @@
 import { Icon } from '../../shared/Icon';
 import { HeroMap } from './Hero';
 
+// Mirrors GET /v1/business-types (and FALLBACK_BIZ_TYPES in
+// features/analyze/model.ts) so the landing chips match what the real
+// /analyze page actually offers.
 const BIZ_TYPES = [
-  { key: 'korean',   label: '한식당',    emoji: '🍚' },
-  { key: 'cafe',     label: '카페',       emoji: '☕' },
-  { key: 'chicken',  label: '치킨집',    emoji: '🍗' },
-  { key: 'bunsik',   label: '분식점',    emoji: '🍜' },
-  { key: 'bakery',   label: '베이커리',  emoji: '🥐' },
-  { key: 'japanese', label: '일식',      emoji: '🍣' },
-  { key: 'bar',      label: '주점',      emoji: '🍺' },
-  { key: 'western',  label: '양식',      emoji: '🍝' },
-  { key: 'chinese',  label: '중식',      emoji: '🥢' },
+  { key: '1', label: '한식',              emoji: '🍚' },
+  { key: '9', label: '카페/디저트',       emoji: '☕' },
+  { key: '7', label: '패스트푸드',        emoji: '🍔' },
+  { key: '8', label: '주점업',            emoji: '🍻' },
+  { key: '3', label: '일식',              emoji: '🍣' },
+  { key: '4', label: '서양식',            emoji: '🍝' },
+  { key: '2', label: '중식',              emoji: '🥟' },
+  { key: '6', label: '구내식당 및 뷔페',  emoji: '🥘' },
+  { key: '5', label: '기타',              emoji: '🍽️' },
 ];
 
 export function LivePreview() {
@@ -31,7 +34,7 @@ export function LivePreview() {
                 <div className="lp-step-num done">✓</div>
                 <div style={{ flex: 1 }}>
                   <div className="lp-step-label">분석 업종</div>
-                  <div className="lp-step-val">☕ 카페</div>
+                  <div className="lp-step-val">☕ 카페/디저트</div>
                 </div>
                 <span className="lp-step-edit">변경</span>
               </div>

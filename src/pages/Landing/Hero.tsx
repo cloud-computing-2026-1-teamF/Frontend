@@ -3,21 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../shared/Icon';
 import { useAuth } from '../../auth/AuthContext';
 
+// Mirrors GET /v1/business-types — the same 9 categories the real
+// /analyze page offers. Keep the order/keys consistent with the backend.
 const TYPES = [
-  { key: 'korean',   label: '🍚 한식당',    icon: 'building' },
-  { key: 'cafe',     label: '☕ 카페',       icon: 'coffee' },
-  { key: 'chicken',  label: '🍗 치킨집',    icon: 'zap' },
-  { key: 'bunsik',   label: '🍜 분식점',    icon: 'layers' },
-  { key: 'bakery',   label: '🥐 베이커리',  icon: 'sparkles' },
-  { key: 'japanese', label: '🍣 일식',      icon: 'layers' },
-  { key: 'bar',      label: '🍺 주점',      icon: 'activity' },
-  { key: 'western',  label: '🍝 양식',      icon: 'cpu' },
-  { key: 'chinese',  label: '🥢 중식',      icon: 'map-pin' },
-  { key: 'fastfood', label: '🍔 패스트푸드', icon: 'zap' },
+  { key: '1', label: '🍚 한식',              icon: 'building' },
+  { key: '9', label: '☕ 카페/디저트',       icon: 'coffee' },
+  { key: '7', label: '🍔 패스트푸드',        icon: 'zap' },
+  { key: '8', label: '🍻 주점업',            icon: 'activity' },
+  { key: '3', label: '🍣 일식',              icon: 'layers' },
+  { key: '4', label: '🍝 서양식',            icon: 'cpu' },
+  { key: '2', label: '🥟 중식',              icon: 'map-pin' },
+  { key: '6', label: '🥘 구내식당 및 뷔페',  icon: 'layers' },
+  { key: '5', label: '🍽️ 기타',              icon: 'sparkles' },
 ];
 
 export function Hero() {
-  const [businessType, setBusinessType] = useState('cafe');
+  const [businessType, setBusinessType] = useState('9'); // 카페/디저트 (matches backend key)
   const [dong, setDong] = useState('');
   const { user, openAuth } = useAuth();
   const navigate = useNavigate();
@@ -76,8 +77,8 @@ export function Hero() {
               <div className="hs-lab">요식업 5년 내 폐업률<br /><span>(국내 평균)</span></div>
             </div>
             <div className="hs-stat">
-              <div className="hs-num num">10<span>종</span></div>
-              <div className="hs-lab">지원 요식업 업종<br /><span>(한식·카페·치킨 등)</span></div>
+              <div className="hs-num num">9<span>종</span></div>
+              <div className="hs-lab">지원 요식업 업종<br /><span>(한식·카페·패스트푸드 등)</span></div>
             </div>
             <div className="hs-stat">
               <div className="hs-num num">424<span>개</span></div>
@@ -97,19 +98,19 @@ export function Hero() {
         <div className="ticker-track">
           {Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="ticker-inner">
-              <span className="tk"><b>LIVE</b> ☕ 홍대입구동 카페 생존율 <span className="tk-up num">88<i>%</i></span></span>
+              <span className="tk"><b>LIVE</b> ☕ 홍대입구동 카페/디저트 생존율 <span className="tk-up num">88<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">🍚 연남동 한식당 <span className="tk-up num">77<i>%</i></span></span>
+              <span className="tk">🍚 연남동 한식 <span className="tk-up num">77<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">🍗 신림동 치킨집 <span className="tk-down num">54<i>%</i></span></span>
+              <span className="tk">🍔 신림동 패스트푸드 <span className="tk-down num">54<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">🥐 성수2가동 베이커리 <span className="tk-up num">82<i>%</i></span></span>
+              <span className="tk">🍝 성수2가동 서양식 <span className="tk-up num">82<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">🍺 이태원1동 주점 <span className="tk-down num">43<i>%</i></span></span>
+              <span className="tk">🍻 이태원1동 주점업 <span className="tk-down num">43<i>%</i></span></span>
               <span className="tk-sep" />
               <span className="tk">🍣 역삼1동 일식 <span className="tk-up num">71<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">☕ 서교동 카페 <span className="tk-up num">88<i>%</i></span></span>
+              <span className="tk">🥟 명동 중식 <span className="tk-up num">75<i>%</i></span></span>
               <span className="tk-sep" />
             </div>
           ))}

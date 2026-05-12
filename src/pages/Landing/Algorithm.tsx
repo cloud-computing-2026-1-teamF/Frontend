@@ -22,12 +22,12 @@ export function Algorithm() {
             <div className="an-body">
               <div className="an-desc">열고 싶은 가게를 선택해요</div>
               <div className="an-features">
-                <span className="feat-pill">☕ 카페</span>
                 <span className="feat-pill">🍚 한식</span>
-                <span className="feat-pill">🍗 치킨</span>
-                <span className="feat-pill">🥐 베이커리</span>
+                <span className="feat-pill">☕ 카페/디저트</span>
+                <span className="feat-pill">🍔 패스트푸드</span>
+                <span className="feat-pill">🍻 주점업</span>
               </div>
-              <div className="an-output mono">10개 업종 지원</div>
+              <div className="an-output mono">9개 업종 지원</div>
             </div>
           </div>
 
