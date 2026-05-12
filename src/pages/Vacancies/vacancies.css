@@ -615,21 +615,21 @@
   grid-template-areas:
     "label count"
     "meta count";
-  grid-template-columns: minmax(72px, 1fr) auto;
+  grid-template-columns: minmax(48px, 1fr) auto;
   align-items: center;
-  column-gap: 10px;
-  min-width: 128px;
-  max-width: 156px;
-  min-height: 50px;
-  padding: 8px 9px 8px 11px;
+  column-gap: 5px;
+  min-width: 88px;
+  max-width: 112px;
+  min-height: 32px;
+  padding: 3px 5px 3px 6px;
   border: 1px solid rgba(16, 24, 40, .12);
-  border-radius: 7px;
+  border-radius: 5px;
   background: rgba(255, 255, 255, .96);
   color: var(--ink-900);
   cursor: pointer;
   box-shadow:
-    0 10px 24px rgba(16, 24, 40, .18),
-    0 0 0 5px var(--cluster-accent-soft);
+    0 5px 14px rgba(16, 24, 40, .14),
+    0 0 0 2px var(--cluster-accent-soft);
   backdrop-filter: blur(8px);
   transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
@@ -638,9 +638,9 @@
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -5px;
-  width: 10px;
-  height: 10px;
+  bottom: -3px;
+  width: 7px;
+  height: 7px;
   border-right: 1px solid rgba(16, 24, 40, .12);
   border-bottom: 1px solid rgba(16, 24, 40, .12);
   background: rgba(255, 255, 255, .96);
@@ -649,11 +649,11 @@
 }
 
 .vacancy-area-cluster.size-sm {
-  min-width: 120px;
+  min-width: 84px;
 }
 
 .vacancy-area-cluster.size-lg {
-  min-width: 144px;
+  min-width: 100px;
 }
 
 .vacancy-area-cluster.score-mid {
@@ -670,10 +670,10 @@
 .vacancy-area-cluster.is-selected {
   z-index: 5;
   border-color: rgba(16, 24, 40, .22);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow:
-    0 14px 30px rgba(16, 24, 40, .24),
-    0 0 0 6px var(--cluster-accent-soft);
+    0 8px 20px rgba(16, 24, 40, .18),
+    0 0 0 3px var(--cluster-accent-soft);
 }
 
 .vacancy-area-cluster-count {
@@ -681,13 +681,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  height: 28px;
-  padding: 0 9px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   border-radius: 999px;
   background: var(--cluster-accent);
   color: #fff;
-  font-size: 13px;
+  font-size: 9px;
   font-weight: 950;
   font-variant-numeric: tabular-nums;
   box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .12);
@@ -701,7 +701,7 @@
   grid-area: label;
   overflow: hidden;
   color: var(--ink-900);
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 950;
   line-height: 1.15;
   text-overflow: ellipsis;
@@ -712,7 +712,7 @@
   grid-area: meta;
   overflow: hidden;
   color: var(--ink-500);
-  font-size: 10.5px;
+  font-size: 8px;
   font-style: normal;
   font-weight: 850;
   line-height: 1.1;

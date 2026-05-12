@@ -163,7 +163,7 @@ const FAKE_PROPERTIES: Omit<Top3Item, 'footHourly' | 'nearby'>[] = [
   { addr: '서교동 401-3',  floor: 'B1', area: 42.0, rent: 210, deposit: 2000, mgmt: 10, score: 79, foot: 6400, comp: 4, rev: 1380, growth: 11 },
 ];
 
-const MOCK_VACANCIES: Vacancy[] = [
+const MOCK_VACANCY_SEEDS: Vacancy[] = [
   {
     id: 'vac_mock_001',
     areaId: '11440540',
@@ -354,6 +354,69 @@ const MOCK_VACANCIES: Vacancy[] = [
   },
 ];
 
+// 서울 전역 지도 데모용 — 고정 시드 외 행정동에 공실을 퍼뜨려 클러스터 개수가 3개로만 보이지 않게 함.
+type SeoulVacancyAreaSeed = {
+  areaId: string;
+  dong: string;
+  district: string;
+  areaName: string;
+  lat: number;
+  lng: number;
+};
+
+const EXTRA_SEOUL_VACANCY_AREAS: SeoulVacancyAreaSeed[] = [
+  { areaId: '11110615', dong: '종로1.2.3.4가동', district: '종로구', areaName: '서울특별시 종로구 종로1.2.3.4가동', lat: 37.5701, lng: 126.9910 },
+  { areaId: '11680660', dong: '논현1동', district: '강남구', areaName: '서울특별시 강남구 논현1동', lat: 37.5114, lng: 127.0217 },
+  { areaId: '11740690', dong: '잠실6동', district: '송파구', areaName: '서울특별시 송파구 잠실6동', lat: 37.5164, lng: 127.0998 },
+  { areaId: '11560680', dong: '여의도동', district: '영등포구', areaName: '서울특별시 영등포구 여의도동', lat: 37.5219, lng: 126.9243 },
+  { areaId: '11740640', dong: '석촌동', district: '송파구', areaName: '서울특별시 송파구 석촌동', lat: 37.5056, lng: 127.1138 },
+  { areaId: '11380670', dong: '상암동', district: '마포구', areaName: '서울특별시 마포구 상암동', lat: 37.5796, lng: 126.8898 },
+  { areaId: '11290685', dong: '성수1가1동', district: '성동구', areaName: '서울특별시 성동구 성수1가1동', lat: 37.5481, lng: 127.0568 },
+  { areaId: '11230106', dong: '신촌동', district: '서대문구', areaName: '서울특별시 서대문구 신촌동', lat: 37.5599, lng: 126.9434 },
+  { areaId: '11740570', dong: '풍납2동', district: '송파구', areaName: '서울특별시 송파구 풍납2동', lat: 37.5348, lng: 127.1219 },
+  { areaId: '11305605', dong: '합정동', district: '마포구', areaName: '서울특별시 마포구 합정동', lat: 37.5496, lng: 126.9139 },
+  { areaId: '11680631', dong: '역삼2동', district: '강남구', areaName: '서울특별시 강남구 역삼2동', lat: 37.4958, lng: 127.0467 },
+  { areaId: '11290105', dong: '불광제2동', district: '은평구', areaName: '서울특별시 은평구 불광제2동', lat: 37.6289, lng: 126.9288 },
+  { areaId: '11740680', dong: '방이동', district: '송파구', areaName: '서울특별시 송파구 방이동', lat: 37.5089, lng: 127.1228 },
+];
+
+function seededVacanciesFromTemplate(template: Vacancy, seeds: SeoulVacancyAreaSeed[]): Vacancy[] {
+  const out: Vacancy[] = [];
+  seeds.forEach((seed, seedIdx) => {
+    [0, 1].forEach(slot => {
+      const jitLat = (((seedIdx * 5 + slot * 3) % 9) - 4) * 0.0012;
+      const jitLng = (((seedIdx * 7 + slot * 5) % 9) - 4) * 0.0012;
+      const score = Math.min(93, Math.max(63.5, 89 - seedIdx * 0.85 - slot * 1.4));
+      const rent = Math.round(175 + seedIdx * 6 + slot * 22 + (seed.areaId.charCodeAt(seed.areaId.length - 1) % 9) * 8);
+      const day = String(((seedIdx + slot * 3) % 27) + 1).padStart(2, '0');
+      out.push({
+        ...template,
+        id: `vac_mock_${seed.areaId}_${slot}`,
+        areaId: seed.areaId,
+        dong: seed.dong,
+        district: seed.district,
+        areaName: seed.areaName,
+        latitude: seed.lat + jitLat,
+        longitude: seed.lng + jitLng,
+        survivalScore: Number(score.toFixed(1)),
+        monthlyRent: rent,
+        deposit: Math.round(rent * 9 + seedIdx * 120),
+        maintenanceFee: Math.max(8, Math.round(10 + slot * 3 + (seedIdx % 5))),
+        businessSubCategoryName: `${seed.dong} ${slot + 1}번 공실`,
+        locationArea: Math.round(26 + (seedIdx % 8) * 3 + slot * 4),
+        createdAt: `2026-02-${day}T00:00:00.000Z`,
+        updatedAt: `2026-05-${day}T00:00:00.000Z`,
+      });
+    });
+  });
+  return out;
+}
+
+const MOCK_VACANCIES: Vacancy[] = [
+  ...MOCK_VACANCY_SEEDS,
+  ...seededVacanciesFromTemplate(MOCK_VACANCY_SEEDS[0], EXTRA_SEOUL_VACANCY_AREAS),
+];
+
 const handleCreateAnalysis: Handler = (spec) => {
   const u = requireUser();
   if ('error' in u) return u;
@@ -515,7 +578,7 @@ const handleSearchVacancies: Handler = (spec) => {
   const areaMax = numberQuery(spec.query?.areaMax);
   const sort = (spec.query?.sort as VacancySearchSort | undefined) ?? 'score_desc';
   const page = Math.max(0, Math.floor(numberQuery(spec.query?.page) ?? 0));
-  const size = Math.min(100, Math.max(1, Math.floor(numberQuery(spec.query?.size) ?? 20)));
+  const size = Math.min(600, Math.max(1, Math.floor(numberQuery(spec.query?.size) ?? 20)));
 
   const filtered = MOCK_VACANCIES.filter(vacancy => {
     const searchable = [
