@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { api } from '../../api';
 
 const SHORTLIST_KEY = 'sanggwon_shortlisted_vacancy_ids';
 const COMPARE_KEY = 'sanggwon_compare_vacancy_ids';
@@ -30,14 +31,36 @@ export function useVacancyCollections() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    api.vacancies.getShortlist()
+      .then(ids => {
+        if (cancelled) return;
+        writeIds(SHORTLIST_KEY, ids);
+      })
+      .catch(() => { /* 미로그인·오프라인 등은 로컬 목록 유지 */ });
+    return () => { cancelled = true };
+  }, []);
+
   const toggleShortlist = useCallback((id: string): ToggleResult => {
-    const next = toggleId(readIds(SHORTLIST_KEY), id);
+    const prev = readIds(SHORTLIST_KEY);
+    const next = toggleId(prev, id);
     writeIds(SHORTLIST_KEY, next);
+    void api.vacancies.putShortlist(next).catch(() => {
+      writeIds(SHORTLIST_KEY, prev);
+      window.dispatchEvent(new Event(COLLECTION_EVENT));
+    });
     return { ok: true };
   }, []);
 
   const removeShortlist = useCallback((id: string) => {
-    writeIds(SHORTLIST_KEY, readIds(SHORTLIST_KEY).filter(current => current !== id));
+    const prev = readIds(SHORTLIST_KEY);
+    const next = prev.filter(current => current !== id);
+    writeIds(SHORTLIST_KEY, next);
+    void api.vacancies.putShortlist(next).catch(() => {
+      writeIds(SHORTLIST_KEY, prev);
+      window.dispatchEvent(new Event(COLLECTION_EVENT));
+    });
   }, []);
 
   const toggleCompare = useCallback((id: string): ToggleResult => {

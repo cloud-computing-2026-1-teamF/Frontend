@@ -4,15 +4,10 @@ import './history.css';
 import { Icon } from '../../shared/Icon';
 import { Footer } from '../../shared/Nav';
 import type { SavedAnalysis } from '../../lib/savedAnalyses';
+import type { AnalysisPollingResponse } from '../../api/types';
 import { api } from '../../api';
 import { USE_MOCK } from '../../api/client';
-import {
-  type AnalysisSession,
-  listAnalysisSessions,
-  patchAnalysisSessionStatus,
-  removeAnalysisSession,
-  sessionToSavedAnalysis,
-} from '../../features/analysisSessions/store';
+import { removeAnalysisSession } from '../../features/analysisSessions/store';
 
 const AVG_FOOT = 7500;
 const AVG_COMP = 5;
@@ -20,7 +15,7 @@ const AVG_COMP = 5;
 type HistoryItem = SavedAnalysis & {
   title: string;
   tags: { key: string; dir: 'up' | 'down' }[];
-  backendStatus?: AnalysisSession['status'];
+  backendStatus?: AnalysisPollingResponse['status'];
   backendProgress?: number;
 };
 
@@ -28,7 +23,7 @@ export function History() {
   const [sort, setSort] = useState<'recent' | 'score'>('recent');
   const [q, setQ] = useState('');
   const [items, setItems] = useState<SavedAnalysis[]>([]);
-  const [sessions, setSessions] = useState<AnalysisSession[]>([]);
+  const [pollById, setPollById] = useState<Map<string, AnalysisPollingResponse>>(() => new Map());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,6 +31,7 @@ export function History() {
     setLoading(true);
 
     if (USE_MOCK) {
+      setPollById(new Map());
       api.analyses.list({ sort, q: q || undefined })
         .then(res => { if (!cancelled) setItems(res.items); })
         .catch(() => { if (!cancelled) setItems([]); })
@@ -43,22 +39,42 @@ export function History() {
       return () => { cancelled = true; };
     }
 
-    const localSessions = filterSessions(listAnalysisSessions(), q, sort);
-    setSessions(localSessions);
-    setItems(localSessions.map(sessionToSavedAnalysis));
-    setLoading(false);
+    api.analyses.list({ sort, q: q || undefined, limit: 200 })
+      .then(async res => {
+        if (cancelled) return;
+        let list = res.items;
+        const keyword = q.trim();
+        if (keyword) {
+          list = list.filter(it =>
+            it.region.includes(keyword)
+            || it.category.includes(keyword)
+            || `${it.region} ${it.category} 입지 분석`.includes(keyword));
+        }
+        list = [...list].sort((a, b) =>
+          sort === 'score' ? b.topScore - a.topScore : b.date.localeCompare(a.date));
 
-    Promise.all(localSessions.map(session =>
-      api.analyses.poll(session.id)
-        .then(status => patchAnalysisSessionStatus(session.id, status))
-        .catch(() => session),
-    )).then(next => {
-      if (cancelled) return;
-      const refreshed = next.filter(Boolean) as AnalysisSession[];
-      const filtered = filterSessions(refreshed, q, sort);
-      setSessions(filtered);
-      setItems(filtered.map(sessionToSavedAnalysis));
-    });
+        setItems(list);
+
+        const polls = await Promise.all(list.map(it =>
+          api.analyses.poll(it.id).catch(() => null)));
+
+        if (cancelled) return;
+
+        const nextMap = new Map<string, AnalysisPollingResponse>();
+        list.forEach((it, i) => {
+          const p = polls[i];
+          if (p) nextMap.set(String(it.id), p);
+        });
+        setPollById(nextMap);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setItems([]);
+          setPollById(new Map());
+          setLoading(false);
+        }
+      });
 
     return () => { cancelled = true; };
   }, [sort, q]);
@@ -66,9 +82,16 @@ export function History() {
   const handleDelete = async (id: number | string) => {
     if (!window.confirm('이 분석 이력을 삭제할까요?')) return;
     if (!USE_MOCK) {
-      removeAnalysisSession(id);
-      setSessions(prev => prev.filter(it => it.id !== String(id)));
-      setItems(prev => prev.filter(it => String(it.id) !== String(id)));
+      try {
+        await api.analyses.delete(id);
+        removeAnalysisSession(id);
+        setItems(prev => prev.filter(it => String(it.id) !== String(id)));
+        setPollById(prev => {
+          const n = new Map(prev);
+          n.delete(String(id));
+          return n;
+        });
+      } catch { /* 목록 유지 */ }
       return;
     }
     try {
@@ -77,27 +100,25 @@ export function History() {
     } catch { /* keep current list on failure */ }
   };
 
-  const sessionById = useMemo(() => new Map(sessions.map(session => [session.id, session])), [sessions]);
-
   const decorated: HistoryItem[] = useMemo(() => items.map(it => {
     const topFoot = it.top3[0].foot;
     const topComp = it.top3[0].comp;
-    const session = sessionById.get(String(it.id));
+    const poll = pollById.get(String(it.id));
     return {
       ...it,
       title: `${it.region} ${it.category} 입지 분석`,
-      backendStatus: session?.status,
-      backendProgress: session?.progress,
+      backendStatus: poll?.status,
+      backendProgress: poll?.progress,
       tags: [
-        session
-          ? { key: statusLabel(session.status), dir: session.status === 'done' ? 'up' as const : 'down' as const }
+        poll
+          ? { key: statusLabel(poll.status), dir: poll.status === 'done' ? 'up' as const : 'down' as const }
           : { key: '유동인구', dir: topFoot >= AVG_FOOT ? 'up' as const : 'down' as const },
-        session
-          ? { key: `${session.progress}%`, dir: session.status === 'done' ? 'up' as const : 'down' as const }
+        poll
+          ? { key: `${poll.progress}%`, dir: poll.status === 'done' ? 'up' as const : 'down' as const }
           : { key: '경쟁밀도', dir: topComp <= AVG_COMP ? 'up' as const : 'down' as const },
       ],
     };
-  }), [items, sessionById]);
+  }), [items, pollById]);
 
   return (
     <>
@@ -108,7 +129,7 @@ export function History() {
             <div className="hist-title-row">
               <div>
                 <h1>분석 이력</h1>
-                <p>{USE_MOCK ? '지금까지 분석한 상권과 공실매물을 다시 살펴보고 비교할 수 있어요.' : '이 브라우저에서 생성한 백엔드 분석 작업을 추적하고 상세 섹션 상태를 확인해요.'}</p>
+                <p>{USE_MOCK ? '지금까지 분석한 상권과 공실매물을 다시 살펴보고 비교할 수 있어요.' : '서버에 저장된 분석 이력을 불러옵니다. 진행 상태는 분석 작업 폴링으로 갱신돼요.'}</p>
               </div>
               <Link to="/analyze" className="btn btn-primary">
                 <Icon name="plus" size={14} />
@@ -156,17 +177,7 @@ export function History() {
   );
 }
 
-function filterSessions(sessions: AnalysisSession[], q: string, sort: 'recent' | 'score'): AnalysisSession[] {
-  const keyword = q.trim();
-  const filtered = keyword
-    ? sessions.filter(session =>
-      `${session.areaName} ${session.category} ${session.roadAddress}`.includes(keyword))
-    : sessions;
-  return [...filtered].sort((a, b) =>
-    sort === 'score' ? b.progress - a.progress : b.createdAt.localeCompare(a.createdAt));
-}
-
-function statusLabel(status: AnalysisSession['status']) {
+function statusLabel(status: AnalysisPollingResponse['status']) {
   return {
     pending: '대기 중',
     running: '분석 중',

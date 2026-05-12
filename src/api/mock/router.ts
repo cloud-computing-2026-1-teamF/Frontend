@@ -624,6 +624,25 @@ const handleGetVacancy: Handler = (_spec, params) => {
   return found ? ok(found) : fail(404, 'not_found', `vacancy ${params.id} not found`);
 };
 
+const handleGetVacancyShortlist: Handler = () => {
+  const u = requireUser();
+  if ('error' in u) return u;
+  const vacancyIds = store.getVacancyShortlist();
+  return ok({ vacancyIds });
+};
+
+const handlePutVacancyShortlist: Handler = (spec) => {
+  const u = requireUser();
+  if ('error' in u) return u;
+  const body = (spec.body || {}) as { vacancyIds?: unknown };
+  const raw = body.vacancyIds;
+  const vacancyIds = Array.isArray(raw)
+    ? raw.filter((id): id is string => typeof id === 'string')
+    : [];
+  store.setVacancyShortlist(vacancyIds);
+  return ok({ vacancyIds: store.getVacancyShortlist() });
+};
+
 function numberQuery(value: unknown): number | undefined {
   if (value === undefined || value === null || value === '') return undefined;
   const parsed = Number(value);
@@ -705,6 +724,8 @@ const ROUTES: Route[] = [
   route('DELETE /analyses/:id',       handleDeleteAnalysis),
 
   route('GET /vacancies/search',      handleSearchVacancies),
+  route('GET /vacancies/shortlist',   handleGetVacancyShortlist),
+  route('PUT /vacancies/shortlist',   handlePutVacancyShortlist),
   route('GET /vacancies',             handleListVacancies),
   route('GET /vacancies/:id',         handleGetVacancy),
 

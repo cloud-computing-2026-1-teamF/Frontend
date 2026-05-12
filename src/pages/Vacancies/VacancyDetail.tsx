@@ -114,7 +114,7 @@ export function VacancyDetail() {
                 className={`btn btn-secondary ${isShortlisted ? 'is-on' : ''}`}
                 onClick={() => collections.toggleShortlist(vacancy.id)}
               >
-                <Icon name="bookmark" size={15} />
+                <Icon name={isShortlisted ? 'bookmark-filled' : 'bookmark'} size={15} />
                 {isShortlisted ? '찜 해제' : '찜하기'}
               </button>
               <button

@@ -69,7 +69,7 @@ export function VacancyInspector({
 
       <div className="vacancy-inspector-actions">
         <button type="button" className={`btn btn-secondary btn-sm ${isShortlisted ? 'is-on' : ''}`} onClick={() => onToggleShortlist?.(vacancy.id)}>
-          <Icon name="bookmark" size={13} />
+          <Icon name={isShortlisted ? 'bookmark-filled' : 'bookmark'} size={13} />
           {isShortlisted ? '찜 해제' : '찜하기'}
         </button>
         <button

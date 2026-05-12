@@ -10,6 +10,8 @@ const KEYS = {
   saved: 'sanggwon_saved_analyses',
   hidden: 'sanggwon_hidden_history_ids',
   accounts: 'sg_accounts',
+  /** 목 계정별 공실 찜 id (실서버 연동 시 PUT /vacancies/shortlist 스펙과 동일) */
+  vacancyShortlist: 'sg_vacancy_shortlist',
 } as const;
 
 // ── Accounts (mock 회원 DB) ────────────────────────────────────────────────
@@ -117,6 +119,14 @@ export const patchAnalysis = (id: number | string, patch: Partial<SavedAnalysis>
   // (matches what a real backend would do for "demo" rows it doesn't own).
   const seed = HISTORY_ITEMS.find(it => String(it.id) === String(id));
   return seed ? { ...seed, ...patch } : undefined;
+};
+
+// ── Vacancy shortlist (mock DB) ─────────────────────────────────────────────
+export const getVacancyShortlist = (): string[] => readJSON<string[]>(KEYS.vacancyShortlist, []);
+
+export const setVacancyShortlist = (ids: string[]): void => {
+  const unique = Array.from(new Set(ids.filter(id => typeof id === 'string' && id.trim() !== '')));
+  writeJSON(KEYS.vacancyShortlist, unique);
 };
 
 export const removeAnalysis = (id: number | string): boolean => {

@@ -213,6 +213,11 @@ export type PatchAnalysisRequest = {
   memo?: string;
 };
 
+/** `GET|PUT /vacancies/shortlist` — 서버에 저장된 공실 찜 id 목록 */
+export type VacancyShortlistPayload = {
+  vacancyIds: string[];
+};
+
 // ── Vacancies ──────────────────────────────────────────────────────────────
 export type Vacancy = {
   id: string;

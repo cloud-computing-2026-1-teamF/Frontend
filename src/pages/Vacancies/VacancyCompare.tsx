@@ -241,6 +241,7 @@ export function VacancyCompare() {
                         className={`btn btn-secondary btn-sm ${collections.shortlistIds.includes(item.id) ? 'is-on' : ''}`}
                         onClick={() => collections.toggleShortlist(item.id)}
                       >
+                        <Icon name={collections.shortlistIds.includes(item.id) ? 'bookmark-filled' : 'bookmark'} size={13} />
                         찜
                       </button>
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => collections.removeCompare(item.id)}>

@@ -30,6 +30,7 @@ import type {
   VacancySearchResponse,
   VacancySearchSort,
   VacancySearchSummary,
+  VacancyShortlistPayload,
 } from './types';
 
 export { ApiError } from './types';
@@ -39,7 +40,7 @@ export type {
   AnalysisRecommendation, AnalysisDetail, AnalysisEventResponse, AnalysisPollingResponse, AnalysisRecommendationsSection, AnalysisSectionKey, AnalysisSectionTodo,
   CreateAnalysisResponse, CreateAnalysisRequest, CreateAnalysisClientRequest, ListAnalysesQuery, ListAnalysesResponse,
   PatchAnalysisRequest, UserStats,
-  Vacancy, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary,
+  Vacancy, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary, VacancyShortlistPayload,
 } from './types';
 
 // ── Auth ────────────────────────────────────────────────────────────────────
@@ -160,6 +161,18 @@ export const vacanciesApi = {
   /** `GET /vacancies/:id` */
   get: (id: string) =>
     apiRequest<Vacancy>({ method: 'GET', path: `/vacancies/${id}` }).then(r => r.data),
+
+  /** `GET /vacancies/shortlist` */
+  getShortlist: () =>
+    apiRequest<VacancyShortlistPayload>({ method: 'GET', path: '/vacancies/shortlist' }).then(r => r.data.vacancyIds),
+
+  /** `PUT /vacancies/shortlist` — 전체 목록 교체 */
+  putShortlist: (vacancyIds: string[]) =>
+    apiRequest<VacancyShortlistPayload>({
+      method: 'PUT',
+      path: '/vacancies/shortlist',
+      body: { vacancyIds },
+    }).then(r => r.data.vacancyIds),
 };
 
 export const ANALYSIS_SECTION_KEYS: AnalysisSectionKey[] = [

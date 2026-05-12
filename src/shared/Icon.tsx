@@ -50,6 +50,18 @@ export function Icon({ name, size = 20, stroke = 1.75, ...rest }: IconProps) {
     case 'cpu': return <svg {...s}><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg>;
     case 'activity': return <svg {...s}><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>;
     case 'bookmark': return <svg {...s}><path d="M5 3h14v18l-7-4-7 4V3Z"/></svg>;
+    case 'bookmark-filled': return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="none"
+        {...rest}
+      >
+        <path d="M5 3h14v18l-7-4-7 4V3Z" fill="var(--brand-600, #E85D1F)" />
+      </svg>
+    );
     case 'heart': return <svg {...s}><path d="M12 21s-8-4.5-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6.5-8 11-8 11Z"/></svg>;
     case 'menu': return <svg {...s}><path d="M3 6h18M3 12h18M3 18h18"/></svg>;
     case 'plus': return <svg {...s}><path d="M12 5v14M5 12h14"/></svg>;

@@ -113,7 +113,7 @@ export function VacancyTable({
                       }}
                       title={isShortlisted ? '찜 해제' : '찜하기'}
                     >
-                      <Icon name="bookmark" size={13} />
+                      <Icon name={isShortlisted ? 'bookmark-filled' : 'bookmark'} size={13} />
                     </button>
                     <Link
                       className="vacancy-row-action"

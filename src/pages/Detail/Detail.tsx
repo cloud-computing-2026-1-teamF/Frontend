@@ -46,28 +46,46 @@ export function Detail() {
     }
 
     const session = findAnalysisSession(id);
-    if (!session) {
-      setStatus('missing');
-      return () => { cancelled = true; };
+
+    const loadFollowUps = () => {
+      api.analyses.poll(id)
+        .then(nextStatus => {
+          const next = patchAnalysisSessionStatus(id, nextStatus);
+          if (!cancelled && next) setItem(sessionToSavedAnalysis(next));
+        })
+        .catch(() => { /* Keep current detail visible. */ });
+
+      api.analyses.sections(id)
+        .then(res => { if (!cancelled) setSections(res); })
+        .catch(error => {
+          if (!cancelled) setSectionError(error instanceof Error ? error.message : '상세 섹션을 불러오지 못했어요.');
+        });
+    };
+
+    if (session) {
+      setItem(sessionToSavedAnalysis(session));
+      setStatus('ok');
+      loadFollowUps();
+      return () => { cancelled = true };
     }
 
-    setItem(sessionToSavedAnalysis(session));
-    setStatus('ok');
-
-    api.analyses.poll(id)
-      .then(nextStatus => {
-        const next = patchAnalysisSessionStatus(id, nextStatus);
-        if (!cancelled && next) setItem(sessionToSavedAnalysis(next));
+    api.analyses.list({ sort: 'recent', limit: 400 })
+      .then(res => {
+        if (cancelled) return;
+        const row = res.items.find(it => String(it.id) === id);
+        if (!row) {
+          setStatus('missing');
+          return;
+        }
+        setItem(row);
+        setStatus('ok');
+        loadFollowUps();
       })
-      .catch(() => { /* Keep the locally saved session visible. */ });
-
-    api.analyses.sections(id)
-      .then(res => { if (!cancelled) setSections(res); })
-      .catch(error => {
-        if (!cancelled) setSectionError(error instanceof Error ? error.message : '상세 섹션을 불러오지 못했어요.');
+      .catch(() => {
+        if (!cancelled) setStatus('missing');
       });
 
-    return () => { cancelled = true; };
+    return () => { cancelled = true };
   }, [idParam]);
 
   if (status === 'loading') {
