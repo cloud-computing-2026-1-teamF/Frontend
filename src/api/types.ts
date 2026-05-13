@@ -379,6 +379,7 @@ export type VacancySearchSort =
 export type VacancySearchQuery = {
   areaId?: string;
   categoryId?: string;
+  scoreMode?: 'best' | 'category';
   transactionType?: string;
   q?: string;
   latitude?: number;

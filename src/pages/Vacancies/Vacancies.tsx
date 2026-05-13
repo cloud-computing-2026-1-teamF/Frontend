@@ -65,6 +65,7 @@ export function Vacancies() {
   const searchQuery = useMemo<VacancySearchQuery>(() => ({
     areaId: selectedArea?.id,
     categoryId: filters.categoryId || undefined,
+    scoreMode: 'best',
     q: filters.q.trim() || undefined,
     rentMax: numberInput(filters.rentMax),
     depositMax: numberInput(filters.depositMax),
@@ -92,6 +93,7 @@ export function Vacancies() {
   const mapQuery = useMemo<VacancySearchQuery>(() => ({
     areaId: selectedArea?.id,
     categoryId: filters.categoryId || undefined,
+    scoreMode: 'best',
     q: filters.q.trim() || undefined,
     rentMax: numberInput(filters.rentMax),
     depositMax: numberInput(filters.depositMax),
@@ -546,9 +548,9 @@ function CategoryFilter({ value, options, onChange }: {
 }) {
   return (
     <div className="vacancy-filter-group">
-      <label htmlFor="vacancy-category">업종 카테고리</label>
+      <label htmlFor="vacancy-category">최고 점수 업종</label>
       <select id="vacancy-category" value={value} onChange={event => onChange(event.target.value)}>
-        <option value="">전체 업종 점수</option>
+        <option value="">전체 최고 점수</option>
         {options.map(option => (
           <option key={option.key} value={option.key}>
             {option.emoji} {option.label}

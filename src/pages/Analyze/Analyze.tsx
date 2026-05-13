@@ -190,6 +190,7 @@ export function Analyze() {
     const timer = window.setTimeout(() => {
       api.vacancies.search({
         categoryId: bizType,
+        scoreMode: 'category',
         transactionType: requestTransactionType(transactionType),
         latitude: area.lat,
         longitude: area.lng,
