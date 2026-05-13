@@ -7,7 +7,7 @@ export function DataSources() {
     {
       name: '서울 열린데이터광장',
       tag: '공공 데이터',
-      desc: '유동인구·업종별 추정 매출·경쟁 점포 수·업종 성장률을 좌표(X/Y) 단위로 활용',
+      desc: '유동인구·동네 평균 추정 매출·경쟁 점포 수를 좌표(X/Y) 단위로 활용',
       stat: '152K+',
       statLabel: '데이터 건수',
       color: '#3B6FE8',
@@ -87,7 +87,6 @@ export function FinalCTA() {
             <Link to="/analyze" className="btn btn-primary btn-lg">
               <Icon name="sparkles" size={16} /> 지도에서 입지 분석하기
             </Link>
-            <a href="#" className="btn btn-secondary btn-lg">데모 영상 보기</a>
           </div>
         </div>
       </div>

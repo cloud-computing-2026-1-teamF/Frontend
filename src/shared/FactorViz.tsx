@@ -14,7 +14,8 @@ export type Property = {
   comp: number;
   rev: number;
   growth: number;
-  // …other fields exist on real data but the viz only needs the four above
+  // Growth still exists on older saved rows, but the current UI renders the
+  // three indicators above.
 };
 
 type Tone = 'up' | 'down' | 'flat';
@@ -68,7 +69,7 @@ function ZoneStrip({ value, ideal = [2, 5], softMax = 10 }: {
   );
 }
 
-// 3) 추정 월매출 — 0..100 percentile bar
+// 3) 동네 평균 추정 매출 — 0..100 percentile bar
 function PercentileBar({ percentile }: { percentile: number }) {
   const p = Math.min(99, Math.max(1, Math.round(percentile)));
   return (
@@ -81,32 +82,6 @@ function PercentileBar({ percentile }: { percentile: number }) {
         <div className="fv-pct-fill" style={{ width: `${p}%` }} />
       </div>
       <div className="fv-pct-foot">{p}번째 백분위</div>
-    </div>
-  );
-}
-
-// 4) 업종 성장률 — symmetric bar pivoting around 0
-function SignedBar({ value, range = [-20, 20] }: { value: number; range?: [number, number] }) {
-  const [min, max] = range;
-  const span = max - min;
-  const zeroPct = (-min / span) * 100;
-  const positive = value >= 0;
-  const v = Math.min(max, Math.max(min, value));
-  const valuePct = ((v - min) / span) * 100;
-  const left = Math.min(zeroPct, valuePct);
-  const width = Math.abs(valuePct - zeroPct);
-  return (
-    <div className="fv-viz fv-signed">
-      <div className="fv-axis">
-        <span>{formatSigned(min)}%</span>
-        <span>0</span>
-        <span>{formatSigned(max)}%</span>
-      </div>
-      <div className="fv-signed-track">
-        <div className="fv-signed-zero" style={{ left: `${zeroPct}%` }} />
-        <div className={`fv-signed-fill ${positive ? 'is-up' : 'is-down'}`}
-          style={{ left: `${left}%`, width: `${width}%` }} />
-      </div>
     </div>
   );
 }
@@ -149,7 +124,6 @@ export function buildFactorViz(sel: Property): (FactorCardProps & { key: string 
     foot:   { avg: 7500, max: 15000 },
     comp:   { ideal: [2, 5] as [number, number], soft_max: 10 },
     rev:    { avg: 1500 },
-    growth: { range: [-20, 20] as [number, number] },
   };
 
   const footDelta = sel.foot - REFS.foot.avg;
@@ -163,9 +137,6 @@ export function buildFactorViz(sel: Property): (FactorCardProps & { key: string 
   const rawPct = 50 + ((sel.rev - REFS.rev.avg) / 100) * 7.5;
   const percentile = Math.min(99, Math.max(1, Math.round(rawPct)));
   const upperPct = 100 - percentile;
-
-  const growthTone: Tone = sel.growth >= 8 ? 'up' : sel.growth >= 0 ? 'flat' : 'down';
-  const growthLabel = sel.growth >= 8 ? '안정 성장' : sel.growth >= 0 ? '완만한 성장' : '성장 둔화';
 
   return [
     {
@@ -194,25 +165,13 @@ export function buildFactorViz(sel: Property): (FactorCardProps & { key: string 
     },
     {
       key: 'rev',
-      title: '추정 월매출',
+      title: '동네 평균 추정 매출',
       subtitle: '동일 업종 기준',
       value: sel.rev.toLocaleString(),
       unit: '만원',
       badge: { label: `상권 내 상위 ${upperPct}%`, tone: percentile >= 50 ? 'up' : 'down' },
       viz: <PercentileBar percentile={percentile} />,
       desc: `주변 동일 업종 대비 상위 ${upperPct}%에 해당하는 매출이 예상돼요.`,
-    },
-    {
-      key: 'growth',
-      title: '업종 성장률',
-      subtitle: '전년 대비 (YoY)',
-      value: `${formatSigned(sel.growth)}%`,
-      unit: null,
-      badge: { label: growthLabel, tone: growthTone },
-      viz: <SignedBar value={sel.growth} range={REFS.growth.range} />,
-      desc: sel.growth >= 0
-        ? '해당 업종은 전년 대비 꾸준히 성장하는 흐름을 보여요.'
-        : '해당 업종은 전년 대비 성장세가 둔화됐어요.',
     },
   ];
 }

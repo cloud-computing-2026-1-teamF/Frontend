@@ -9,11 +9,10 @@ type RiskSummaryProps = {
 };
 
 export function RiskSummary({ sel, selRank }: RiskSummaryProps) {
-  const refs = { foot: 7500, comp: 5, rev: 1500, growth: 5 };
+  const refs = { foot: 7500, comp: 5, rev: 1500 };
   const footDiff = Math.round((sel.foot - refs.foot) / refs.foot * 100);
   const revDiff = Math.round((sel.rev - refs.rev) / refs.rev * 100);
   const compGap = sel.comp - refs.comp;
-  const growthGap = sel.growth - refs.growth;
 
   const factors: { lab: string; tone: Tone; headline: string; score: number }[] = [
     {
@@ -31,20 +30,12 @@ export function RiskSummary({ sel, selRank }: RiskSummaryProps) {
       score: compGap <= 0 ? 1 : compGap <= 2 ? 0 : -1,
     },
     {
-      lab: '추정 매출',
+      lab: '동네 평균 추정 매출',
       tone: revDiff >= 0 ? 'up' : 'down',
       headline: revDiff >= 0
         ? `업종 평균 대비 +${revDiff}% 수준의 매출이 예상돼요`
         : `업종 평균 대비 ${revDiff}% 낮은 매출이 예상돼요`,
       score: revDiff >= 10 ? 1 : revDiff >= -10 ? 0 : -1,
-    },
-    {
-      lab: '업종 성장률',
-      tone: growthGap >= 0 ? 'up' : 'down',
-      headline: growthGap >= 0
-        ? `전년 대비 +${sel.growth}% 성장하는 흐름이에요`
-        : `전년 대비 +${sel.growth}%로 성장세가 둔화됐어요`,
-      score: sel.growth >= 8 ? 1 : sel.growth >= 3 ? 0 : -1,
     },
   ];
 
@@ -64,7 +55,7 @@ export function RiskSummary({ sel, selRank }: RiskSummaryProps) {
         </div>
         <div>
           <div className="dt-risk-title">{title}</div>
-          <div className="dt-risk-sub">생존율 {sel.score}% · Top {selRank} 공실매물 기준 · 주요 지표 4개 요약</div>
+          <div className="dt-risk-sub">생존율 {sel.score}% · Top {selRank} 공실매물 기준 · 주요 지표 3개 요약</div>
         </div>
       </div>
       <ul className="dt-risk-list">

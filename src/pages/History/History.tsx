@@ -309,7 +309,7 @@ function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: num
           <div className="hc-meta">
             <span><Icon name="map-pin" size={11} /> {item.region}</span>
             <span><Icon name="coffee" size={11} /> {item.category}</span>
-            <span><Icon name="database" size={11} /> {item.count > 0 ? `공실매물 ${item.count}개 검토` : '상세 데이터 준비 중'}</span>
+            <span><Icon name="database" size={11} /> {item.count > 0 ? `추천 공실매물 ${item.count}개` : '상세 데이터 준비 중'}</span>
           </div>
           <div className="hc-tags">
             {item.tags.map(t => (

@@ -175,7 +175,7 @@ function HeroVisual() {
         <div className="hv-foot mono">
           <span><i className="dot-green" />유동인구 9,200/일</span>
           <span><i className="dot-amber" />동종 경쟁 3곳</span>
-          <span><i className="dot-blue" />성장률 +12%</span>
+          <span><i className="dot-blue" />생존율 92점</span>
         </div>
       </div>
 

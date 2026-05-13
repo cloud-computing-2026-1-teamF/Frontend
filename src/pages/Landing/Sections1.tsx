@@ -47,7 +47,7 @@ export function Features() {
   const items = [
     { icon: 'coffee', color: '#E85D1F', bg: 'var(--brand-100)', title: '업종별 맞춤 분석', desc: '한식·중식·일식·서양식·카페/디저트·패스트푸드·주점업·구내식당 및 뷔페·기타 9개 요식업 업종에 맞춰 드려요' },
     { icon: 'map-pin', color: '#0FB5A6', bg: 'var(--teal-100)', title: '지도 마커 기반 입지 선택', desc: '행정동 단위가 아닌 지도 좌표 기반. 마커를 찍은 지점 일대의 공실매물·상권만 정밀 분석해드려요' },
-    { icon: 'cpu', color: '#3B6FE8', bg: 'var(--blue-100)', title: '생존율 점수', desc: '유동인구·경쟁·추정매출·성장률을 종합해 0~100점으로 한눈에 보여드려요' },
+    { icon: 'cpu', color: '#3B6FE8', bg: 'var(--blue-100)', title: '생존율 점수', desc: '유동인구·경쟁·동네 평균 추정 매출을 종합해 0~100점으로 한눈에 보여드려요' },
     { icon: 'shield', color: '#7C5CE6', bg: 'var(--violet-100)', title: '프랜차이즈 제외', desc: '소상공인 독립 창업자만을 위한 서비스. 프랜차이즈 전용 분석 도구와 다릅니다' },
   ];
   return (

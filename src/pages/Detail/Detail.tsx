@@ -5,7 +5,7 @@ import { Icon } from '../../shared/Icon';
 import { FactorCard, buildFactorViz } from '../../shared/FactorViz';
 import { Footer } from '../../shared/Nav';
 import type { SavedAnalysis } from '../../lib/savedAnalyses';
-import { api, type AnalysisPollingResponse, type AnalysisSectionTodo, type BusinessType } from '../../api';
+import { api, type AnalysisPollingResponse, type BusinessType } from '../../api';
 import { USE_MOCK } from '../../api/client';
 import { HISTORY_ITEMS } from '../../data/history';
 import { readSavedAnalyses } from '../../lib/savedAnalyses';
@@ -26,15 +26,11 @@ export function Detail() {
   const { id: idParam } = useParams<{ id: string }>();
 
   const [item, setItem] = useState<SavedAnalysis | null>(null);
-  const [sections, setSections] = useState<AnalysisSectionTodo[]>([]);
-  const [sectionError, setSectionError] = useState<string | null>(null);
   const [status, setStatus] = useState<'loading' | 'ok' | 'missing'>('loading');
 
   useEffect(() => {
     let cancelled = false;
     setStatus('loading');
-    setSections([]);
-    setSectionError(null);
     const id = idParam ?? '';
 
     if (USE_MOCK) {
@@ -57,12 +53,6 @@ export function Detail() {
           if (!cancelled && next) setItem(sessionToSavedAnalysis(next));
         })
         .catch(() => { /* Keep current detail visible. */ });
-
-      api.analyses.sections(id)
-        .then(res => { if (!cancelled) setSections(res); })
-        .catch(error => {
-          if (!cancelled) setSectionError(error instanceof Error ? error.message : '상세 섹션을 불러오지 못했어요.');
-        });
 
       // Refresh top3 from the authoritative source — this is the only path
       // that hydrates cross-laptop analyses (the local stub session built
@@ -164,7 +154,7 @@ export function Detail() {
                 )}
                 <span className="dt-chip">{item.categoryEmoji} {item.category}</span>
                 <span className="dt-chip"><Icon name="calendar" size={11} /> {item.date} · {item.time}</span>
-                <span className="dt-chip"><Icon name="database" size={11} /> {item.count > 0 ? `공실매물 ${item.count}개 검토` : '상세 데이터 준비 중'}</span>
+                <span className="dt-chip"><Icon name="database" size={11} /> {item.count > 0 ? `추천 공실매물 ${item.count}개` : '상세 데이터 준비 중'}</span>
               </div>
               <p className="dt-budget">
                 <span className="dt-budget-lab">예산 조건</span>
@@ -220,7 +210,7 @@ export function Detail() {
               </div>
               <h2 className="dt-hero-addr">{sel.addr}</h2>
               <p className="dt-hero-sub">
-                해당 공실매물의 주변 상권 · 유동인구 · 경쟁 · 매출 · 성장성 지표를 종합했어요.
+                해당 공실매물의 주변 상권 · 유동인구 · 경쟁 · 매출 지표를 종합했어요.
               </p>
 
               <div className="dt-hero-kpis">
@@ -237,7 +227,7 @@ export function Detail() {
                   <div className="dt-hk-val">{sel.mgmt}<span>만원</span></div>
                 </div>
                 <div className="dt-hk">
-                  <div className="dt-hk-lab">추정 월매출</div>
+                  <div className="dt-hk-lab">동네 평균 추정 매출</div>
                   <div className="dt-hk-val">{sel.rev.toLocaleString()}<span>만원</span></div>
                 </div>
               </div>
@@ -247,49 +237,9 @@ export function Detail() {
             </div>
           </section>
 
-          {!USE_MOCK && (
-            <section className="dt-section">
-              <div className="dt-sec-label">
-                <span className="dt-sec-num">02</span>
-                <span>백엔드 상세 섹션 API</span>
-              </div>
-              {sectionError ? (
-                <div className="dt-api-empty">
-                  <Icon name="info" size={18} />
-                  <div>
-                    <b>섹션 API를 불러오지 못했어요</b>
-                    <p>{sectionError}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="dt-api-grid">
-                  {sections.map(section => (
-                    <div className="dt-api-card" key={section.sectionKey}>
-                      <div className="dt-api-card-head">
-                        <span>{section.sectionLabel}</span>
-                        <b>{section.sectionKey}</b>
-                      </div>
-                      <p>{section.todo}</p>
-                      <time>{new Date(section.updatedAt).toLocaleString()}</time>
-                    </div>
-                  ))}
-                  {sections.length === 0 && (
-                    <div className="dt-api-empty">
-                      <Icon name="database" size={18} />
-                      <div>
-                        <b>상세 섹션을 불러오는 중</b>
-                        <p>추천 매물, 주요 지표, 유동인구, 경쟁, 매출, 성장률, 접근성 API를 확인하고 있어요.</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </section>
-          )}
-
           <section className="dt-section">
             <div className="dt-sec-label">
-              <span className="dt-sec-num">{USE_MOCK ? '02' : '03'}</span>
+              <span className="dt-sec-num">02</span>
               <span>주요 지표</span>
             </div>
             <div className="dt-factors">
@@ -301,7 +251,7 @@ export function Detail() {
 
           <section className="dt-section">
             <div className="dt-sec-label">
-              <span className="dt-sec-num">{USE_MOCK ? '03' : '04'}</span>
+              <span className="dt-sec-num">03</span>
               <span>유동 패턴 & 입지 접근성</span>
             </div>
             <div className="dt-grid-2">
@@ -360,7 +310,7 @@ export function Detail() {
 
           <section className="dt-section">
             <div className="dt-sec-label">
-              <span className="dt-sec-num">{USE_MOCK ? '04' : '05'}</span>
+              <span className="dt-sec-num">04</span>
               <span>종합 진단</span>
             </div>
             <RiskSummary sel={sel} selRank={selRank} />

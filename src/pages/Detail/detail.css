@@ -300,9 +300,9 @@
 
 /* ===== Factor cards container =====
    Card visuals (.fv-*) live in shared/factor-viz.css. We just lay them
-   out as a 4-up grid here. */
+   out as a 3-up grid here. */
 .dt-factors {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
 }
 
 /* ===== Card base (used by hourly/weekly/demo/access) ===== */
