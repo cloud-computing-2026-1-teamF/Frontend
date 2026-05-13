@@ -68,7 +68,7 @@ export function Analyze() {
   const [candidateStatus, setCandidateStatus] = useState<CandidateStatus>('idle');
   const [candidateTotal, setCandidateTotal] = useState(0);
   const [candidateError, setCandidateError] = useState<string | null>(null);
-  const [transactionType, setTransactionType] = useState<VacancyTransactionType>('임대');
+  const [transactionType, setTransactionType] = useState<VacancyTransactionType>('전체');
   const [budget, setBudget] = useState({
     depositMax: '',
     rentMax: '',
@@ -174,7 +174,7 @@ export function Analyze() {
     if (USE_MOCK) {
       const mockProperties = buildProperties(area).map(property => ({
         ...property,
-        transactionType,
+        transactionType: transactionType === '전체' ? property.transactionType : transactionType,
         recommended: property.rank <= 2,
       }));
       setCandidateProperties(mockProperties);
@@ -190,7 +190,7 @@ export function Analyze() {
     const timer = window.setTimeout(() => {
       api.vacancies.search({
         categoryId: bizType,
-        transactionType,
+        transactionType: requestTransactionType(transactionType),
         latitude: area.lat,
         longitude: area.lng,
         radiusM: area.radius,
@@ -255,7 +255,7 @@ export function Analyze() {
       const result = await api.analyses.create({
         businessType: bizType,
         areaId: analysisArea.id,
-        transactionType,
+        transactionType: requestTransactionType(transactionType),
         budget: budgetRequest,
         center: { lat: analysisArea.lat, lng: analysisArea.lng },
         radiusM: analysisArea.radius,
@@ -425,7 +425,7 @@ export function Analyze() {
     setCandidateTotal(0);
     setCandidateStatus('idle');
     setCandidateError(null);
-    setTransactionType('임대');
+    setTransactionType('전체');
     clearBudget();
     trackingCleanupRef.current?.();
     trackingCleanupRef.current = null;
@@ -492,7 +492,6 @@ export function Analyze() {
         onBudgetChange={handleBudgetChange}
         onClearBudget={clearBudget}
         onRadiusChange={handleRadiusChange}
-        onClearArea={() => setArea(null)}
         onSearchPan={handleSearchPick}
         onRun={runAnalysis}
         canRun={canRunAnalysis}
@@ -526,7 +525,9 @@ function toBudgetRequest(budget: {
   maintenanceFeeMax: string;
   premiumMax: string;
   salePriceMax: string;
-}, transactionType: VacancyTransactionType = '임대') {
+}, transactionType: VacancyTransactionType = '전체') {
+  if (transactionType === '전체') return undefined;
+
   const next = {
     depositMax: transactionType !== '매매' ? toOptionalNumber(budget.depositMax) : undefined,
     rentMax: transactionType === '임대' ? toOptionalNumber(budget.rentMax) : undefined,
@@ -543,6 +544,10 @@ function toBudgetRequest(budget: {
     premiumMax?: number;
     salePriceMax?: number;
   };
+}
+
+function requestTransactionType(transactionType: VacancyTransactionType): string | undefined {
+  return transactionType === '전체' ? undefined : transactionType;
 }
 
 function toVacancySearchBudget(

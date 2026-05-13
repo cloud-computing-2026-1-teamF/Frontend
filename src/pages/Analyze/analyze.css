@@ -101,12 +101,13 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   text-align: center;
 }
 .lf-body {
-  padding: 16px 18px;
-  display: flex; flex-direction: column; gap: 14px;
+  padding: 14px 18px 16px;
+  display: flex; flex-direction: column; gap: 12px;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
+  scroll-padding-bottom: 72px;
 }
 .lf-body::-webkit-scrollbar {
   width: 8px;
@@ -255,8 +256,8 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .lf-sugg-sub { font-size: 10px; color: #9AA3BD; margin-top: 1px; }
 
 .lf-radius {
-  margin-top: 12px;
-  padding: 12px;
+  margin-top: 10px;
+  padding: 10px;
   border: 1px solid #E6EAF2;
   border-radius: 10px;
   background: #FAFBFD;
@@ -293,7 +294,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   border: 1px solid #E8ECF4;
   border-radius: 12px;
   background: linear-gradient(180deg, #FFFFFF, #FAFBFD);
-  padding: 12px;
+  padding: 10px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
 }
 .lf-budget.has-values {
@@ -305,7 +306,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .lf-budget-title {
   font-size: 12px;
@@ -332,15 +333,15 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .lf-budget-clear:hover { background: #E7EAF1; color: #0A0E1A; }
 .lf-transaction-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   padding: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   border-radius: 9px;
   background: #EEF1F6;
 }
 .lf-transaction-tabs button {
-  height: 30px;
+  height: 28px;
   border: 0;
   border-radius: 7px;
   background: transparent;
@@ -413,17 +414,17 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .lf-candidate {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
-  padding: 12px;
+  padding: 9px 10px;
   border-radius: 12px;
   border: 1px solid #E5EAF2;
   background: #FAFBFD;
   flex-shrink: 0;
 }
 .lf-candidate-icon {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -466,7 +467,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   bottom: 0;
   z-index: 2;
   width: 100%;
-  padding: 14px;
+  padding: 13px;
   background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
   color: #fff;
   border: 0;
@@ -474,6 +475,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   font-size: 14px; font-weight: 700;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 8px;
+  flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(232,93,31,.3);
   transition: all .15s;
 }
@@ -1031,7 +1033,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
    Left widget — Kakao-style search box (above the pick panel)
    ============================================ */
 .lf-mapsearch {
-  margin-top: 12px;
+  margin-top: 10px;
   position: relative;
 }
 .lf-mapsearch-input {
@@ -1130,36 +1132,37 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .lf-pick-hint-sub b { color: var(--brand-600); }
 
 .lf-pick-summary {
-  margin-top: 12px;
-  padding: 10px 12px;
+  margin-top: 8px;
+  padding: 8px 10px;
   background: rgba(10,122,91,.06);
   border: 1px solid rgba(10,122,91,.18);
   border-radius: 10px;
-  display: flex; flex-direction: column; gap: 6px;
+  display: flex; align-items: center; gap: 8px;
 }
-.lf-pick-summary-row {
-  display: flex; align-items: baseline; gap: 8px;
-  font-size: 11px;
+.lf-pick-summary-ico {
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  background: #0A7A5B;
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
-.lf-pick-summary-lab {
-  color: #6B7490; flex-shrink: 0; min-width: 56px;
-  font-weight: 500;
+.lf-pick-summary-copy {
+  min-width: 0;
+  flex: 1;
 }
 .lf-pick-summary-val {
-  color: #0A0E1A; font-weight: 600;
-  word-break: break-all;
+  color: #0A0E1A; font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.lf-pick-clear {
-  align-self: flex-start;
-  margin-top: 2px;
-  border: 0; background: transparent;
-  color: var(--brand-600);
-  font-size: 11px; font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  display: inline-flex; align-items: center; gap: 4px;
+.lf-pick-summary-sub {
+  margin-top: 1px;
+  color: #6B7490;
+  font-size: 10px;
+  line-height: 1.35;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.lf-pick-clear:hover { text-decoration: underline; }
 
 /* Empty map hint */
 .km-hint {

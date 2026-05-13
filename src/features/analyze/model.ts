@@ -10,7 +10,7 @@ export const DEFAULT_CENTER = { lat: 37.5572, lng: 126.9237 };
 export type BizKey = string;
 export type BizType = Pick<BusinessType, 'key' | 'label' | 'emoji'>;
 export type AnalyzePhase = 'idle' | 'analyzing' | 'done' | 'failed';
-export type VacancyTransactionType = '임대' | '전세' | '매매';
+export type VacancyTransactionType = '전체' | '임대' | '전세' | '매매';
 export type CandidateStatus = 'idle' | 'loading' | 'ok' | 'error';
 
 export type AnalyzeArea = {

@@ -5,11 +5,10 @@ import { type AnalyzeArea } from '../model';
 
 type AreaSearchPanelProps = {
   area: AnalyzeArea | null;
-  onClearArea: () => void;
   onSearchPan: (place: AreaSearchHit) => void;
 };
 
-export function AreaSearchPanel({ area, onClearArea, onSearchPan }: AreaSearchPanelProps) {
+export function AreaSearchPanel({ area, onSearchPan }: AreaSearchPanelProps) {
   const [q, setQ] = useState('');
   const [matches, setMatches] = useState<AreaSearchHit[]>([]);
 
@@ -91,28 +90,15 @@ export function AreaSearchPanel({ area, onClearArea, onSearchPan }: AreaSearchPa
         </div>
       ) : (
         <div className="lf-pick-summary">
-          <div className="lf-pick-summary-row">
-            <span className="lf-pick-summary-lab">선택 위치</span>
-            <span className="lf-pick-summary-val">{area.roadAddress}</span>
+          <div className="lf-pick-summary-ico"><Icon name="map-pin" size={13} /></div>
+          <div className="lf-pick-summary-copy">
+            <div className="lf-pick-summary-val">{area.dong}</div>
+            <div className="lf-pick-summary-sub">
+              {area.roadAddress} · 반경 {area.radius.toLocaleString()}m
+            </div>
           </div>
-          <div className="lf-pick-summary-row">
-            <span className="lf-pick-summary-lab">행정동</span>
-            <span className="lf-pick-summary-val">{area.dong}</span>
-          </div>
-          <div className="lf-pick-summary-row">
-            <span className="lf-pick-summary-lab">분석 반경</span>
-            <span className="lf-pick-summary-val">{area.radius.toLocaleString()}m</span>
-          </div>
-          <button className="lf-pick-clear" onClick={onClearArea}>
-            <Icon name="close" size={11} /> 마커 다시 찍기
-          </button>
         </div>
       )}
-
-      <div style={{ fontSize: 10, color: '#9AA3BD', marginTop: 10, display: 'flex', alignItems: 'center', gap: 4, lineHeight: 1.5 }}>
-        <Icon name="info" size={11} />
-        도로명 주소·실좌표로 거리 계산 → 선택한 반경 내 공실매물만 분석해요
-      </div>
     </>
   );
 }
