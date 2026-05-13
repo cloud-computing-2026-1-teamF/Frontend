@@ -62,10 +62,13 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .lf-widget {
   position: absolute; top: 20px; left: 20px; z-index: 10;
   width: 340px;
+  max-height: calc(100% - 40px);
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(16,24,40,.12), 0 2px 8px rgba(16,24,40,.06);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   transition: all .4s cubic-bezier(.2,.8,.2,1);
 }
 .lf-widget.analyzing {
@@ -76,6 +79,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   padding: 16px 18px 12px;
   display: flex; align-items: center; gap: 10px;
   border-bottom: 1px solid #F4F6FB;
+  flex-shrink: 0;
 }
 .lf-logo {
   width: 30px; height: 30px; border-radius: 8px;
@@ -99,6 +103,21 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .lf-body {
   padding: 16px 18px;
   display: flex; flex-direction: column; gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.lf-body::-webkit-scrollbar {
+  width: 8px;
+}
+.lf-body::-webkit-scrollbar-thumb {
+  background: #D8DEE9;
+  border-radius: 999px;
+  border: 2px solid #fff;
+}
+.lf-body::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* Step rows */
@@ -400,6 +419,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   border-radius: 12px;
   border: 1px solid #E5EAF2;
   background: #FAFBFD;
+  flex-shrink: 0;
 }
 .lf-candidate-icon {
   width: 30px;
@@ -442,6 +462,9 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 
 /* CTA */
 .lf-cta {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   width: 100%;
   padding: 14px;
   background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
