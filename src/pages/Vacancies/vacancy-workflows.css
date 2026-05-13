@@ -600,6 +600,118 @@
   line-height: 1.6;
 }
 
+.vf-loading-panel {
+  display: grid;
+  gap: 14px;
+  min-height: 360px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.vf-loading-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vf-loading-title span {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #E4EAF2;
+}
+
+.vf-loading-title div {
+  display: grid;
+  gap: 8px;
+  flex: 1;
+}
+
+.vf-loading-title b,
+.vf-loading-title em,
+.vf-loading-metrics span,
+.vf-loading-map,
+.vf-loading-card b,
+.vf-loading-card span {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #E4EAF2;
+}
+
+.vf-loading-title b {
+  width: min(320px, 68%);
+  height: 18px;
+}
+
+.vf-loading-title em {
+  width: min(440px, 86%);
+  height: 12px;
+}
+
+.vf-loading-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.vf-loading-metrics span {
+  height: 82px;
+}
+
+.vf-loading-map {
+  height: 240px;
+}
+
+.vf-loading-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.vf-loading-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #FAFBFD;
+}
+
+.vf-loading-card b {
+  width: 72%;
+  height: 16px;
+}
+
+.vf-loading-card span {
+  width: 100%;
+  height: 12px;
+}
+
+.vf-loading-card span:last-child {
+  width: 58%;
+}
+
+.vf-loading-title b::after,
+.vf-loading-title em::after,
+.vf-loading-metrics span::after,
+.vf-loading-map::after,
+.vf-loading-card b::after,
+.vf-loading-card span::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent);
+  animation: vf-shimmer 1.2s infinite;
+}
+
+@keyframes vf-shimmer {
+  to { transform: translateX(100%); }
+}
+
 .vcmp-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -766,6 +878,11 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .vf-loading-metrics,
+  .vf-loading-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .vf-row-grid.three,
   .vcmp-card-metrics {
     grid-template-columns: 1fr;
@@ -791,6 +908,8 @@
   }
 
   .vf-metric-grid,
+  .vf-loading-metrics,
+  .vf-loading-cards,
   .vf-row-grid,
   .vshort-grid,
   .vshort-metrics {

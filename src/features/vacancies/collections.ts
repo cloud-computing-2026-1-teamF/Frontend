@@ -13,6 +13,7 @@ export const MIN_COMPARE_VACANCIES = 2;
 
 export type VacancyCollectionState = {
   shortlistIds: string[];
+  shortlistReady: boolean;
   compareIds: string[];
 };
 
@@ -55,12 +56,14 @@ async function fetchShortlist(): Promise<string[]> {
 export function useVacancyCollections() {
   const [state, setState] = useState<VacancyCollectionState>(() => ({
     shortlistIds: shortlistCache,
+    shortlistReady,
     compareIds: readIds(COMPARE_KEY),
   }));
 
   useEffect(() => {
     const refresh = () => setState({
       shortlistIds: shortlistCache,
+      shortlistReady,
       compareIds: readIds(COMPARE_KEY),
     });
     window.addEventListener('storage', refresh);
@@ -144,6 +147,7 @@ export function useVacancyCollections() {
 export function readVacancyCollections(): VacancyCollectionState {
   return {
     shortlistIds: shortlistCache,
+    shortlistReady,
     compareIds: readIds(COMPARE_KEY),
   };
 }

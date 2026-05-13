@@ -86,6 +86,84 @@
 .hist-empty p { margin: 0; font-size: 13px; }
 .hist-empty-action { margin-top: 18px; }
 
+.hist-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hist-loading-card {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 150px;
+  gap: 18px;
+  align-items: center;
+  min-height: 122px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.hist-loading-card span,
+.hist-loading-card b,
+.hist-loading-card em,
+.hist-loading-card i,
+.hist-loading-card strong {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #E4EAF2;
+}
+
+.hist-loading-card span {
+  width: 56px;
+  height: 64px;
+}
+
+.hist-loading-card div {
+  display: grid;
+  gap: 10px;
+}
+
+.hist-loading-card b {
+  width: 62%;
+  height: 18px;
+}
+
+.hist-loading-card em {
+  width: 78%;
+  height: 12px;
+}
+
+.hist-loading-card i {
+  width: 42%;
+  height: 24px;
+}
+
+.hist-loading-card strong {
+  justify-self: end;
+  width: 110px;
+  height: 64px;
+}
+
+.hist-loading-card span::after,
+.hist-loading-card b::after,
+.hist-loading-card em::after,
+.hist-loading-card i::after,
+.hist-loading-card strong::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+  animation: hist-shimmer 1.2s infinite;
+}
+
+@keyframes hist-shimmer {
+  to { transform: translateX(100%); }
+}
+
 /* Card */
 .hc {
   display: grid; grid-template-columns: 1.3fr 1fr 180px;
@@ -207,6 +285,8 @@
 
 @media (max-width: 1024px) {
   .hc { grid-template-columns: 1fr; gap: 16px; }
+  .hist-loading-card { grid-template-columns: 56px minmax(0, 1fr); }
+  .hist-loading-card strong { display: none; }
   .hc-mid { border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 14px; }
   .hist-stats { grid-template-columns: repeat(2, 1fr); }
 }
@@ -327,6 +407,15 @@
 .hd-hgauge-sub { font-size: 10px; color: var(--ink-500); margin-top: 4px; font-weight: 600; }
 
 @media (max-width: 620px) {
+  .hist-loading-card {
+    grid-template-columns: 1fr;
+  }
+
+  .hist-loading-card span {
+    width: 100%;
+    height: 42px;
+  }
+
   .hd-hero { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .hd-hero-kpis { width: 100%; }
 }

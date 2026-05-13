@@ -18,6 +18,7 @@ import {
 
 type VacancyInspectorProps = {
   vacancy: Vacancy | null;
+  loading?: boolean;
   isShortlisted?: boolean;
   isCompared?: boolean;
   compareDisabled?: boolean;
@@ -27,12 +28,28 @@ type VacancyInspectorProps = {
 
 export function VacancyInspector({
   vacancy,
+  loading = false,
   isShortlisted = false,
   isCompared = false,
   compareDisabled = false,
   onToggleShortlist,
   onToggleCompare,
 }: VacancyInspectorProps) {
+  if (loading) {
+    return (
+      <aside className="vacancy-inspector">
+        <div className="vacancy-inspector-loading" aria-label="선택 공실 정보를 불러오는 중">
+          <span />
+          <b />
+          <em />
+          <div>
+            {Array.from({ length: 4 }).map((_, index) => <i key={index} />)}
+          </div>
+        </div>
+      </aside>
+    );
+  }
+
   if (!vacancy) {
     return (
       <aside className="vacancy-inspector">

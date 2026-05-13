@@ -181,6 +181,7 @@ export function History() {
           </div>
 
           <div className="hist-list">
+            {loading && <HistoryLoadingState />}
             {!loading && decorated.length === 0 && (
               <div className="hist-empty">
                 <Icon name="search" size={32} />
@@ -201,6 +202,24 @@ export function History() {
       </div>
       <Footer />
     </>
+  );
+}
+
+function HistoryLoadingState() {
+  return (
+    <div className="hist-loading" aria-label="분석 이력을 불러오는 중">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div className="hist-loading-card" key={index}>
+          <span />
+          <div>
+            <b />
+            <em />
+            <i />
+          </div>
+          <strong />
+        </div>
+      ))}
+    </div>
   );
 }
 

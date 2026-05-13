@@ -37,6 +37,11 @@ export function Shortlist() {
 
   useEffect(() => {
     let cancelled = false;
+    if (!collections.shortlistReady) {
+      setItems([]);
+      setStatus('loading');
+      return () => { cancelled = true; };
+    }
     if (collections.shortlistIds.length === 0) {
       setItems([]);
       setStatus('ok');
@@ -57,7 +62,7 @@ export function Shortlist() {
       });
 
     return () => { cancelled = true; };
-  }, [shortlistKey, collections.shortlistIds]);
+  }, [shortlistKey, collections.shortlistIds, collections.shortlistReady]);
 
   useEffect(() => {
     if (!items.length) {
@@ -126,7 +131,7 @@ export function Shortlist() {
 
           {notice && <p className="vf-notice">{notice}</p>}
 
-          {status === 'loading' && <ShortlistEmpty title="찜한 공실을 불러오는 중" />}
+          {status === 'loading' && <ShortlistLoading />}
           {status === 'error' && <ShortlistEmpty title="찜 목록을 불러오지 못했어요" />}
           {status === 'ok' && items.length === 0 && (
             <ShortlistEmpty
@@ -221,6 +226,33 @@ function ShortlistEmpty({ title, description }: { title: string; description?: s
       <h1>{title}</h1>
       {description && <p>{description}</p>}
       <Link to="/vacancies" className="btn btn-primary">공실 탐색으로 이동</Link>
+    </div>
+  );
+}
+
+function ShortlistLoading() {
+  return (
+    <div className="vf-loading-panel" aria-label="찜한 공실을 불러오는 중">
+      <div className="vf-loading-title">
+        <span />
+        <div>
+          <b />
+          <em />
+        </div>
+      </div>
+      <div className="vf-loading-metrics">
+        {Array.from({ length: 4 }).map((_, index) => <span key={index} />)}
+      </div>
+      <div className="vf-loading-map" />
+      <div className="vf-loading-cards">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div className="vf-loading-card" key={index}>
+            <b />
+            <span />
+            <span />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

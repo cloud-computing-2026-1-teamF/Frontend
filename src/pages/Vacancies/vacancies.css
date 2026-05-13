@@ -133,6 +133,36 @@
   font-weight: 700;
 }
 
+.vacancy-summary-tile.is-loading .vacancy-summary-icon {
+  color: transparent;
+}
+
+.vacancy-summary-skeleton,
+.vacancy-summary-value span.vacancy-summary-skeleton {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  width: 74px;
+  height: 23px;
+  border-radius: 6px;
+  background: #E4EAF2;
+}
+
+.vacancy-summary-skeleton.small,
+.vacancy-summary-value small.vacancy-summary-skeleton {
+  width: 24px;
+  height: 12px;
+}
+
+.vacancy-summary-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+  animation: vacancy-shimmer 1.2s infinite;
+}
+
 .vacancy-workspace {
   display: grid;
   grid-template-columns: 286px minmax(0, 1fr) 340px;
@@ -392,6 +422,18 @@
   padding: 16px;
 }
 
+.vacancy-map-panel.is-expanded {
+  position: fixed;
+  inset: 18px;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 24px 70px rgba(16, 24, 40, .28);
+}
+
 .vacancy-map-count {
   color: var(--ink-400);
   font-size: 11px;
@@ -411,10 +453,21 @@
   background: #FAFBFD;
 }
 
-.vacancy-map-toolbar div {
+.vacancy-map-toolbar > div:first-child {
   display: grid;
   gap: 2px;
   min-width: 0;
+}
+
+.vacancy-map-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.vacancy-map-expand-btn svg {
+  flex-shrink: 0;
 }
 
 .vacancy-map-toolbar b {
@@ -440,6 +493,12 @@
     linear-gradient(135deg, rgba(232, 93, 31, .08), transparent 34%),
     linear-gradient(315deg, rgba(15, 181, 166, .10), transparent 36%),
     #F8FAFD;
+}
+
+.vacancy-map-panel.is-expanded .vacancy-map-canvas {
+  flex: 1;
+  height: auto;
+  min-height: 520px;
 }
 
 .vacancy-kakao-canvas {
@@ -490,6 +549,29 @@
   font-weight: 700;
   z-index: 2;
   background: rgba(248, 250, 253, .88);
+}
+
+.vacancy-map-loading {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vacancy-map-loading b {
+  color: var(--ink-600);
+  font-size: 13px;
+}
+
+.vacancy-map-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(47, 111, 237, .18);
+  border-top-color: var(--blue-500);
+  border-radius: 50%;
+  animation: vacancy-spin .8s linear infinite;
+}
+
+@keyframes vacancy-spin {
+  to { transform: rotate(360deg); }
 }
 
 .vacancy-map-dot {
@@ -654,6 +736,29 @@
 
 .vacancy-area-cluster.size-lg {
   min-width: 100px;
+}
+
+.vacancy-district-cluster {
+  min-width: 92px;
+  min-height: 36px;
+  border-color: rgba(16, 24, 40, .18);
+  box-shadow:
+    0 8px 22px rgba(16, 24, 40, .18),
+    0 0 0 3px var(--cluster-accent-soft);
+}
+
+.vacancy-district-cluster.size-lg {
+  min-width: 110px;
+}
+
+.vacancy-district-cluster .vacancy-area-cluster-label {
+  font-size: 11px;
+}
+
+.vacancy-district-cluster .vacancy-area-cluster-count {
+  min-width: 22px;
+  height: 22px;
+  font-size: 10px;
 }
 
 .vacancy-area-cluster.score-mid {
@@ -1311,6 +1416,60 @@
   line-height: 1.5;
 }
 
+.vacancy-inspector-loading {
+  display: grid;
+  gap: 12px;
+}
+
+.vacancy-inspector-loading span,
+.vacancy-inspector-loading b,
+.vacancy-inspector-loading em,
+.vacancy-inspector-loading i {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #E4EAF2;
+}
+
+.vacancy-inspector-loading span {
+  width: 58px;
+  height: 44px;
+}
+
+.vacancy-inspector-loading b {
+  width: 78%;
+  height: 18px;
+}
+
+.vacancy-inspector-loading em {
+  width: 92%;
+  height: 12px;
+}
+
+.vacancy-inspector-loading div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.vacancy-inspector-loading i {
+  height: 62px;
+}
+
+.vacancy-inspector-loading span::after,
+.vacancy-inspector-loading b::after,
+.vacancy-inspector-loading em::after,
+.vacancy-inspector-loading i::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+  animation: vacancy-shimmer 1.2s infinite;
+}
+
 @media (max-width: 1240px) {
   .vacancy-workspace {
     grid-template-columns: 280px minmax(0, 1fr);
@@ -1376,6 +1535,23 @@
   .vacancy-map-toolbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .vacancy-map-panel.is-expanded {
+    inset: 8px;
+    padding: 12px;
+  }
+
+  .vacancy-map-panel.is-expanded .vacancy-map-canvas {
+    min-height: 420px;
+  }
+
+  .vacancy-map-toolbar-actions {
+    width: 100%;
+  }
+
+  .vacancy-map-toolbar-actions .btn {
+    flex: 1 1 auto;
   }
 
   .vacancy-error {

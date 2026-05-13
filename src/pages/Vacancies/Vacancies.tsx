@@ -51,6 +51,7 @@ export function Vacancies() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [collectionNotice, setCollectionNotice] = useState<string | null>(null);
   const [mapItems, setMapItems] = useState<Vacancy[]>([]);
+  const [mapStatus, setMapStatus] = useState<LoadStatus>('loading');
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const collections = useVacancyCollections();
 
@@ -157,12 +158,19 @@ export function Vacancies() {
 
   useEffect(() => {
     let cancelled = false;
+    setMapStatus('loading');
     api.vacancies.search(debouncedMapQuery)
       .then(data => {
-        if (!cancelled) setMapItems(data.items);
+        if (!cancelled) {
+          setMapItems(data.items);
+          setMapStatus('ok');
+        }
       })
       .catch(() => {
-        if (!cancelled) setMapItems([]);
+        if (!cancelled) {
+          setMapItems([]);
+          setMapStatus('error');
+        }
       });
 
     return () => { cancelled = true; };
@@ -199,6 +207,8 @@ export function Vacancies() {
   const vacancies = result?.items ?? [];
   const mapVacancies = mapItems.length > 0 ? mapItems : vacancies;
   const summary = result?.summary ?? EMPTY_SUMMARY;
+  const summaryLoading = status === 'loading' && result === null;
+  const mapLoading = mapStatus === 'loading' && mapItems.length === 0 && vacancies.length === 0;
   // The inspector should be able to show any vacancy the user can click,
   // including map pins that live outside the current paginated table page.
   // Look up the selected id in both pools (table page + larger map slice)
@@ -312,10 +322,10 @@ export function Vacancies() {
           </header>
 
           <section className="vacancy-summary-grid" aria-label="공실 탐색 요약">
-            <SummaryTile icon="database" label="검색 결과" value={formatCount(summary.total)} unit="개" />
-            <SummaryTile icon="trending" label="평균 생존점수" value={formatScore(summary.averageScore)} unit="/100" tone="blue" />
-            <SummaryTile icon="building" label="평균 월세" value={formatManWon(summary.averageRent)} unit="만원" tone="teal" />
-            <SummaryTile icon="map-pin" label="행정동 수" value={formatCount(summary.areaCount)} unit="곳" tone="amber" />
+            <SummaryTile icon="database" label="검색 결과" value={formatCount(summary.total)} unit="개" loading={summaryLoading} />
+            <SummaryTile icon="trending" label="평균 생존점수" value={formatScore(summary.averageScore)} unit="/100" tone="blue" loading={summaryLoading} />
+            <SummaryTile icon="building" label="평균 월세" value={formatManWon(summary.averageRent)} unit="만원" tone="teal" loading={summaryLoading} />
+            <SummaryTile icon="map-pin" label="행정동 수" value={formatCount(summary.areaCount)} unit="곳" tone="amber" loading={summaryLoading} />
           </section>
 
           <section className="vacancy-workspace">
@@ -372,7 +382,7 @@ export function Vacancies() {
             </aside>
 
             <section className="vacancy-results-panel">
-              <VacancyMapPanel items={mapVacancies} selectedId={selectedVacancy?.id ?? null} onSelect={setSelectedId} />
+              <VacancyMapPanel items={mapVacancies} selectedId={selectedVacancy?.id ?? null} onSelect={setSelectedId} loading={mapLoading} />
 
               <div className="vacancy-list-panel">
                 <div className="vacancy-list-head">
@@ -474,6 +484,7 @@ export function Vacancies() {
 
             <VacancyInspector
               vacancy={selectedVacancy}
+              loading={summaryLoading}
               isShortlisted={selectedIsShortlisted}
               isCompared={selectedIsCompared}
               compareDisabled={!selectedIsCompared && collections.compareIds.length >= MAX_COMPARE_VACANCIES}

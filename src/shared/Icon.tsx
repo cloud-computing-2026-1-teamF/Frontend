@@ -70,6 +70,8 @@ export function Icon({ name, size = 20, stroke = 1.75, ...rest }: IconProps) {
     case 'info': return <svg {...s}><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>;
     case 'download': return <svg {...s}><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14"/></svg>;
     case 'external': return <svg {...s}><path d="M14 4h6v6M20 4l-9 9M5 5h6M19 13v6H5V5"/></svg>;
+    case 'maximize': return <svg {...s}><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/><path d="M3 3l6 6M21 3l-6 6M21 21l-6-6M3 21l6-6"/></svg>;
+    case 'minimize': return <svg {...s}><path d="M9 3v6H3M15 3v6h6M15 21v-6h6M9 21v-6H3"/><path d="M9 9 3 3M15 9l6-6M15 15l6 6M9 15l-6 6"/></svg>;
     case 'mail': return <svg {...s}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>;
     case 'lock': return <svg {...s}><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>;
     case 'clock': return <svg {...s}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>;
