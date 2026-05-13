@@ -4,6 +4,8 @@
 import type { Property } from '../shared/FactorViz';
 
 export type Top3Item = Property & {
+  vacancyId?: string;
+  categoryId?: string | null;
   addr: string;
   recommended?: boolean | null;
   score: number;
@@ -39,6 +41,7 @@ export type SavedAnalysis = {
   centerLat?: number;
   centerLng?: number;
   category: string;
+  businessTypeKey?: string;
   categoryEmoji: string;
   budget: string;
   topScore: number;

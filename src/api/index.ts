@@ -30,6 +30,8 @@ import type {
   VacancySearchResponse,
   VacancySearchSort,
   VacancySearchSummary,
+  VacancyMetricDistribution,
+  VacancyMetricReference,
   VacancyShortlistPayload,
 } from './types';
 
@@ -40,7 +42,7 @@ export type {
   AnalysisRecommendation, AnalysisDetail, AnalysisEventResponse, AnalysisPollingResponse, AnalysisRecommendationsSection, AnalysisSectionKey, AnalysisSectionTodo,
   CreateAnalysisResponse, CreateAnalysisRequest, CreateAnalysisClientRequest, ListAnalysesQuery, ListAnalysesResponse,
   PatchAnalysisRequest, UserStats,
-  Vacancy, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary, VacancyShortlistPayload,
+  Vacancy, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary, VacancyMetricDistribution, VacancyMetricReference, VacancyShortlistPayload,
 } from './types';
 
 // ── Auth ────────────────────────────────────────────────────────────────────
@@ -182,6 +184,17 @@ export const vacanciesApi = {
   /** `GET /vacancies/:id` */
   get: (id: string) =>
     apiRequest<Vacancy>({ method: 'GET', path: `/vacancies/${id}` }).then(r => r.data),
+
+  /** `GET /vacancies/metric-reference` */
+  metricReference: (query: { categoryId?: string | null; vacancyId?: string | null } = {}) =>
+    apiRequest<VacancyMetricReference>({
+      method: 'GET',
+      path: '/vacancies/metric-reference',
+      query: {
+        ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+        ...(query.vacancyId ? { vacancyId: query.vacancyId } : {}),
+      },
+    }).then(r => r.data),
 
   /** `GET /vacancies/shortlist` */
   getShortlist: () =>

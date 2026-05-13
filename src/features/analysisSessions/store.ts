@@ -222,6 +222,7 @@ export function sessionToSavedAnalysis(session: AnalysisSession): SavedAnalysis 
     centerLat: session.lat,
     centerLng: session.lng,
     category: session.category,
+    businessTypeKey: session.businessType,
     categoryEmoji: session.categoryEmoji,
     budget: formatBudget(session.budget),
     topScore: top3[0].score,
@@ -312,6 +313,7 @@ function recommendationsToTop3(recommendations: AnalysisRecommendation[]): Top3I
         : 0;
       const area = item.facilityTotalSize ?? item.locationArea ?? 0;
       return {
+        vacancyId: item.vacancyId,
         addr: readableLabel(item.roadAddress)
           || readableLabel(item.lotAddress)
           || readableLabel(item.businessSubCategoryName)

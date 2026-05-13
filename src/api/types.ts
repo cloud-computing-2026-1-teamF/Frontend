@@ -417,6 +417,28 @@ export type VacancySearchResponse = {
   summary: VacancySearchSummary;
 };
 
+export type VacancyMetricDistribution = {
+  selected?: number | null;
+  average?: number | null;
+  median?: number | null;
+  min?: number | null;
+  max?: number | null;
+  p10?: number | null;
+  p25?: number | null;
+  p75?: number | null;
+  p90?: number | null;
+  percentile?: number | null;
+};
+
+export type VacancyMetricReference = {
+  categoryId?: string | null;
+  vacancyId?: string | null;
+  peerCount: number;
+  footTrafficDaily: VacancyMetricDistribution;
+  competition500m: VacancyMetricDistribution;
+  averageSalesMonthly: VacancyMetricDistribution;
+};
+
 // ── User stats ──────────────────────────────────────────────────────────────
 export type UserStats = {
   total_analyses: number;

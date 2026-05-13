@@ -6,6 +6,7 @@ import {
 } from '../../analysisSessions/store';
 import { FactorCard, buildFactorViz } from '../../../shared/FactorViz';
 import { Icon } from '../../../shared/Icon';
+import { useVacancyMetricReference } from '../../vacancies/useVacancyMetricReference';
 import type { AnalyzeArea, AnalyzeProperty, BizType } from '../model';
 
 type SaveState = 'idle' | 'saving' | 'saved';
@@ -33,6 +34,7 @@ export function AnalyzeResultsPanel({
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const sel = properties.find(property => property.rank === selected) || properties[0];
   const hasProperties = properties.length > 0;
+  const { data: metricReference } = useVacancyMetricReference(selectedBiz?.key, sel?.vacancyId);
 
   const handleCardClick = (rank: number) => {
     if (selected === rank && detailOpen) {
@@ -161,15 +163,23 @@ export function AnalyzeResultsPanel({
 
       {detailOpen && sel && (
         <div className="rr-detail-pane">
-          <PropertyDetail property={sel} onClose={() => setDetailOpen(false)} />
+          <PropertyDetail property={sel} metricReference={metricReference} onClose={() => setDetailOpen(false)} />
         </div>
       )}
     </div>
   );
 }
 
-function PropertyDetail({ property, onClose }: { property: AnalyzeProperty; onClose: () => void }) {
-  const factors = buildFactorViz(property);
+function PropertyDetail({
+  property,
+  metricReference,
+  onClose,
+}: {
+  property: AnalyzeProperty;
+  metricReference: Parameters<typeof buildFactorViz>[1];
+  onClose: () => void;
+}) {
+  const factors = buildFactorViz(property, metricReference);
 
   return (
     <>

@@ -20,6 +20,7 @@ import {
 import { HourlyChart } from '../../features/detail/components/HourlyChart';
 import { RiskSummary } from '../../features/detail/components/RiskSummary';
 import { ScoreRing } from '../../features/detail/components/ScoreRing';
+import { useVacancyMetricReference } from '../../features/vacancies/useVacancyMetricReference';
 
 export function Detail() {
   const [selected, setSelected] = useState(0);
@@ -27,6 +28,8 @@ export function Detail() {
 
   const [item, setItem] = useState<SavedAnalysis | null>(null);
   const [status, setStatus] = useState<'loading' | 'ok' | 'missing'>('loading');
+  const selectedItem = item?.top3[selected] ?? null;
+  const { data: metricReference } = useVacancyMetricReference(item?.businessTypeKey, selectedItem?.vacancyId);
 
   useEffect(() => {
     let cancelled = false;
@@ -243,7 +246,7 @@ export function Detail() {
               <span>주요 지표</span>
             </div>
             <div className="dt-factors">
-              {buildFactorViz(sel).map(f => (
+              {buildFactorViz(sel, metricReference).map(f => (
                 <FactorCard key={f.key} {...f} />
               ))}
             </div>
@@ -313,7 +316,7 @@ export function Detail() {
               <span className="dt-sec-num">04</span>
               <span>종합 진단</span>
             </div>
-            <RiskSummary sel={sel} selRank={selRank} />
+            <RiskSummary sel={sel} selRank={selRank} metricReference={metricReference} />
           </section>
 
           <div className="dt-foot-cta">

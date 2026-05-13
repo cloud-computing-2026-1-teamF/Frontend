@@ -1,4 +1,5 @@
 import type { Top3Item } from '../../../lib/savedAnalyses';
+import type { VacancyMetricDistribution, VacancyMetricReference } from '../../../api';
 
 type RiskLevel = 'low' | 'medium' | 'high';
 type Tone = 'up' | 'down';
@@ -6,36 +7,32 @@ type Tone = 'up' | 'down';
 type RiskSummaryProps = {
   sel: Top3Item;
   selRank: number;
+  metricReference?: VacancyMetricReference | null;
 };
 
-export function RiskSummary({ sel, selRank }: RiskSummaryProps) {
-  const refs = { foot: 7500, comp: 5, rev: 1500 };
-  const footDiff = Math.round((sel.foot - refs.foot) / refs.foot * 100);
-  const revDiff = Math.round((sel.rev - refs.rev) / refs.rev * 100);
-  const compGap = sel.comp - refs.comp;
+export function RiskSummary({ sel, selRank, metricReference }: RiskSummaryProps) {
+  const foot = summarizeHigherBetter(metricReference?.footTrafficDaily, sel.foot, '명');
+  const comp = summarizeLowerBetter(metricReference?.competition500m, sel.comp, '곳');
+  const rev = summarizeHigherBetter(metricReference?.averageSalesMonthly, sel.rev, '만원');
 
   const factors: { lab: string; tone: Tone; headline: string; score: number }[] = [
     {
       lab: '유동인구',
-      tone: footDiff >= 0 ? 'up' : 'down',
-      headline: footDiff >= 0 ? `업종 평균보다 ${footDiff}% 많아요` : `업종 평균보다 ${Math.abs(footDiff)}% 적어요`,
-      score: footDiff >= 10 ? 1 : footDiff >= -10 ? 0 : -1,
+      tone: foot.tone,
+      headline: foot.headline,
+      score: foot.score,
     },
     {
       lab: '경쟁 밀도',
-      tone: compGap <= 0 ? 'up' : 'down',
-      headline: compGap <= 0
-        ? `분석 반경 내 ${sel.comp}곳으로 적정 수준이에요`
-        : `분석 반경 내 ${sel.comp}곳으로 다소 밀집돼 있어요`,
-      score: compGap <= 0 ? 1 : compGap <= 2 ? 0 : -1,
+      tone: comp.tone,
+      headline: comp.headline,
+      score: comp.score,
     },
     {
       lab: '동네 평균 추정 매출',
-      tone: revDiff >= 0 ? 'up' : 'down',
-      headline: revDiff >= 0
-        ? `업종 평균 대비 +${revDiff}% 수준의 매출이 예상돼요`
-        : `업종 평균 대비 ${revDiff}% 낮은 매출이 예상돼요`,
-      score: revDiff >= 10 ? 1 : revDiff >= -10 ? 0 : -1,
+      tone: rev.tone,
+      headline: rev.headline,
+      score: rev.score,
     },
   ];
 
@@ -71,4 +68,58 @@ export function RiskSummary({ sel, selRank }: RiskSummaryProps) {
       </ul>
     </div>
   );
+}
+
+function summarizeHigherBetter(
+  distribution: VacancyMetricDistribution | undefined,
+  fallbackSelected: number,
+  unit: string,
+): { tone: Tone; headline: string; score: number } {
+  const selected = toNumber(distribution?.selected) ?? fallbackSelected;
+  const average = toNumber(distribution?.average);
+  if (average == null || average <= 0) {
+    return { tone: 'down', headline: '동일 업종 비교 기준을 불러오는 중이에요', score: 0 };
+  }
+  const percent = Math.round(((selected - average) / average) * 100);
+  const above = selected >= average;
+  const percentile = percentileSuffix(distribution?.percentile);
+  return {
+    tone: above ? 'up' : 'down',
+    headline: `평균 ${formatMetric(average, unit)}보다 ${Math.abs(percent)}% ${above ? '높아요' : '낮아요'}${percentile}`,
+    score: percent >= 10 ? 1 : percent >= -10 ? 0 : -1,
+  };
+}
+
+function summarizeLowerBetter(
+  distribution: VacancyMetricDistribution | undefined,
+  fallbackSelected: number,
+  unit: string,
+): { tone: Tone; headline: string; score: number } {
+  const selected = toNumber(distribution?.selected) ?? fallbackSelected;
+  const average = toNumber(distribution?.average);
+  if (average == null || average <= 0) {
+    return { tone: 'down', headline: '동일 업종 비교 기준을 불러오는 중이에요', score: 0 };
+  }
+  const delta = Math.round(selected - average);
+  const percent = Math.round((delta / average) * 100);
+  const lower = selected <= average;
+  const percentile = percentileSuffix(distribution?.percentile);
+  return {
+    tone: lower ? 'up' : 'down',
+    headline: `평균 ${formatMetric(average, unit)}보다 ${formatMetric(Math.abs(delta), unit)} ${lower ? '적어요' : '많아요'}${percentile}`,
+    score: percent <= -10 ? 1 : percent <= 10 ? 0 : -1,
+  };
+}
+
+function percentileSuffix(value: number | null | undefined): string {
+  const percentile = toNumber(value);
+  return percentile == null ? '' : ` · P${Math.round(percentile)}`;
+}
+
+function toNumber(value: number | null | undefined): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function formatMetric(value: number, unit: string): string {
+  return `${Math.round(value).toLocaleString()}${unit}`;
 }
