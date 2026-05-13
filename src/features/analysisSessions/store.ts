@@ -26,6 +26,7 @@ export type AnalysisSession = {
   lat: number;
   lng: number;
   radius: number;
+  analyzedVacancyCount?: number | null;
   budget?: {
     depositMax?: number;
     rentMax?: number;
@@ -74,6 +75,7 @@ export function createAnalysisSession(input: NewSessionInput): AnalysisSession {
     lat: input.lat,
     lng: input.lng,
     radius: input.radius,
+    analyzedVacancyCount: input.response.analyzedVacancyCount ?? null,
     budget: input.budget,
     top3: recommendationsToTop3(input.recommendations ?? input.response.recommendations ?? []),
     error: null,
@@ -102,6 +104,7 @@ export function patchAnalysisSessionStatus(id: string | number, status: Analysis
     progress: status.progress,
     stepLabel: status.step?.label ?? null,
     completedAt: status.completedAt,
+    analyzedVacancyCount: status.analyzedVacancyCount ?? session.analyzedVacancyCount ?? null,
     error: status.error,
   };
   upsertAnalysisSession(next);
@@ -150,6 +153,7 @@ export function buildSessionFromBackend(
     lat: item.centerLat ?? 0,
     lng: item.centerLng ?? 0,
     radius: item.radiusM ?? 500,
+    analyzedVacancyCount: item.analyzedVacancyCount ?? null,
     budget: {
       depositMax: item.budgetDepositMax ?? undefined,
       rentMax: item.budgetRentMax ?? undefined,
@@ -206,7 +210,7 @@ export function sessionToSavedAnalysis(session: AnalysisSession): SavedAnalysis 
     categoryEmoji: session.categoryEmoji,
     budget: formatBudget(session.budget),
     topScore: top3[0].score,
-    count: top3.length,
+    count: session.analyzedVacancyCount ?? 0,
     saved: true,
     top3,
   };

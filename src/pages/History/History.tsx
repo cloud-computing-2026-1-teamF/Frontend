@@ -17,6 +17,7 @@ import {
   listAnalysisSessions,
   removeAnalysisSession,
   sessionToSavedAnalysis,
+  upsertAnalysisSession,
 } from '../../features/analysisSessions/store';
 
 const AVG_FOOT = 7500;
@@ -85,6 +86,7 @@ export function History() {
       const mergedSessions = backendList.items.map(item =>
         listItemToSession(item, businessTypes, cachedById),
       );
+      mergedSessions.forEach(upsertAnalysisSession);
 
       const filtered = filterSessions(mergedSessions, q, sort);
       setItems(filtered.map(sessionToSavedAnalysis));
@@ -245,6 +247,7 @@ function savedAnalysisRowToSession(row: SavedAnalysis): AnalysisSession {
     lat: row.centerLat ?? 0,
     lng: row.centerLng ?? 0,
     radius: row.radius ?? 500,
+    analyzedVacancyCount: row.count,
     budget: undefined,
     top3: row.top3,
     error: null,
@@ -258,11 +261,26 @@ function listItemToSession(
 ): AnalysisSession {
   const id = String(item.id);
   const cached = cachedById.get(id);
-  if (cached) return cached;
   if (isSavedAnalysisRow(item)) {
     return savedAnalysisRowToSession(item);
   }
+  if (cached) return mergeBackendSummaryIntoSession(cached, item as AnalysisPollingResponse);
   return buildSessionFromBackend(item as AnalysisPollingResponse, businessTypes);
+}
+
+function mergeBackendSummaryIntoSession(
+  session: AnalysisSession,
+  item: AnalysisPollingResponse,
+): AnalysisSession {
+  return {
+    ...session,
+    status: item.status,
+    progress: item.progress,
+    stepLabel: item.step?.label ?? session.stepLabel ?? null,
+    completedAt: item.completedAt ?? session.completedAt ?? null,
+    analyzedVacancyCount: item.analyzedVacancyCount ?? session.analyzedVacancyCount ?? null,
+    error: item.error,
+  };
 }
 
 function filterSessions(sessions: AnalysisSession[], keywordRaw: string, sort: 'recent' | 'score'): AnalysisSession[] {
@@ -309,7 +327,7 @@ function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: num
           <div className="hc-meta">
             <span><Icon name="map-pin" size={11} /> {item.region}</span>
             <span><Icon name="coffee" size={11} /> {item.category}</span>
-            <span><Icon name="database" size={11} /> {item.count > 0 ? `추천 공실매물 ${item.count}개` : '상세 데이터 준비 중'}</span>
+            <span><Icon name="database" size={11} /> {item.count > 0 ? `공실매물 ${item.count}개 검토` : '검토 수 집계 전'}</span>
           </div>
           <div className="hc-tags">
             {item.tags.map(t => (

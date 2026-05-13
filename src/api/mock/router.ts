@@ -464,6 +464,7 @@ const handleCreateAnalysis: Handler = (spec) => {
     progress: 100,
     createdAt: now.toISOString(),
     estimatedSeconds: 1,
+    analyzedVacancyCount: created.count,
     links: {
       self: `/v1/analyses/${created.id}`,
       events: `/v1/analyses/${created.id}/events`,
@@ -484,6 +485,7 @@ const handlePollAnalysis: Handler = (_spec, params) => {
     createdAt: `${found.date}T${found.time}:00.000Z`,
     completedAt: `${found.date}T${found.time}:01.000Z`,
     error: null,
+    analyzedVacancyCount: found.count,
   };
   return ok(res);
 };

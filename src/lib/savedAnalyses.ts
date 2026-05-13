@@ -42,6 +42,8 @@ export type SavedAnalysis = {
   categoryEmoji: string;
   budget: string;
   topScore: number;
+  // Total vacancies included in the saved analysis at creation time, not the
+  // number of Top 3 recommendation cards.
   count: number;
   saved: boolean;
   top3: Top3Item[];

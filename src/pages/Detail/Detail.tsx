@@ -154,7 +154,7 @@ export function Detail() {
                 )}
                 <span className="dt-chip">{item.categoryEmoji} {item.category}</span>
                 <span className="dt-chip"><Icon name="calendar" size={11} /> {item.date} · {item.time}</span>
-                <span className="dt-chip"><Icon name="database" size={11} /> {item.count > 0 ? `추천 공실매물 ${item.count}개` : '상세 데이터 준비 중'}</span>
+                <span className="dt-chip"><Icon name="database" size={11} /> {item.count > 0 ? `공실매물 ${item.count}개 검토` : '검토 수 집계 전'}</span>
               </div>
               <p className="dt-budget">
                 <span className="dt-budget-lab">예산 조건</span>

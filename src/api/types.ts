@@ -78,6 +78,7 @@ export type CreateAnalysisResponse = {
   progress: number;
   createdAt: string;
   estimatedSeconds: number;
+  analyzedVacancyCount?: number | null;
   links: {
     self: string;
     events: string;
@@ -115,6 +116,7 @@ export type AnalysisPollingResponse = {
   budgetPremiumMax?: number | null;
   budgetSalePriceMax?: number | null;
   topScore?: number | null;
+  analyzedVacancyCount?: number | null;
   recommendationCount?: number | null;
 };
 export type AnalysisEventResponse = {
