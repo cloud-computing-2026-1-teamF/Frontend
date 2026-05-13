@@ -125,15 +125,61 @@ export function vacancyTitle(vacancy: {
   buildingName?: string | null;
   roadAddress?: string | null;
   lotAddress?: string | null;
+  detailAddress?: string | null;
+  floor?: string | null;
+  dedicatedArea?: number | null;
+  locationArea?: number | null;
   businessSubCategoryName?: string | null;
   middleBusinessCategory?: string | null;
 }): string {
-  return compactText(vacancy.buildingName)
-    || compactText(vacancy.roadAddress)
-    || compactText(vacancy.lotAddress)
-    || compactText(vacancy.businessSubCategoryName)
+  const building = compactText(vacancy.buildingName);
+  if (building) {
+    const unit = vacancyUnitLabel(vacancy);
+    return unit ? `${building} · ${unit}` : building;
+  }
+  const address = compactText(vacancy.roadAddress) || compactText(vacancy.lotAddress);
+  if (address) {
+    const unit = vacancyUnitLabel(vacancy);
+    return unit ? `${address} · ${unit}` : address;
+  }
+  return compactText(vacancy.businessSubCategoryName)
     || compactText(vacancy.middleBusinessCategory)
     || vacancy.id;
+}
+
+function vacancyUnitLabel(vacancy: {
+  roadAddress?: string | null;
+  lotAddress?: string | null;
+  detailAddress?: string | null;
+  floor?: string | null;
+  dedicatedArea?: number | null;
+  locationArea?: number | null;
+}): string | undefined {
+  const detail = meaningfulUnitText(vacancy.detailAddress);
+  const road = compactText(vacancy.roadAddress);
+  const lot = compactText(vacancy.lotAddress);
+  if (detail && detail !== road && detail !== lot && !detail.startsWith(`${lot ?? ''} `)) {
+    return detail;
+  }
+
+  const floor = compactText(vacancy.floor);
+  const floorLabel = floor ? formatFloorLabel(floor) : undefined;
+  const area = vacancy.dedicatedArea ?? vacancy.locationArea;
+  const areaLabel = typeof area === 'number' && Number.isFinite(area) ? `${area.toFixed(1)}㎡` : undefined;
+  return [floorLabel, areaLabel].filter(Boolean).join(' · ') || undefined;
+}
+
+function meaningfulUnitText(value?: string | null): string | undefined {
+  const normalized = compactText(value);
+  if (!normalized || /^[.\-_/]+$/.test(normalized)) return undefined;
+  return normalized;
+}
+
+function formatFloorLabel(floor: string): string {
+  const numeric = Number(floor);
+  if (Number.isInteger(numeric) && numeric < 0) return `B${Math.abs(numeric)}`;
+  if (Number.isInteger(numeric) && numeric === 0) return '층 미상';
+  return `${floor}층`;
 }
 
 export function vacancySubtitle(vacancy: {
