@@ -154,7 +154,7 @@ export const analysesApi = {
 
   /** `PATCH /analyses/:id` */
   patch: (id: number | string, body: PatchAnalysisRequest) =>
-    apiRequest<AnalysisDetail>({ method: 'PATCH', path: `/analyses/${id}`, body }).then(r => r.data),
+    apiRequest<AnalysisPollingResponse>({ method: 'PATCH', path: `/analyses/${id}`, body }).then(r => r.data),
 
   /** `DELETE /analyses/:id` */
   delete: (id: number | string) =>

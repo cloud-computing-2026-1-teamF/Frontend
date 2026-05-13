@@ -125,7 +125,7 @@ export function AnalyzeControlPanel({
                 <span style={{ width: `${Math.max(0, Math.min(100, analysisProgress))}%` }} />
               </div>
               <div className="lf-progress-meta">
-                <span>Backend analysis</span>
+                <span>입지 분석 진행률</span>
                 <b>{Math.round(analysisProgress)}%</b>
               </div>
             </div>

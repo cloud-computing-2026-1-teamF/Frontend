@@ -79,6 +79,7 @@ export type CreateAnalysisResponse = {
   createdAt: string;
   estimatedSeconds: number;
   analyzedVacancyCount?: number | null;
+  saved?: boolean | null;
   links: {
     self: string;
     events: string;
@@ -102,6 +103,7 @@ export type AnalysisPollingResponse = {
     code: string;
     message: string;
   } | null;
+  saved?: boolean | null;
   // Summary fields, populated by GET /v1/analyses (list endpoint). Lets the
   // History page render cards straight from the API without dipping into
   // localStorage. The single-analysis polling endpoint leaves them undefined.

@@ -43,20 +43,20 @@ export function History() {
 
     if (USE_MOCK) {
       setPollById(new Map());
-      api.analyses.list({ sort, q: q || undefined })
+      api.analyses.list({ sort, q: q || undefined, saved: true })
         .then(res => { if (!cancelled) setItems(res.items as SavedAnalysis[]); })
         .catch(() => { if (!cancelled) setItems([]); })
         .finally(() => { if (!cancelled) setLoading(false); });
       return () => { cancelled = true };
     }
 
-    const localSessions = filterSessions(listAnalysisSessions(), q, sort);
+    const localSessions = filterSessions(listAnalysisSessions().filter(session => session.saved), q, sort);
     setItems(localSessions.map(sessionToSavedAnalysis));
     setPollById(new Map());
     setLoading(localSessions.length === 0);
 
     Promise.all([
-      api.analyses.list({ sort, q: q || undefined, limit: 200 }).catch(() => null),
+      api.analyses.list({ sort, q: q || undefined, saved: true, limit: 200 }).catch(() => null),
       api.catalog.listBusinessTypes().catch(() => [] as BusinessType[]),
     ]).then(async ([backendList, businessTypes]) => {
       if (cancelled) return;
@@ -75,11 +75,6 @@ export function History() {
         setLoading(false);
         return;
       }
-
-      const backendIds = new Set(backendList.items.map(item => String(item.id)));
-      listAnalysisSessions().forEach(session => {
-        if (!backendIds.has(session.id)) removeAnalysisSession(session.id);
-      });
 
       const cachedById = new Map(listAnalysisSessions().map(s => [s.id, s]));
 
@@ -248,6 +243,7 @@ function savedAnalysisRowToSession(row: SavedAnalysis): AnalysisSession {
     lng: row.centerLng ?? 0,
     radius: row.radius ?? 500,
     analyzedVacancyCount: row.count,
+    saved: row.saved,
     budget: undefined,
     top3: row.top3,
     error: null,
@@ -279,6 +275,7 @@ function mergeBackendSummaryIntoSession(
     stepLabel: item.step?.label ?? session.stepLabel ?? null,
     completedAt: item.completedAt ?? session.completedAt ?? null,
     analyzedVacancyCount: item.analyzedVacancyCount ?? session.analyzedVacancyCount ?? null,
+    saved: item.saved ?? session.saved ?? false,
     error: item.error,
   };
 }

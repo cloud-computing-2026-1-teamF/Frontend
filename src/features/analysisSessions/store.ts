@@ -27,6 +27,7 @@ export type AnalysisSession = {
   lng: number;
   radius: number;
   analyzedVacancyCount?: number | null;
+  saved?: boolean;
   budget?: {
     depositMax?: number;
     rentMax?: number;
@@ -76,6 +77,7 @@ export function createAnalysisSession(input: NewSessionInput): AnalysisSession {
     lng: input.lng,
     radius: input.radius,
     analyzedVacancyCount: input.response.analyzedVacancyCount ?? null,
+    saved: input.response.saved ?? false,
     budget: input.budget,
     top3: recommendationsToTop3(input.recommendations ?? input.response.recommendations ?? []),
     error: null,
@@ -105,6 +107,7 @@ export function patchAnalysisSessionStatus(id: string | number, status: Analysis
     stepLabel: status.step?.label ?? null,
     completedAt: status.completedAt,
     analyzedVacancyCount: status.analyzedVacancyCount ?? session.analyzedVacancyCount ?? null,
+    saved: status.saved ?? session.saved ?? false,
     error: status.error,
   };
   upsertAnalysisSession(next);
@@ -154,6 +157,7 @@ export function buildSessionFromBackend(
     lng: item.centerLng ?? 0,
     radius: item.radiusM ?? 500,
     analyzedVacancyCount: item.analyzedVacancyCount ?? null,
+    saved: item.saved ?? false,
     budget: {
       depositMax: item.budgetDepositMax ?? undefined,
       rentMax: item.budgetRentMax ?? undefined,
@@ -187,6 +191,17 @@ export function patchAnalysisSessionTop3(id: string | number, recommendations: A
   return next;
 }
 
+export function patchAnalysisSessionSaved(id: string | number, saved: boolean): AnalysisSession | undefined {
+  const session = findAnalysisSession(id);
+  if (!session) return undefined;
+  const next: AnalysisSession = {
+    ...session,
+    saved,
+  };
+  upsertAnalysisSession(next);
+  return next;
+}
+
 export function removeAnalysisSession(id: string | number): void {
   writeSessions(readSessions().filter(session => session.id !== String(id)));
 }
@@ -211,7 +226,7 @@ export function sessionToSavedAnalysis(session: AnalysisSession): SavedAnalysis 
     budget: formatBudget(session.budget),
     topScore: top3[0].score,
     count: session.analyzedVacancyCount ?? 0,
-    saved: true,
+    saved: session.saved ?? false,
     top3,
   };
 }

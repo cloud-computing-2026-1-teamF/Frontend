@@ -449,12 +449,12 @@ const handleCreateAnalysis: Handler = (spec) => {
     displayName: body.displayName,
     category: body.category || biz?.label || '미지정',
     categoryEmoji: body.categoryEmoji || biz?.emoji || '📍',
-  budget: body.budget
+    budget: body.budget
       ? `보증금 ${body.budget.depositMax ?? '-'} / 월세 ${body.budget.rentMax ?? '-'} / 관리비 ${body.budget.maintenanceFeeMax ?? '-'}`
       : '예산 조건 없음',
     topScore: top3[0].score,
     count: top3.length * 40 + 28,
-    saved: true,
+    saved: false,
     top3,
   };
   store.insertAnalysis(created);
@@ -465,6 +465,7 @@ const handleCreateAnalysis: Handler = (spec) => {
     createdAt: now.toISOString(),
     estimatedSeconds: 1,
     analyzedVacancyCount: created.count,
+    saved: created.saved,
     links: {
       self: `/v1/analyses/${created.id}`,
       events: `/v1/analyses/${created.id}/events`,
@@ -486,6 +487,7 @@ const handlePollAnalysis: Handler = (_spec, params) => {
     completedAt: `${found.date}T${found.time}:01.000Z`,
     error: null,
     analyzedVacancyCount: found.count,
+    saved: found.saved,
   };
   return ok(res);
 };
