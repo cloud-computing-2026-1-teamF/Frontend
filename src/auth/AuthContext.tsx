@@ -39,6 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // `bootstrapping` stays true until this resolves so route guards don't
   // redirect-then-correct on every refresh.
   useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/auth/kakao/callback' || path === '/auth/naver/callback') {
+      setBootstrapping(false);
+      return;
+    }
     let cancelled = false;
     api.auth.me()
       .then(u => { if (!cancelled) setUser(u); })
