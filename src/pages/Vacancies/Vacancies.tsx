@@ -304,7 +304,7 @@ export function Vacancies() {
         <div className="container vacancy-container">
           <header className="vacancy-header">
             <div className="vacancy-crumb">
-              <span>상권AI</span>
+              <span>상권을 부탁해</span>
               <span>/</span>
               <b>공실 탐색</b>
             </div>

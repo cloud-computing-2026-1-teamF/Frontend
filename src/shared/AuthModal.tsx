@@ -56,8 +56,8 @@ export function AuthModal() {
 
         <div className="auth-left">
           <div className="auth-brand">
-            <div className="auth-logo"><img src="/logo.png" alt="상권AI" /></div>
-            <h2>상권<b>AI</b></h2>
+            <div className="auth-logo"><img src="/logo.png" alt="상권을 부탁해" /></div>
+            <h2><b>상권</b>을 부탁해</h2>
           </div>
           <div className="auth-quote">
             <p>지도에 위치만 찍으면,<br />AI가 주변 상권·유동인구·경쟁을 분석해<br />창업 입지 <b>Top 3</b>를 추천해드려요.</p>

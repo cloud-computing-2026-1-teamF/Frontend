@@ -143,7 +143,7 @@ function HeroVisual() {
       <div className="hv-window">
         <div className="hv-bar">
           <div className="hv-dots"><i /><i /><i /></div>
-          <div className="hv-url mono">상권AI · {dongs[activeIdx]} · ☕ 카페</div>
+          <div className="hv-url mono">상권을 부탁해 · {dongs[activeIdx]} · ☕ 카페</div>
           <div className="hv-live mono"><span className="pulse" />LIVE</div>
         </div>
         <div className="hv-body">

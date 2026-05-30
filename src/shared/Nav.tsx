@@ -29,8 +29,8 @@ export function Nav({ active = 'home' }: NavProps) {
     <nav className="site-nav" style={{ fontFamily: 'Pretendard' }}>
       <div className="container nav-inner">
         <Link to="/" className="logo">
-          <span className="logo-mark"><img src="/logo.png" alt="상권AI" /></span>
-          <span className="logo-word">상권<b>AI</b></span>
+          <span className="logo-mark"><img src="/logo.png" alt="상권을 부탁해" /></span>
+          <span className="logo-word"><b>상권</b>을 부탁해</span>
           <span className="logo-tag">요식업 특화</span>
         </Link>
         <ul className="nav-links">
@@ -88,8 +88,8 @@ export function Footer() {
         <div className="foot-grid">
           <div className="foot-brand">
             <div className="logo" style={{ color: '#fff' }}>
-              <span className="logo-mark"><img src="/logo.png" alt="상권AI" /></span>
-              <span className="logo-word">상권<b>AI</b></span>
+              <span className="logo-mark"><img src="/logo.png" alt="상권을 부탁해" /></span>
+              <span className="logo-word"><b>상권</b>을 부탁해</span>
             </div>
             <p className="foot-tag">
               서울 요식업 창업자를 위한<br />
@@ -97,7 +97,7 @@ export function Footer() {
             </p>
             <div className="foot-meta mono">
               <div>2020–2024년 서울 상권 데이터 기반</div>
-              <div>© 2026 SANGGWON AI · 팀 프로젝트</div>
+              <div>© 2026 상권을 부탁해 · 팀 프로젝트</div>
             </div>
           </div>
           <div className="foot-col">
