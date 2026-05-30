@@ -249,6 +249,38 @@
   font-weight: 800;
 }
 
+.vacancy-transaction-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border-radius: 9px;
+  background: var(--ink-50);
+  border: 1px solid var(--border);
+}
+
+.vacancy-transaction-tabs button {
+  height: 30px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-500);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+
+.vacancy-transaction-tabs button:hover {
+  color: var(--ink-700);
+}
+
+.vacancy-transaction-tabs button.is-on {
+  background: var(--ink-900, #0A0E1A);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(10, 14, 26, .16);
+}
+
 .vacancy-input-shell {
   display: flex;
   align-items: center;

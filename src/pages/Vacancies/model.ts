@@ -1,16 +1,60 @@
-import type { VacancySearchResponse, VacancySearchSort } from '../../api';
+import type { VacancySearchQuery, VacancySearchResponse, VacancySearchSort } from '../../api';
+import type { VacancyTransactionType } from '../../features/analyze/model';
 
 export type FilterState = {
   q: string;
   categoryId: string;
+  transactionType: VacancyTransactionType;
   rentMax: string;
   depositMax: string;
   maintenanceFeeMax: string;
+  salePriceMax: string;
+  premiumMax: string;
   scoreMin: string;
   areaMin: string;
   areaMax: string;
   sort: VacancySearchSort;
 };
+
+export const TRANSACTION_OPTIONS: Array<{ value: VacancyTransactionType; label: string }> = [
+  { value: '전체', label: '전체' },
+  // 데이터상 월세 매물의 거래유형 값은 '임대'이므로 화면 라벨만 '월세'로 보여준다.
+  { value: '임대', label: '월세' },
+  { value: '전세', label: '전세' },
+  { value: '매매', label: '매매' },
+];
+
+/** 거래유형을 검색 쿼리 파라미터로 변환('전체'는 미지정). */
+export function transactionTypeParam(transactionType: VacancyTransactionType): string | undefined {
+  return transactionType === '전체' ? undefined : transactionType;
+}
+
+/** 선택한 거래유형에 맞는 가격 필터 파라미터만 추려서 반환한다. */
+export function priceFilterParams(filters: FilterState): Pick<
+  VacancySearchQuery,
+  'rentMax' | 'depositMax' | 'maintenanceFeeMax' | 'salePriceMax' | 'premiumMax'
+> {
+  const maintenanceFeeMax = numberInput(filters.maintenanceFeeMax);
+  switch (filters.transactionType) {
+    case '매매':
+      return {
+        salePriceMax: numberInput(filters.salePriceMax),
+        premiumMax: numberInput(filters.premiumMax),
+        maintenanceFeeMax,
+      };
+    case '전세':
+      return {
+        depositMax: numberInput(filters.depositMax),
+        maintenanceFeeMax,
+      };
+    default: // 전체 / 임대(월세)
+      return {
+        rentMax: numberInput(filters.rentMax),
+        depositMax: numberInput(filters.depositMax),
+        maintenanceFeeMax,
+      };
+  }
+}
 
 export type LoadStatus = 'loading' | 'ok' | 'error';
 
@@ -40,9 +84,12 @@ export const SORT_OPTIONS: Array<{ value: VacancySearchSort; label: string }> = 
 export const defaultFilters: FilterState = {
   q: '',
   categoryId: '',
+  transactionType: '전체',
   rentMax: '',
   depositMax: '',
   maintenanceFeeMax: '',
+  salePriceMax: '',
+  premiumMax: '',
   scoreMin: '',
   areaMin: '',
   areaMax: '',

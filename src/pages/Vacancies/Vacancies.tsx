@@ -32,7 +32,10 @@ import {
   MAP_PAGE_SIZE,
   numberInput,
   PAGE_SIZE,
+  priceFilterParams,
   SORT_OPTIONS,
+  transactionTypeParam,
+  TRANSACTION_OPTIONS,
   type FilterState,
   type LoadStatus,
 } from './model';
@@ -66,56 +69,31 @@ export function Vacancies() {
     areaId: selectedArea?.id,
     categoryId: filters.categoryId || undefined,
     scoreMode: 'best',
+    transactionType: transactionTypeParam(filters.transactionType),
     q: filters.q.trim() || undefined,
-    rentMax: numberInput(filters.rentMax),
-    depositMax: numberInput(filters.depositMax),
-    maintenanceFeeMax: numberInput(filters.maintenanceFeeMax),
+    ...priceFilterParams(filters),
     scoreMin: numberInput(filters.scoreMin),
     areaMin: numberInput(filters.areaMin),
     areaMax: numberInput(filters.areaMax),
     page,
     size: PAGE_SIZE,
     sort: filters.sort,
-  }), [
-    filters.areaMax,
-    filters.areaMin,
-    filters.categoryId,
-    filters.depositMax,
-    filters.maintenanceFeeMax,
-    filters.q,
-    filters.rentMax,
-    filters.scoreMin,
-    filters.sort,
-    page,
-    selectedArea?.id,
-  ]);
+  }), [filters, page, selectedArea?.id]);
 
   const mapQuery = useMemo<VacancySearchQuery>(() => ({
     areaId: selectedArea?.id,
     categoryId: filters.categoryId || undefined,
     scoreMode: 'best',
+    transactionType: transactionTypeParam(filters.transactionType),
     q: filters.q.trim() || undefined,
-    rentMax: numberInput(filters.rentMax),
-    depositMax: numberInput(filters.depositMax),
-    maintenanceFeeMax: numberInput(filters.maintenanceFeeMax),
+    ...priceFilterParams(filters),
     scoreMin: numberInput(filters.scoreMin),
     areaMin: numberInput(filters.areaMin),
     areaMax: numberInput(filters.areaMax),
     page: 0,
     size: MAP_PAGE_SIZE,
     sort: filters.sort,
-  }), [
-    filters.areaMax,
-    filters.areaMin,
-    filters.categoryId,
-    filters.depositMax,
-    filters.maintenanceFeeMax,
-    filters.q,
-    filters.rentMax,
-    filters.scoreMin,
-    filters.sort,
-    selectedArea?.id,
-  ]);
+  }), [filters, selectedArea?.id]);
 
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
   const [debouncedMapQuery, setDebouncedMapQuery] = useState(mapQuery);
@@ -245,9 +223,12 @@ export function Vacancies() {
   const hasFilters = selectedArea !== null ||
     filters.q.trim() !== '' ||
     filters.categoryId !== '' ||
+    filters.transactionType !== defaultFilters.transactionType ||
     filters.rentMax !== '' ||
     filters.depositMax !== '' ||
     filters.maintenanceFeeMax !== '' ||
+    filters.salePriceMax !== '' ||
+    filters.premiumMax !== '' ||
     filters.scoreMin !== '' ||
     filters.areaMin !== '' ||
     filters.areaMax !== '' ||
@@ -255,6 +236,21 @@ export function Vacancies() {
 
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(0);
+  };
+
+  // 거래유형을 바꾸면 보이지 않게 되는 가격 입력값은 비워, 숨겨진 값이
+  // 검색에 묻혀 들어가거나 필터 초기화 버튼을 헷갈리게 만들지 않도록 한다.
+  // (관리비는 모든 거래유형에 공통이라 유지)
+  const changeTransactionType = (value: FilterState['transactionType']) => {
+    setFilters(prev => ({
+      ...prev,
+      transactionType: value,
+      rentMax: '',
+      depositMax: '',
+      salePriceMax: '',
+      premiumMax: '',
+    }));
     setPage(0);
   };
 
@@ -364,10 +360,43 @@ export function Vacancies() {
                 onSelect={selectArea}
               />
 
+              <div className="vacancy-filter-group">
+                <label>거래유형</label>
+                <div className="vacancy-transaction-tabs" role="tablist" aria-label="거래유형">
+                  {TRANSACTION_OPTIONS.map(option => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="tab"
+                      aria-selected={filters.transactionType === option.value}
+                      className={filters.transactionType === option.value ? 'is-on' : ''}
+                      onClick={() => changeTransactionType(option.value)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="vacancy-filter-grid">
-                <NumberField label="월세 최대" value={filters.rentMax} suffix="만원" onChange={value => updateFilter('rentMax', value)} />
-                <NumberField label="보증금 최대" value={filters.depositMax} suffix="만원" onChange={value => updateFilter('depositMax', value)} />
-                <NumberField label="관리비 최대" value={filters.maintenanceFeeMax} suffix="만원" onChange={value => updateFilter('maintenanceFeeMax', value)} />
+                {filters.transactionType === '매매' ? (
+                  <>
+                    <NumberField label="매매가 최대" value={filters.salePriceMax} suffix="만원" onChange={value => updateFilter('salePriceMax', value)} />
+                    <NumberField label="권리금 최대" value={filters.premiumMax} suffix="만원" onChange={value => updateFilter('premiumMax', value)} />
+                    <NumberField label="관리비 최대" value={filters.maintenanceFeeMax} suffix="만원" onChange={value => updateFilter('maintenanceFeeMax', value)} />
+                  </>
+                ) : filters.transactionType === '전세' ? (
+                  <>
+                    <NumberField label="전세금 최대" value={filters.depositMax} suffix="만원" onChange={value => updateFilter('depositMax', value)} />
+                    <NumberField label="관리비 최대" value={filters.maintenanceFeeMax} suffix="만원" onChange={value => updateFilter('maintenanceFeeMax', value)} />
+                  </>
+                ) : (
+                  <>
+                    <NumberField label="월세 최대" value={filters.rentMax} suffix="만원" onChange={value => updateFilter('rentMax', value)} />
+                    <NumberField label="보증금 최대" value={filters.depositMax} suffix="만원" onChange={value => updateFilter('depositMax', value)} />
+                    <NumberField label="관리비 최대" value={filters.maintenanceFeeMax} suffix="만원" onChange={value => updateFilter('maintenanceFeeMax', value)} />
+                  </>
+                )}
                 <NumberField label="최소 점수" value={filters.scoreMin} suffix="점" onChange={value => updateFilter('scoreMin', value)} />
                 <NumberField label="면적 최소" value={filters.areaMin} suffix="㎡" onChange={value => updateFilter('areaMin', value)} />
                 <NumberField label="면적 최대" value={filters.areaMax} suffix="㎡" onChange={value => updateFilter('areaMax', value)} />
