@@ -56,34 +56,16 @@ export function AuthModal() {
 
         <div className="auth-left">
           <div className="auth-brand">
-            <div className="auth-logo"><Icon name="logo" size={28} /></div>
+            <div className="auth-logo"><img src="/logo.png" alt="상권AI" /></div>
             <h2>상권<b>AI</b></h2>
           </div>
           <div className="auth-quote">
-            <p>"AI가 분석한 공실매물 Top 3로<br />창업 입지를 선정할 수 있었습니다."</p>
-            <div className="auth-quote-foot">
-              <div className="auth-avatar">박</div>
-              <div>
-                <div className="auth-quote-name">박OO 대표</div>
-                <div className="auth-quote-role">홍대 카페 운영중 · 베타 사용자</div>
-              </div>
-            </div>
+            <p>지도에 위치만 찍으면,<br />AI가 주변 상권·유동인구·경쟁을 분석해<br />창업 입지 <b>Top 3</b>를 추천해드려요.</p>
           </div>
-          <div className="auth-stats">
-            <div className="auth-stat">
-              <div className="auth-stat-num">152K+</div>
-              <div className="auth-stat-lab">분석 레코드</div>
-            </div>
-            <div className="auth-stat-div" />
-            <div className="auth-stat">
-              <div className="auth-stat-num">3,847</div>
-              <div className="auth-stat-lab">활성 사용자</div>
-            </div>
-            <div className="auth-stat-div" />
-            <div className="auth-stat">
-              <div className="auth-stat-num">88<span>%</span></div>
-              <div className="auth-stat-lab">예측 정확도</div>
-            </div>
+          <div className="auth-points">
+            <div className="auth-point"><Icon name="map-pin" size={15} /><span>지도 기반 공실매물 탐색</span></div>
+            <div className="auth-point"><Icon name="chart" size={15} /><span>상권 · 유동인구 데이터 분석</span></div>
+            <div className="auth-point"><Icon name="trending" size={15} /><span>생존점수 기반 입지 추천</span></div>
           </div>
         </div>
 
@@ -159,7 +141,7 @@ export function AuthModal() {
                       type={isLogin ? 'text' : 'email'}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder={isLogin ? 'qwer1234' : 'user@example.com'}
+                      placeholder={isLogin ? '아이디를 입력하세요' : 'user@example.com'}
                       autoComplete={isLogin ? 'username' : 'email'}
                       required
                     />

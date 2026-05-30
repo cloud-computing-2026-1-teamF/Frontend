@@ -37,10 +37,10 @@
 }
 .auth-brand { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
 .auth-logo {
-  width: 44px; height: 44px; border-radius: 10px;
-  background: var(--brand-500);
+  width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
 }
+.auth-logo img { width: 100%; height: 100%; object-fit: contain; }
 .auth-brand h2 { margin: 0; font-size: 20px; font-weight: 700; }
 .auth-brand h2 b { color: var(--brand-400); font-weight: 800; }
 
@@ -71,6 +71,17 @@
 .auth-stat-num span { font-size: 12px; color: var(--ink-300); margin-left: 1px; }
 .auth-stat-lab { font-size: 10px; color: var(--ink-300); margin-top: 2px; }
 .auth-stat-div { width: 1px; height: 24px; background: rgba(255,255,255,.1); }
+
+.auth-points {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px; background: rgba(255,255,255,.06); border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.08); position: relative; z-index: 1;
+}
+.auth-point {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.88);
+}
+.auth-point svg { color: var(--brand-400); flex-shrink: 0; }
 
 /* Right form panel */
 .auth-right {

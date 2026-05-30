@@ -29,7 +29,7 @@ export function Nav({ active = 'home' }: NavProps) {
     <nav className="site-nav" style={{ fontFamily: 'Pretendard' }}>
       <div className="container nav-inner">
         <Link to="/" className="logo">
-          <span className="logo-mark"><Icon name="logo" size={22} /></span>
+          <span className="logo-mark"><img src="/logo.png" alt="상권AI" /></span>
           <span className="logo-word">상권<b>AI</b></span>
           <span className="logo-tag">요식업 특화</span>
         </Link>
@@ -88,7 +88,7 @@ export function Footer() {
         <div className="foot-grid">
           <div className="foot-brand">
             <div className="logo" style={{ color: '#fff' }}>
-              <span className="logo-mark"><Icon name="logo" size={22} /></span>
+              <span className="logo-mark"><img src="/logo.png" alt="상권AI" /></span>
               <span className="logo-word">상권<b>AI</b></span>
             </div>
             <p className="foot-tag">
