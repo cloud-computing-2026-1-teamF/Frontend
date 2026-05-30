@@ -2,23 +2,24 @@ import type { Vacancy } from '../../../api';
 import {
   formatArea,
   formatCount,
-  formatLargeManWon,
-  formatManWon,
   formatPeople,
   formatPercent,
   formatScore,
   formatWon,
   totalCompetition,
+  vacancyPriceMetrics,
 } from '../model';
+
+const PRICE_TONES = ['teal', 'blue', 'amber'] as const;
 
 export function VacancyMetricGrid({ vacancy }: { vacancy: Vacancy }) {
   const competition = totalCompetition(vacancy);
   return (
     <div className="vf-metric-grid">
       <MetricCard label="생존점수" value={formatScore(vacancy.survivalScore)} unit="/100" tone="brand" />
-      <MetricCard label="월세" value={formatManWon(vacancy.monthlyRent)} unit="만원" tone="teal" />
-      <MetricCard label="보증금" value={formatLargeManWon(vacancy.deposit)} unit="" tone="blue" />
-      <MetricCard label="관리비" value={formatManWon(vacancy.maintenanceFee)} unit="만원" tone="amber" />
+      {vacancyPriceMetrics(vacancy).map((metric, index) => (
+        <MetricCard key={metric.label} label={metric.label} value={metric.value} unit={metric.unit} tone={PRICE_TONES[index]} />
+      ))}
       <MetricCard label="전용면적" value={formatArea(vacancy.dedicatedArea ?? vacancy.locationArea)} unit="" />
       <MetricCard label="동종 경쟁 500m" value={formatCount(competition)} unit="개" />
       <MetricCard label="분기 유동" value={formatPeople(vacancy.floatingPopulationQuarterlyAverage)} unit="" />

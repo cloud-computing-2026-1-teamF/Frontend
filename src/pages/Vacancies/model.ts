@@ -224,3 +224,87 @@ export function rentBurden(vacancy: {
   if (!sales || sales <= 0) return null;
   return (rentWon / sales) * 100;
 }
+
+// ── 거래유형(월세 / 전세 / 매매)별 가격 표기 ────────────────────────────────
+// 데이터의 `transactionType` 값은 '임대'(월세) / '전세' / '매매' / '월세' 등으로 들어온다.
+// 매물 종류에 따라 의미 있는 가격 필드가 다르므로(전세→보증금, 매매→매매가) 표기를
+// 한 곳에서 통일한다.
+export type TransactionKind = 'rent' | 'jeonse' | 'sale';
+
+export function transactionKind(transactionType?: string | null): TransactionKind {
+  switch (transactionType?.trim()) {
+    case '매매':
+      return 'sale';
+    case '전세':
+      return 'jeonse';
+    default:
+      // '임대', '월세', 빈 값 등은 모두 월세로 취급
+      return 'rent';
+  }
+}
+
+type VacancyPriceFields = {
+  transactionType?: string | null;
+  monthlyRent?: number | null;
+  deposit?: number | null;
+  maintenanceFee?: number | null;
+  premium?: number | null;
+  salePrice?: number | null;
+};
+
+export type PriceMetric = { label: string; value: string; unit: string };
+
+/** 우측 인스펙터·지표 카드용 가격 메트릭(전용면적 제외, 가격 3종). */
+export function vacancyPriceMetrics(vacancy: VacancyPriceFields): PriceMetric[] {
+  const maintenance: PriceMetric = {
+    label: '관리비',
+    value: formatManWon(vacancy.maintenanceFee),
+    unit: '만원',
+  };
+  switch (transactionKind(vacancy.transactionType)) {
+    case 'sale':
+      return [
+        { label: '매매가', value: formatLargeManWon(vacancy.salePrice), unit: '' },
+        { label: '권리금', value: formatLargeManWon(vacancy.premium), unit: '' },
+        maintenance,
+      ];
+    case 'jeonse':
+      return [
+        { label: '전세보증금', value: formatLargeManWon(vacancy.deposit), unit: '' },
+        { label: '권리금', value: formatLargeManWon(vacancy.premium), unit: '' },
+        maintenance,
+      ];
+    default:
+      return [
+        { label: '월세', value: formatManWon(vacancy.monthlyRent), unit: '만원' },
+        { label: '보증금', value: formatLargeManWon(vacancy.deposit), unit: '' },
+        maintenance,
+      ];
+  }
+}
+
+/** 단일 가격만 보여주는 곳(지도 말풍선 등)을 위한 대표 가격. */
+export function vacancyPrimaryPrice(vacancy: VacancyPriceFields): PriceMetric {
+  return vacancyPriceMetrics(vacancy)[0];
+}
+
+/** 목록 '임대 조건' 컬럼용 — 짧은 접두사(월/전/매)와 보조 줄. */
+export function vacancyRentTerms(vacancy: VacancyPriceFields): {
+  prefix: string;
+  primary: string;
+  secondary: string;
+} {
+  const maintenance = `관 ${formatManWon(vacancy.maintenanceFee)}`;
+  switch (transactionKind(vacancy.transactionType)) {
+    case 'sale':
+      return { prefix: '매', primary: formatLargeManWon(vacancy.salePrice), secondary: maintenance };
+    case 'jeonse':
+      return { prefix: '전', primary: formatLargeManWon(vacancy.deposit), secondary: maintenance };
+    default:
+      return {
+        prefix: '월',
+        primary: formatManWon(vacancy.monthlyRent),
+        secondary: `보 ${formatLargeManWon(vacancy.deposit)} · ${maintenance}`,
+      };
+  }
+}

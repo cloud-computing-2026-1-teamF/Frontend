@@ -4,14 +4,13 @@ import { Icon } from '../../../shared/Icon';
 import {
   formatArea,
   formatCount,
-  formatLargeManWon,
-  formatManWon,
   formatPeople,
   formatPercent,
   formatScore,
   formatWon,
   scoreClass,
   totalCompetition,
+  vacancyPriceMetrics,
   vacancySubtitle,
   vacancyTitle,
 } from '../model';
@@ -104,9 +103,9 @@ export function VacancyInspector({
       </div>
 
       <div className="vacancy-price-grid">
-        <Metric label="월세" value={formatManWon(vacancy.monthlyRent)} unit="만원" />
-        <Metric label="보증금" value={formatLargeManWon(vacancy.deposit)} unit="" />
-        <Metric label="관리비" value={formatManWon(vacancy.maintenanceFee)} unit="만원" />
+        {vacancyPriceMetrics(vacancy).map(metric => (
+          <Metric key={metric.label} label={metric.label} value={metric.value} unit={metric.unit} />
+        ))}
         <Metric label="전용면적" value={formatArea(vacancy.dedicatedArea ?? vacancy.locationArea)} unit="" />
       </div>
 

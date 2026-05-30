@@ -6,7 +6,7 @@ import {
 } from 'react-kakao-maps-sdk';
 import type { Vacancy } from '../../../api';
 import { Icon } from '../../../shared/Icon';
-import { compactText, formatManWon, formatScore, scoreClass, vacancyTitle } from '../model';
+import { compactText, formatScore, scoreClass, vacancyPrimaryPrice, vacancyTitle } from '../model';
 
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.9780 };
 const DISTRICT_CLUSTER_LEVEL = 8;
@@ -387,6 +387,11 @@ function AreaClusterMarker({ cluster, selected, onClick }: {
   );
 }
 
+function priceLabel(vacancy: VacancyWithCoordinate): string {
+  const price = vacancyPrimaryPrice(vacancy);
+  return `${price.label} ${price.value}${price.unit}`;
+}
+
 function VacancyMapPin({ vacancy, score, selected, onClick }: {
   vacancy: VacancyWithCoordinate;
   score: number;
@@ -404,7 +409,7 @@ function VacancyMapPin({ vacancy, score, selected, onClick }: {
       {selected && (
         <span className="vacancy-kakao-callout">
           <b>{vacancyTitle(vacancy)}</b>
-          <em>점수 {formatScore(score)} · 월세 {formatManWon(vacancy.monthlyRent)}만</em>
+          <em>점수 {formatScore(score)} · {priceLabel(vacancy)}</em>
         </span>
       )}
     </button>

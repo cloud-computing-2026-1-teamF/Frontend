@@ -6,12 +6,11 @@ import { MAX_COMPARE_VACANCIES } from '../../../features/vacancies/collections';
 import {
   formatArea,
   formatCount,
-  formatLargeManWon,
-  formatManWon,
   formatPeople,
   formatScore,
   scoreClass,
   totalCompetition,
+  vacancyRentTerms,
   vacancySubtitle,
   vacancyTitle,
 } from '../model';
@@ -57,6 +56,7 @@ export function VacancyTable({
         <tbody>
           {items.map(item => {
             const selected = item.id === selectedId;
+            const rentTerms = vacancyRentTerms(item);
             const isShortlisted = shortlistIds.includes(item.id);
             const isCompared = compareIds.includes(item.id);
             const compareDisabled = !isCompared && compareIds.length >= MAX_COMPARE_VACANCIES;
@@ -95,8 +95,8 @@ export function VacancyTable({
                 </td>
                 <td>
                   <div className="vacancy-money-stack">
-                    <b>월 {formatManWon(item.monthlyRent)}</b>
-                    <span>보 {formatLargeManWon(item.deposit)} · 관 {formatManWon(item.maintenanceFee)}</span>
+                    <b>{rentTerms.prefix} {rentTerms.primary}</b>
+                    <span>{rentTerms.secondary}</span>
                   </div>
                 </td>
                 <td>{formatArea(item.dedicatedArea ?? item.locationArea)}</td>
