@@ -1,4 +1,4 @@
-import type { VacancySearchQuery, VacancySearchResponse, VacancySearchSort } from '../../api';
+import type { VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary } from '../../api';
 import type { VacancyTransactionType } from '../../features/analyze/model';
 
 export type FilterState = {
@@ -66,6 +66,7 @@ export const EMPTY_SUMMARY: VacancySearchResponse['summary'] = {
   averageScore: null,
   averageRent: null,
   averageDeposit: null,
+  averageSalePrice: null,
   averageMaintenanceFee: null,
   minRent: null,
   maxRent: null,
@@ -327,6 +328,21 @@ export function vacancyPriceMetrics(vacancy: VacancyPriceFields): PriceMetric[] 
         { label: '보증금', value: formatLargeManWon(vacancy.deposit), unit: '' },
         maintenance,
       ];
+  }
+}
+
+/** 상단 요약 타일의 가격 항목 — 선택한 거래유형에 맞춰 라벨/값/단위를 바꾼다. */
+export function summaryPriceMetric(
+  transactionType: VacancyTransactionType,
+  summary: VacancySearchSummary,
+): PriceMetric {
+  switch (transactionType) {
+    case '매매':
+      return { label: '평균 매매가', value: formatLargeManWon(summary.averageSalePrice), unit: '' };
+    case '전세':
+      return { label: '평균 전세금', value: formatLargeManWon(summary.averageDeposit), unit: '' };
+    default: // 전체 / 월세(임대)
+      return { label: '평균 월세', value: formatManWon(summary.averageRent), unit: '만원' };
   }
 }
 

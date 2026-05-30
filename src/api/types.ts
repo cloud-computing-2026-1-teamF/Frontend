@@ -405,6 +405,7 @@ export type VacancySearchSummary = {
   averageScore?: number | null;
   averageRent?: number | null;
   averageDeposit?: number | null;
+  averageSalePrice?: number | null;
   averageMaintenanceFee?: number | null;
   minRent?: number | null;
   maxRent?: number | null;

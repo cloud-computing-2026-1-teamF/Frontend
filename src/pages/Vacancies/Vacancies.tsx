@@ -27,13 +27,13 @@ import {
   defaultFilters,
   EMPTY_SUMMARY,
   formatCount,
-  formatManWon,
   formatScore,
   MAP_PAGE_SIZE,
   numberInput,
   PAGE_SIZE,
   priceFilterParams,
   SORT_OPTIONS,
+  summaryPriceMetric,
   transactionTypeParam,
   TRANSACTION_OPTIONS,
   type FilterState,
@@ -188,6 +188,7 @@ export function Vacancies() {
   const mapVacancies = mapItems.length > 0 ? mapItems : vacancies;
   const summary = result?.summary ?? EMPTY_SUMMARY;
   const summaryLoading = status === 'loading' && result === null;
+  const summaryPrice = summaryPriceMetric(filters.transactionType, summary);
   const mapLoading = mapStatus === 'loading' && mapItems.length === 0 && vacancies.length === 0;
   // The inspector should be able to show any vacancy the user can click,
   // including map pins that live outside the current paginated table page.
@@ -322,7 +323,7 @@ export function Vacancies() {
           <section className="vacancy-summary-grid" aria-label="공실 탐색 요약">
             <SummaryTile icon="database" label="검색 결과" value={formatCount(summary.total)} unit="개" loading={summaryLoading} />
             <SummaryTile icon="trending" label="평균 생존점수" value={formatScore(summary.averageScore)} unit="/100" tone="blue" loading={summaryLoading} />
-            <SummaryTile icon="building" label="평균 월세" value={formatManWon(summary.averageRent)} unit="만원" tone="teal" loading={summaryLoading} />
+            <SummaryTile icon="building" label={summaryPrice.label} value={summaryPrice.value} unit={summaryPrice.unit} tone="teal" loading={summaryLoading} />
             <SummaryTile icon="map-pin" label="행정동 수" value={formatCount(summary.areaCount)} unit="곳" tone="amber" loading={summaryLoading} />
           </section>
 
