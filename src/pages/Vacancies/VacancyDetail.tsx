@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ApiError, api, type Vacancy } from '../../api';
+import { useAuth } from '../../auth/AuthContext';
 import {
   MAX_COMPARE_VACANCIES,
   useVacancyCollections,
@@ -34,6 +35,9 @@ export function VacancyDetail() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const collections = useVacancyCollections();
+  const { user } = useAuth();
+  // 공실 상세(생존점수 포함)는 Pro·Business 전용 — 직접 URL 접근도 차단.
+  const canViewDetail = user?.tier === 'pro' || user?.tier === 'business';
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +68,18 @@ export function VacancyDetail() {
     }
     setNotice(null);
   };
+
+  if (!canViewDetail) {
+    return (
+      <VacancyPageShell>
+        <EmptyState
+          icon="lock"
+          title="Pro 플랜 전용 화면이에요"
+          description="공실 상세 정보와 생존점수는 Pro 플랜부터 확인할 수 있어요."
+        />
+      </VacancyPageShell>
+    );
+  }
 
   if (status === 'loading') {
     return <VacancyPageShell><EmptyState icon="building" title="공실 정보를 불러오는 중" /></VacancyPageShell>;

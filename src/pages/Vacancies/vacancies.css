@@ -1144,7 +1144,8 @@
   color: var(--brand-700);
 }
 
-.vacancy-row-check:disabled {
+.vacancy-row-check:disabled,
+.vacancy-row-action:disabled {
   opacity: .42;
   cursor: not-allowed;
   transform: none;

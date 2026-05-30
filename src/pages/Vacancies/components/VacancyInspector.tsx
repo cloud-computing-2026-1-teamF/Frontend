@@ -102,7 +102,7 @@ export function VacancyInspector({
       {!canViewScore && (
         <p className="vacancy-score-lock-note">
           <Icon name="lock" size={12} />
-          <span>생존점수는 <b>Pro 플랜</b>부터 확인할 수 있어요.</span>
+          <span>생존점수와 상세 보기는 <b>Pro 플랜</b>부터 확인할 수 있어요.</span>
         </p>
       )}
 
@@ -120,9 +120,21 @@ export function VacancyInspector({
           <Icon name={isCompared ? 'check' : 'plus'} size={13} />
           {isCompared ? '비교 해제' : '비교 추가'}
         </button>
-        <Link className="btn btn-primary btn-sm" to={`/vacancies/${vacancy.id}`}>
-          상세 보기
-        </Link>
+        {canViewScore ? (
+          <Link className="btn btn-primary btn-sm" to={`/vacancies/${vacancy.id}`}>
+            상세 보기
+          </Link>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            disabled
+            title="상세 보기는 Pro 플랜부터 이용할 수 있어요"
+          >
+            <Icon name="lock" size={13} />
+            상세 보기
+          </button>
+        )}
       </div>
 
       <div className="vacancy-price-grid">

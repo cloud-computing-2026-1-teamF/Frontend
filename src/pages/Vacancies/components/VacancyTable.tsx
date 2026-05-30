@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { Vacancy } from '../../../api';
+import { useAuth } from '../../../auth/AuthContext';
 import { Icon } from '../../../shared/Icon';
 import { MAX_COMPARE_VACANCIES } from '../../../features/vacancies/collections';
 import {
@@ -32,6 +33,9 @@ export function VacancyTable({
   onToggleShortlist,
   onToggleCompare,
 }: VacancyTableProps) {
+  const { user } = useAuth();
+  // 상세 보기(생존점수 포함)는 Pro·Business 전용. Free/비로그인은 막는다.
+  const canViewDetail = user?.tier === 'pro' || user?.tier === 'business';
   const handleKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, id: string) => {
     if (event.key === 'Enter' || event.key === ' ') onSelect(id);
   };
@@ -107,14 +111,26 @@ export function VacancyTable({
                     >
                       <Icon name={isShortlisted ? 'bookmark-filled' : 'bookmark'} size={13} />
                     </button>
-                    <Link
-                      className="vacancy-row-action"
-                      to={`/vacancies/${item.id}`}
-                      onClick={event => event.stopPropagation()}
-                      title="상세 보기"
-                    >
-                      <Icon name="eye" size={13} />
-                    </Link>
+                    {canViewDetail ? (
+                      <Link
+                        className="vacancy-row-action"
+                        to={`/vacancies/${item.id}`}
+                        onClick={event => event.stopPropagation()}
+                        title="상세 보기"
+                      >
+                        <Icon name="eye" size={13} />
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        className="vacancy-row-action"
+                        disabled
+                        onClick={event => event.stopPropagation()}
+                        title="상세 보기는 Pro 플랜부터 이용할 수 있어요"
+                      >
+                        <Icon name="lock" size={13} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
