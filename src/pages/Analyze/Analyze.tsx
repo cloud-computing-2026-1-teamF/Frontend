@@ -432,6 +432,21 @@ export function Analyze() {
     trackingCleanupRef.current = null;
   };
 
+  // '다시' 버튼 — 분석 결과만 비우고 방금 분석한 지점·업종·조건은 그대로 둔다.
+  // 지도 이동이나 위치 초기화 없이 같은 자리에서 바로 다시 분석할 수 있도록 한다.
+  // (후보 매물 상태는 분석 중에도 유지되므로 idle로 돌아가면 마커가 다시 보인다)
+  const restartInPlace = () => {
+    trackingCleanupRef.current?.();
+    trackingCleanupRef.current = null;
+    setPhase('idle');
+    setShowMarkers(false);
+    setAnalysisId(null);
+    setAnalysisProgress(0);
+    setAnalysisStepLabel(null);
+    setAnalysisError(null);
+    setRecommendedProperties([]);
+  };
+
   const selectedBiz = bizTypes.find(b => b.key === bizType);
 
   // Synthesised demo coords. Memo so the same object reference is shared
@@ -499,7 +514,7 @@ export function Analyze() {
         candidateStatus={candidateStatus}
         candidateCount={candidateTotal}
         candidateError={candidateError}
-        onReset={reset}
+        onReset={restartInPlace}
         analysisProgress={analysisProgress}
         analysisStepLabel={analysisStepLabel}
         analysisError={analysisError}
