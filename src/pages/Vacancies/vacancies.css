@@ -682,12 +682,8 @@
   transform: rotate(-45deg);
 }
 
-.vacancy-kakao-pin.score-mid::before {
-  background: var(--blue-500);
-}
-
-.vacancy-kakao-pin.score-low::before {
-  background: var(--amber-500);
+.vacancy-kakao-pin.is-selected::before {
+  background: var(--brand-700, #C24F1A);
 }
 
 .vacancy-kakao-pin:hover,
@@ -697,28 +693,14 @@
   z-index: 5;
 }
 
-.vacancy-kakao-pin-score {
+.vacancy-kakao-pin-dot {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: #fff;
-  color: var(--brand-600);
-  font-size: 10px;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-}
-
-.vacancy-kakao-pin.score-mid .vacancy-kakao-pin-score {
-  color: var(--blue-500);
-}
-
-.vacancy-kakao-pin.score-low .vacancy-kakao-pin-score {
-  color: #9A6400;
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 40, .08);
 }
 
 .vacancy-area-cluster {
@@ -1290,6 +1272,31 @@
   font-size: 17px;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
+}
+
+.vacancy-score-large.is-locked {
+  background: var(--ink-100, #EEF1F6);
+  color: var(--ink-400, #97A0B5);
+  cursor: help;
+}
+
+.vacancy-score-lock-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: var(--ink-50);
+  border: 1px solid var(--border);
+  color: var(--ink-600);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.vacancy-score-lock-note b {
+  color: var(--brand-600);
+  font-weight: 800;
 }
 
 .vacancy-price-grid,

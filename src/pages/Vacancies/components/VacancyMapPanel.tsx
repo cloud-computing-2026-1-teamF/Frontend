@@ -325,7 +325,7 @@ export function VacancyMapPanel({ items, selectedId, onSelect, loading = false }
                   />
                 </CustomOverlayMap>
               ))
-              : visiblePoints.map(({ item, score }) => (
+              : visiblePoints.map(({ item }) => (
                 <CustomOverlayMap
                   key={item.id}
                   position={{ lat: item.latitude, lng: item.longitude }}
@@ -334,7 +334,6 @@ export function VacancyMapPanel({ items, selectedId, onSelect, loading = false }
                 >
                   <VacancyMapPin
                     vacancy={item}
-                    score={score}
                     selected={item.id === selectedId}
                     onClick={() => onSelect(item.id)}
                   />
@@ -392,24 +391,23 @@ function priceLabel(vacancy: VacancyWithCoordinate): string {
   return `${price.label} ${price.value}${price.unit}`;
 }
 
-function VacancyMapPin({ vacancy, score, selected, onClick }: {
+function VacancyMapPin({ vacancy, selected, onClick }: {
   vacancy: VacancyWithCoordinate;
-  score: number;
   selected: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      className={`vacancy-kakao-pin ${selected ? 'is-selected' : ''} ${scoreClass(score)}`}
+      className={`vacancy-kakao-pin ${selected ? 'is-selected' : ''}`}
       onClick={onClick}
       title={vacancyTitle(vacancy)}
     >
-      <span className="vacancy-kakao-pin-score">{Math.round(score)}</span>
+      <span className="vacancy-kakao-pin-dot" />
       {selected && (
         <span className="vacancy-kakao-callout">
           <b>{vacancyTitle(vacancy)}</b>
-          <em>점수 {formatScore(score)} · {priceLabel(vacancy)}</em>
+          <em>{priceLabel(vacancy)}</em>
         </span>
       )}
     </button>

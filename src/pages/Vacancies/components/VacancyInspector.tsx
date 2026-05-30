@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Vacancy } from '../../../api';
+import { useAuth } from '../../../auth/AuthContext';
 import { Icon } from '../../../shared/Icon';
 import {
   formatArea,
@@ -34,6 +35,11 @@ export function VacancyInspector({
   onToggleShortlist,
   onToggleCompare,
 }: VacancyInspectorProps) {
+  const { user } = useAuth();
+  // 생존점수는 유료 플랜(Pro·Business)에서만 노출. 무료/비로그인 사용자에게는
+  // 점수 대신 '?'와 안내 문구로 구독을 유도한다.
+  const canViewScore = user?.tier === 'pro' || user?.tier === 'business';
+
   if (loading) {
     return (
       <aside className="vacancy-inspector">
@@ -78,10 +84,27 @@ export function VacancyInspector({
           <h2>{vacancyTitle(vacancy)}</h2>
           <p>{vacancySubtitle(vacancy)}</p>
         </div>
-        <span className={`vacancy-score-large ${scoreClass(vacancy.survivalScore)}`}>
-          {formatScore(vacancy.survivalScore)}
-        </span>
+        {canViewScore ? (
+          <span className={`vacancy-score-large ${scoreClass(vacancy.survivalScore)}`}>
+            {formatScore(vacancy.survivalScore)}
+          </span>
+        ) : (
+          <span
+            className="vacancy-score-large is-locked"
+            title="생존점수는 Pro 플랜부터 확인할 수 있어요"
+            aria-label="생존점수는 Pro 플랜부터 확인할 수 있어요"
+          >
+            ?
+          </span>
+        )}
       </div>
+
+      {!canViewScore && (
+        <p className="vacancy-score-lock-note">
+          <Icon name="lock" size={12} />
+          <span>생존점수는 <b>Pro 플랜</b>부터 확인할 수 있어요.</span>
+        </p>
+      )}
 
       <div className="vacancy-inspector-actions">
         <button type="button" className={`btn btn-secondary btn-sm ${isShortlisted ? 'is-on' : ''}`} onClick={() => onToggleShortlist?.(vacancy.id)}>

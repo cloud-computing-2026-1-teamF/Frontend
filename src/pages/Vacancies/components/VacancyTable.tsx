@@ -7,8 +7,6 @@ import {
   formatArea,
   formatCount,
   formatPeople,
-  formatScore,
-  scoreClass,
   totalCompetition,
   vacancyRentTerms,
   vacancySubtitle,
@@ -45,7 +43,6 @@ export function VacancyTable({
           <tr>
             <th>비교</th>
             <th>공실</th>
-            <th>점수</th>
             <th>임대 조건</th>
             <th>면적</th>
             <th>경쟁</th>
@@ -87,11 +84,6 @@ export function VacancyTable({
                 <td>
                   <div className="vacancy-row-title">{vacancyTitle(item)}</div>
                   <div className="vacancy-row-sub">{vacancySubtitle(item)}</div>
-                </td>
-                <td>
-                  <span className={`vacancy-score-badge ${scoreClass(item.survivalScore)}`}>
-                    {formatScore(item.survivalScore)}
-                  </span>
                 </td>
                 <td>
                   <div className="vacancy-money-stack">
