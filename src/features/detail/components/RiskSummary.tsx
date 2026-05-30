@@ -82,10 +82,9 @@ function summarizeHigherBetter(
   }
   const percent = Math.round(((selected - average) / average) * 100);
   const above = selected >= average;
-  const percentile = percentileSuffix(distribution?.percentile);
   return {
     tone: above ? 'up' : 'down',
-    headline: `평균 ${formatMetric(average, unit)}보다 ${Math.abs(percent)}% ${above ? '높아요' : '낮아요'}${percentile}`,
+    headline: `평균 ${formatMetric(average, unit)}보다 ${Math.abs(percent)}% ${above ? '높아요' : '낮아요'}`,
     score: percent >= 10 ? 1 : percent >= -10 ? 0 : -1,
   };
 }
@@ -103,17 +102,11 @@ function summarizeLowerBetter(
   const delta = Math.round(selected - average);
   const percent = Math.round((delta / average) * 100);
   const lower = selected <= average;
-  const percentile = percentileSuffix(distribution?.percentile);
   return {
     tone: lower ? 'up' : 'down',
-    headline: `평균 ${formatMetric(average, unit)}보다 ${formatMetric(Math.abs(delta), unit)} ${lower ? '적어요' : '많아요'}${percentile}`,
+    headline: `평균 ${formatMetric(average, unit)}보다 ${formatMetric(Math.abs(delta), unit)} ${lower ? '적어요' : '많아요'}`,
     score: percent <= -10 ? 1 : percent <= 10 ? 0 : -1,
   };
-}
-
-function percentileSuffix(value: number | null | undefined): string {
-  const percentile = toNumber(value);
-  return percentile == null ? '' : ` · P${Math.round(percentile)}`;
 }
 
 function toNumber(value: number | null | undefined): number | null {

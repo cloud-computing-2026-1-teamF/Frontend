@@ -77,9 +77,7 @@ function DistributionBar({
   const p90Pct = metric.p90 == null ? null : valueToPct(metric.p90, metric.min, metric.max);
   const selectedEdgeClass = edgeClass(selectedPct);
   const averageEdgeClass = averagePct == null ? '' : edgeClass(averagePct);
-  const selectedLabel = metric.percentile == null
-    ? `현재 ${formatCompact(metric.selected)}${unit}`
-    : `현재 P${Math.round(metric.percentile)} · ${formatCompact(metric.selected)}${unit}`;
+  const selectedLabel = `현재 ${formatCompact(metric.selected)}${unit}`;
 
   return (
     <div className="fv-viz fv-dist">
@@ -258,12 +256,12 @@ function edgeClass(percent: number): string {
 function percentileLabel(percentile: number, kind: MetricKind): string {
   if (kind === 'lower-better') {
     return percentile >= 50
-      ? ` · P${percentile}, 경쟁이 많은 쪽`
-      : ` · P${percentile}, 경쟁이 적은 쪽`;
+      ? ' · 경쟁이 많은 쪽'
+      : ' · 경쟁이 적은 쪽';
   }
   return percentile >= 50
-    ? ` · P${percentile}, 상위 ${Math.max(1, 100 - percentile)}%권`
-    : ` · P${percentile}, 하위 ${Math.max(1, percentile)}%권`;
+    ? ` · 상위 ${Math.max(1, 100 - percentile)}%권`
+    : ` · 하위 ${Math.max(1, percentile)}%권`;
 }
 
 function topicLabel(label: string): string {
