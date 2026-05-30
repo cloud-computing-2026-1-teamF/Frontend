@@ -191,6 +191,37 @@ export function patchAnalysisSessionTop3(id: string | number, recommendations: A
   return next;
 }
 
+// 목록 요약만으로 만든 placeholder 세션을 실제 추천으로 완전히 채운다.
+// top3는 물론, '저장된 분석'으로 비어 있던 지역명도 추천 매물 주소에서 추론해
+// 채워 넣어, 상세 페이지를 거치지 않아도 카드가 정상 표기되도록 한다.
+export function applyRecommendationsToSession(
+  session: AnalysisSession,
+  recommendations: AnalysisRecommendation[],
+): AnalysisSession {
+  const top3 = recommendationsToTop3(recommendations);
+  if (!top3 || top3.length === 0) return session;
+  const next: AnalysisSession = { ...session, top3 };
+  if (!session.areaName || session.areaName === '저장된 분석') {
+    const region = deriveRegionFromRecommendations(recommendations);
+    if (region) {
+      next.areaName = region;
+      next.region = region;
+    }
+  }
+  return next;
+}
+
+function deriveRegionFromRecommendations(recommendations: AnalysisRecommendation[]): string | undefined {
+  const address = recommendations
+    .map(rec => readableLabel(rec.roadAddress) || readableLabel(rec.lotAddress))
+    .find(Boolean);
+  if (!address) return undefined;
+  const parts = address.split(/\s+/);
+  const gu = parts.find(part => part.endsWith('구'));
+  const dong = parts.find(part => part.endsWith('동'));
+  return [gu, dong].filter(Boolean).join(' ') || gu || undefined;
+}
+
 export function patchAnalysisSessionSaved(id: string | number, saved: boolean): AnalysisSession | undefined {
   const session = findAnalysisSession(id);
   if (!session) return undefined;

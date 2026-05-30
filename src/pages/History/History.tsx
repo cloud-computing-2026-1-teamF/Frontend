@@ -13,6 +13,7 @@ import { api } from '../../api';
 import { USE_MOCK } from '../../api/client';
 import {
   type AnalysisSession,
+  applyRecommendationsToSession,
   buildSessionFromBackend,
   listAnalysisSessions,
   removeAnalysisSession,
@@ -50,10 +51,15 @@ export function History() {
       return () => { cancelled = true };
     }
 
+    // 캐시에 '이미 정상인'(실제 top3 보유) 카드는 즉시 보여준다. 단, 점수만 담긴
+    // placeholder(아직 추천이 없는)는 깨진 모습이 보이지 않도록 초기 렌더에서 제외하고,
+    // 백엔드 목록 + 하이드레이션이 끝난 뒤 완전한 목록으로 교체한다. 보여줄 게 하나도
+    // 없으면 loading 스켈레톤(공실 탐색 진입 시와 동일한 '불러오는 중')을 띄운다.
     const localSessions = filterSessions(listAnalysisSessions().filter(session => session.saved), q, sort);
-    setItems(localSessions.map(sessionToSavedAnalysis));
+    const readyLocalSessions = localSessions.filter(session => !sessionNeedsTop3(session));
+    setItems(readyLocalSessions.map(sessionToSavedAnalysis));
     setPollById(new Map());
-    setLoading(localSessions.length === 0);
+    setLoading(readyLocalSessions.length === 0);
 
     Promise.all([
       api.analyses.list({ sort, q: q || undefined, saved: true, limit: 200 }).catch(() => null),
@@ -62,6 +68,7 @@ export function History() {
       if (cancelled) return;
 
       if (!backendList) {
+        setItems(localSessions.map(sessionToSavedAnalysis));
         const polls = await Promise.all(
           localSessions.map(s => api.analyses.poll(s.id).catch(() => null)),
         );
@@ -78,9 +85,32 @@ export function History() {
 
       const cachedById = new Map(listAnalysisSessions().map(s => [s.id, s]));
 
-      const mergedSessions = backendList.items.map(item =>
+      let mergedSessions = backendList.items.map(item =>
         listItemToSession(item, businessTypes, cachedById),
       );
+
+      // 목록 API(GET /analyses)는 추천 매물 배열을 주지 않는다. 로컬 캐시에 실제
+      // top3가 없는 분석(다른 기기/캐시 초기화/방금 생성 등)은 점수만 담긴
+      // placeholder로 만들어지므로, 렌더 전에 추천 엔드포인트를 병렬 호출해
+      // top3와 지역명까지 모두 채워 넣는다. → 깨진 카드가 노출되지 않는다.
+      const needTop3 = mergedSessions.filter(sessionNeedsTop3);
+      if (needTop3.length > 0) {
+        const recLists = await Promise.all(
+          needTop3.map(s =>
+            api.analyses.recommendations(s.id).then(r => r.recommendations).catch(() => null),
+          ),
+        );
+        if (cancelled) return;
+        const hydratedById = new Map<string, AnalysisSession>();
+        needTop3.forEach((session, i) => {
+          const recs = recLists[i];
+          if (recs && recs.length > 0) {
+            hydratedById.set(String(session.id), applyRecommendationsToSession(session, recs));
+          }
+        });
+        mergedSessions = mergedSessions.map(s => hydratedById.get(String(s.id)) ?? s);
+      }
+
       mergedSessions.forEach(upsertAnalysisSession);
 
       const filtered = filterSessions(mergedSessions, q, sort);
@@ -222,6 +252,13 @@ function HistoryLoadingState() {
 
 function isSavedAnalysisRow(item: AnalysisListItem): item is SavedAnalysis {
   return 'region' in item && 'top3' in item && Array.isArray((item as SavedAnalysis).top3);
+}
+
+// 실제 추천(vacancyId 보유)이 없는 세션 = 목록 요약만으로 만든 placeholder.
+// 이런 카드는 추천 엔드포인트로 top3를 다시 받아와야 한다.
+function sessionNeedsTop3(session: AnalysisSession): boolean {
+  const top3 = session.top3;
+  return !top3 || top3.length === 0 || !top3[0].vacancyId;
 }
 
 function savedAnalysisRowToSession(row: SavedAnalysis): AnalysisSession {
