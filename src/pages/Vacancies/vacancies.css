@@ -657,27 +657,30 @@
 
 .vacancy-kakao-pin {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 48px;
+  width: 30px;
+  height: 36px;
   padding: 0;
   border: 0;
   background: transparent;
   color: #fff;
   cursor: pointer;
-  filter: drop-shadow(0 8px 14px rgba(16, 24, 40, .22));
-  transform: translateY(-2px);
+  filter: drop-shadow(0 6px 10px rgba(16, 24, 40, .25));
+  /* 끝점(바닥 중앙)을 기준으로 확대돼야 좌표에서 떨어지지 않음 */
+  transform-origin: bottom center;
   transition: transform .14s ease, filter .14s ease;
 }
 
 .vacancy-kakao-pin::before {
   content: '';
   position: absolute;
-  inset: 2px 4px 8px;
+  left: 50%;
+  top: 3px;
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
   border: 2px solid #fff;
-  border-radius: 18px 18px 18px 5px;
+  /* 정사각형 + 좌하단만 각진 모서리 → -45° 회전 시 끝점이 정확히 아래를 향함 */
+  border-radius: 50% 50% 50% 0;
   background: var(--brand-600);
   transform: rotate(-45deg);
 }
@@ -688,19 +691,22 @@
 
 .vacancy-kakao-pin:hover,
 .vacancy-kakao-pin.is-selected {
-  transform: translateY(-6px) scale(1.07);
-  filter: drop-shadow(0 12px 20px rgba(16, 24, 40, .30));
+  transform: scale(1.12);
+  filter: drop-shadow(0 10px 16px rgba(16, 24, 40, .32));
   z-index: 5;
 }
 
 .vacancy-kakao-pin-dot {
-  position: relative;
-  z-index: 1;
-  width: 11px;
-  height: 11px;
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
   border-radius: 50%;
   background: #fff;
   box-shadow: inset 0 0 0 1px rgba(16, 24, 40, .08);
+  z-index: 1;
 }
 
 .vacancy-area-cluster {
@@ -842,7 +848,7 @@
 .vacancy-kakao-callout {
   position: absolute;
   left: 50%;
-  bottom: 56px;
+  bottom: 44px;
   z-index: 6;
   display: grid;
   gap: 3px;
