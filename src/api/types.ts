@@ -109,6 +109,7 @@ export type AnalysisPollingResponse = {
   // localStorage. The single-analysis polling endpoint leaves them undefined.
   businessTypeKey?: string | null;
   transactionType?: string | null;
+  region?: string | null;
   centerLat?: number | null;
   centerLng?: number | null;
   radiusM?: number | null;
@@ -184,6 +185,8 @@ export type CreateAnalysisRequest = {
   x?: number;
   y?: number;
   radiusM?: number;
+  // 표시용 지역명(행정동). 서버에 저장돼 다른 기기에서도 동일하게 복원된다.
+  region?: string;
 };
 
 export type CreateAnalysisClientRequest = CreateAnalysisRequest & {
@@ -193,7 +196,6 @@ export type CreateAnalysisClientRequest = CreateAnalysisRequest & {
   // analysis fields above; these labels stay frontend-local.
   category?: string;
   categoryEmoji?: string;
-  region?: string;
 };
 
 export type AnalysisSectionKey =

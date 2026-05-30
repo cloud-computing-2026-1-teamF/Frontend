@@ -229,6 +229,7 @@ function toCreateAnalysisRequest(body: CreateAnalysisClientRequest): CreateAnaly
     x: body.x,
     y: body.y,
     radiusM: body.radiusM,
+    region: body.region,
   };
 }
 

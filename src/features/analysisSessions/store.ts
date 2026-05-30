@@ -150,8 +150,10 @@ export function buildSessionFromBackend(
     category: biz?.label ?? '업종 미상',
     categoryEmoji: biz?.emoji ?? '📍',
     areaId: '',
-    areaName: '저장된 분석',
-    region: '',
+    // 서버가 지역명을 주면 그대로 사용(다른 기기에서도 동일). 구버전 데이터는
+    // region이 없어 placeholder로 두고, 이후 추천 주소에서 지역을 추론한다.
+    areaName: item.region ?? '저장된 분석',
+    region: item.region ?? '',
     roadAddress: '',
     lat: item.centerLat ?? 0,
     lng: item.centerLng ?? 0,

@@ -305,8 +305,13 @@ function mergeBackendSummaryIntoSession(
   session: AnalysisSession,
   item: AnalysisPollingResponse,
 ): AnalysisSession {
+  // 서버에 저장된 지역명이 있으면 그것을 권위 있는 값으로 사용해 모든 기기가
+  // 동일하게 표기되도록 한다. (구버전 분석은 region이 없어 캐시 값을 유지)
+  const region = item.region ?? session.areaName;
   return {
     ...session,
+    areaName: region,
+    region: item.region ?? session.region,
     status: item.status,
     progress: item.progress,
     stepLabel: item.step?.label ?? session.stepLabel ?? null,
