@@ -6,7 +6,7 @@ import { FactorCard, buildFactorViz } from '../../shared/FactorViz';
 import { Footer } from '../../shared/Nav';
 import type { SavedAnalysis } from '../../lib/savedAnalyses';
 import { api, type AnalysisPollingResponse, type BusinessType } from '../../api';
-import { USE_MOCK } from '../../api/client';
+import { USE_MOCK, BASE_URL, getAccessToken } from '../../api/client';
 import { HISTORY_ITEMS } from '../../data/history';
 import { readSavedAnalyses } from '../../lib/savedAnalyses';
 import {
@@ -24,6 +24,7 @@ import { useVacancyMetricReference } from '../../features/vacancies/useVacancyMe
 
 export function Detail() {
   const [selected, setSelected] = useState(0);
+  const [reportLoading, setReportLoading] = useState(false);
   const { id: idParam } = useParams<{ id: string }>();
 
   const [item, setItem] = useState<SavedAnalysis | null>(null);
@@ -125,6 +126,43 @@ export function Detail() {
     );
   }
 
+  const handleReport = async () => {
+    // 라이브: 백엔드가 OpenAI로 보고서 PDF를 생성(POST /analyses/{id}/report) → 파일로 다운로드.
+    // mock 또는 생성 실패 시: 사전 생성 샘플 PDF 다운로드로 폴백.
+    setReportLoading(true);
+    const sampleUrl = `${import.meta.env.BASE_URL}uploads/sample-report.pdf`;
+    const filename = `상권분석보고서-${idParam ?? 'report'}.pdf`;
+    const triggerDownload = (href: string) => {
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+    try {
+      if (USE_MOCK) {
+        await new Promise(resolve => setTimeout(resolve, 600)); // 생성되는 듯한 연출
+        triggerDownload(sampleUrl);
+        return;
+      }
+      const res = await fetch(`${BASE_URL}/analyses/${idParam}/report`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getAccessToken() ?? ''}` },
+      });
+      if (!res.ok) throw new Error(`report ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      triggerDownload(url);
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (err) {
+      console.warn('보고서 생성 실패 — 샘플로 폴백:', err);
+      triggerDownload(sampleUrl);
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   const sel = item.top3[selected];
   const selRank = selected + 1;
 
@@ -144,6 +182,12 @@ export function Detail() {
                 <Icon name="chevron-left" size={14} />
                 <span>목록으로</span>
               </Link>
+              <div className="dt-header-actions">
+                <button className="dt-report-btn" onClick={handleReport} disabled={reportLoading}>
+                  <Icon name="download" size={14} />
+                  <span>{reportLoading ? '보고서 생성 중…' : '분석 보고서 PDF'}</span>
+                </button>
+              </div>
             </div>
 
             <div className="dt-title-block">
