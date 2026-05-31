@@ -38,6 +38,7 @@ export function Icon({ name, size = 20, stroke = 1.75, ...rest }: IconProps) {
     case 'coffee': return <svg {...s}><path d="M4 8h14v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M18 10h2a2 2 0 0 1 0 4h-2"/><path d="M8 3v2M12 3v2M16 3v2"/></svg>;
     case 'users': return <svg {...s}><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M21 19c0-2.5-2-4.5-4.5-4.5"/></svg>;
     case 'arrow-right': return <svg {...s}><path d="M5 12h14m-6-6 6 6-6 6"/></svg>;
+    case 'arrow-up': return <svg {...s}><path d="M12 19V5m-6 6 6-6 6 6"/></svg>;
     case 'chevron-left': return <svg {...s}><path d="m15 6-6 6 6 6"/></svg>;
     case 'chevron-right': return <svg {...s}><path d="m9 6 6 6-6 6"/></svg>;
     case 'search': return <svg {...s}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>;

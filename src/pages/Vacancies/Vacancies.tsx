@@ -10,9 +10,11 @@ import {
   type VacancySearchQuery,
   type VacancySearchResponse,
   type VacancySearchSort,
+  type VacancyStructuredFilter,
 } from '../../api';
 import { Icon } from '../../shared/Icon';
 import { Footer } from '../../shared/Nav';
+import { useAuth } from '../../auth/AuthContext';
 import { NumberField } from './components/NumberField';
 import { SummaryTile } from './components/SummaryTile';
 import { VacancyInspector } from './components/VacancyInspector';
@@ -31,14 +33,20 @@ import {
   MAP_PAGE_SIZE,
   numberInput,
   PAGE_SIZE,
+  interpretVacancyPrompt,
+  promptPatchFromStructuredFilter,
   priceFilterParams,
   SORT_OPTIONS,
   summaryPriceMetric,
   transactionTypeParam,
   TRANSACTION_OPTIONS,
+  withStructuredPromptArea,
+  withStructuredPromptPaging,
   type FilterState,
   type LoadStatus,
 } from './model';
+
+type PromptStage = 'idle' | 'parsing' | 'matchingArea' | 'querying' | 'complete' | 'error';
 
 export function Vacancies() {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
@@ -56,7 +64,16 @@ export function Vacancies() {
   const [mapItems, setMapItems] = useState<Vacancy[]>([]);
   const [mapStatus, setMapStatus] = useState<LoadStatus>('loading');
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
+  const [promptText, setPromptText] = useState('');
+  const [promptApplying, setPromptApplying] = useState(false);
+  const [promptLabels, setPromptLabels] = useState<string[]>([]);
+  const [promptNotice, setPromptNotice] = useState<string | null>(null);
+  const [promptStage, setPromptStage] = useState<PromptStage>('idle');
+  const [promptSearchStarted, setPromptSearchStarted] = useState(false);
+  const [promptStructuredFilters, setPromptStructuredFilters] = useState<VacancyStructuredFilter | null>(null);
   const collections = useVacancyCollections();
+  const { user } = useAuth();
+  const canUseLlmPrompt = user?.tier === 'pro' || user?.tier === 'business';
 
   useEffect(() => {
     collections.clearCompare();
@@ -68,7 +85,7 @@ export function Vacancies() {
   const searchQuery = useMemo<VacancySearchQuery>(() => ({
     areaId: selectedArea?.id,
     categoryId: filters.categoryId || undefined,
-    scoreMode: 'best',
+    scoreMode: filters.categoryId ? 'category' : 'best',
     transactionType: transactionTypeParam(filters.transactionType),
     q: filters.q.trim() || undefined,
     ...priceFilterParams(filters),
@@ -83,7 +100,7 @@ export function Vacancies() {
   const mapQuery = useMemo<VacancySearchQuery>(() => ({
     areaId: selectedArea?.id,
     categoryId: filters.categoryId || undefined,
-    scoreMode: 'best',
+    scoreMode: filters.categoryId ? 'category' : 'best',
     transactionType: transactionTypeParam(filters.transactionType),
     q: filters.q.trim() || undefined,
     ...priceFilterParams(filters),
@@ -97,6 +114,14 @@ export function Vacancies() {
 
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
   const [debouncedMapQuery, setDebouncedMapQuery] = useState(mapQuery);
+  const structuredPageFilters = useMemo(
+    () => promptStructuredFilters ? withStructuredPromptPaging(promptStructuredFilters, page, PAGE_SIZE) : null,
+    [page, promptStructuredFilters],
+  );
+  const structuredMapFilters = useMemo(
+    () => promptStructuredFilters ? withStructuredPromptPaging(promptStructuredFilters, 0, MAP_PAGE_SIZE) : null,
+    [promptStructuredFilters],
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedQuery(searchQuery), 180);
@@ -121,7 +146,11 @@ export function Vacancies() {
     setStatus('loading');
     setError(null);
 
-    api.vacancies.search(debouncedQuery)
+    const request = structuredPageFilters
+      ? api.vacancies.structuredSearch(structuredPageFilters)
+      : api.vacancies.search(debouncedQuery);
+
+    request
       .then(data => {
         if (cancelled) return;
         setResult(data);
@@ -134,12 +163,16 @@ export function Vacancies() {
       });
 
     return () => { cancelled = true; };
-  }, [debouncedQuery, refreshKey]);
+  }, [debouncedQuery, refreshKey, structuredPageFilters]);
 
   useEffect(() => {
     let cancelled = false;
     setMapStatus('loading');
-    api.vacancies.search(debouncedMapQuery)
+    const request = structuredMapFilters
+      ? api.vacancies.structuredSearch(structuredMapFilters)
+      : api.vacancies.search(debouncedMapQuery);
+
+    request
       .then(data => {
         if (!cancelled) {
           setMapItems(data.items);
@@ -154,7 +187,26 @@ export function Vacancies() {
       });
 
     return () => { cancelled = true; };
-  }, [debouncedMapQuery, refreshKey]);
+  }, [debouncedMapQuery, refreshKey, structuredMapFilters]);
+
+  useEffect(() => {
+    if (promptStage !== 'querying') return;
+    if (status === 'loading') {
+      setPromptSearchStarted(true);
+      return;
+    }
+    if (!promptSearchStarted) return;
+    setPromptStage(status === 'error' ? 'error' : 'complete');
+  }, [promptSearchStarted, promptStage, status]);
+
+  useEffect(() => {
+    if (promptStage !== 'complete') return;
+    const timer = window.setTimeout(() => {
+      setPromptStage('idle');
+      setPromptSearchStarted(false);
+    }, 1800);
+    return () => window.clearTimeout(timer);
+  }, [promptStage]);
 
   useEffect(() => {
     const keyword = areaQuery.trim();
@@ -221,7 +273,8 @@ export function Vacancies() {
     setSelectedId(vacancies[0]?.id ?? mapVacancies[0]?.id ?? null);
   }, [selectedId, vacancies, mapVacancies]);
 
-  const hasFilters = selectedArea !== null ||
+  const hasFilters = promptStructuredFilters !== null ||
+    selectedArea !== null ||
     filters.q.trim() !== '' ||
     filters.categoryId !== '' ||
     filters.transactionType !== defaultFilters.transactionType ||
@@ -236,6 +289,9 @@ export function Vacancies() {
     filters.sort !== defaultFilters.sort;
 
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
+    setPromptStructuredFilters(null);
+    setPromptLabels([]);
+    setPromptNotice(null);
     setFilters(prev => ({ ...prev, [key]: value }));
     setPage(0);
   };
@@ -244,6 +300,9 @@ export function Vacancies() {
   // 검색에 묻혀 들어가거나 필터 초기화 버튼을 헷갈리게 만들지 않도록 한다.
   // (관리비는 모든 거래유형에 공통이라 유지)
   const changeTransactionType = (value: FilterState['transactionType']) => {
+    setPromptStructuredFilters(null);
+    setPromptLabels([]);
+    setPromptNotice(null);
     setFilters(prev => ({
       ...prev,
       transactionType: value,
@@ -256,6 +315,9 @@ export function Vacancies() {
   };
 
   const resetFilters = () => {
+    setPromptStructuredFilters(null);
+    setPromptLabels([]);
+    setPromptNotice(null);
     setFilters(defaultFilters);
     setSelectedArea(null);
     setAreaQuery('');
@@ -264,6 +326,9 @@ export function Vacancies() {
   };
 
   const selectArea = (area: AreaSearchHit) => {
+    setPromptStructuredFilters(null);
+    setPromptLabels([]);
+    setPromptNotice(null);
     setSelectedArea(area);
     setAreaQuery(area.fullName);
     setAreaOptions([]);
@@ -271,10 +336,102 @@ export function Vacancies() {
   };
 
   const clearArea = () => {
+    setPromptStructuredFilters(null);
+    setPromptLabels([]);
+    setPromptNotice(null);
     setSelectedArea(null);
     setAreaQuery('');
     setAreaOptions([]);
     setPage(0);
+  };
+
+  const applyPrompt = async () => {
+    const prompt = promptText.trim();
+    if (!prompt || promptApplying) return;
+
+    let interpreted = interpretVacancyPrompt(prompt, businessTypes);
+    let structuredFilters: VacancyStructuredFilter | null = null;
+    let parseSource = 'local';
+    let nextSelectedArea: AreaSearchHit | null = null;
+    let nextAreaQuery = '';
+    let areaMiss = false;
+
+    setPromptApplying(true);
+    setPromptStage('parsing');
+    setPromptSearchStarted(false);
+    setPromptNotice(null);
+
+    try {
+      if (canUseLlmPrompt) {
+        try {
+          const parsed = await api.vacancies.parsePrompt(prompt);
+          structuredFilters = parsed.filters;
+          interpreted = promptPatchFromStructuredFilter(parsed.filters, businessTypes);
+          parseSource = parsed.source;
+        } catch {
+          structuredFilters = null;
+        }
+      }
+
+      const nextFilters: FilterState = {
+        ...defaultFilters,
+        ...interpreted.filters,
+      };
+
+      setPromptStage('matchingArea');
+      if (interpreted.areaKeyword) {
+        const matches = await api.catalog.searchAreas(interpreted.areaKeyword);
+        const area = pickPromptArea(matches, interpreted.areaKeyword, interpreted.areaDistrictHint);
+        if (area) {
+          nextSelectedArea = area;
+          nextAreaQuery = area.fullName;
+          if (structuredFilters) structuredFilters = withStructuredPromptArea(structuredFilters, area);
+        } else {
+          areaMiss = true;
+          nextAreaQuery = interpreted.areaKeyword;
+          if (!structuredFilters && !nextFilters.q) nextFilters.q = interpreted.areaKeyword;
+        }
+      }
+
+      setPromptStage('querying');
+      setFilters(nextFilters);
+      setPromptStructuredFilters(structuredFilters);
+      setSelectedArea(nextSelectedArea);
+      setAreaQuery(nextAreaQuery);
+      setAreaOptions([]);
+      setPromptLabels(interpreted.labels);
+      setPromptNotice(areaMiss
+        ? `${interpreted.areaKeyword} 행정동을 정확히 찾지 못해 ${structuredFilters ? '주소 조건' : '키워드'}로 적용했어요.`
+        : parseSource === 'openai' || parseSource === 'cache'
+          ? 'AI가 해석한 조건을 적용했어요.'
+          : '조건을 적용했어요.');
+      setPage(0);
+    } catch {
+      const nextFilters: FilterState = {
+        ...defaultFilters,
+        ...interpreted.filters,
+      };
+      if (interpreted.areaKeyword && !structuredFilters && !nextFilters.q) nextFilters.q = interpreted.areaKeyword;
+      setPromptStage('error');
+      setFilters(nextFilters);
+      setPromptStructuredFilters(structuredFilters);
+      setSelectedArea(null);
+      setAreaQuery(interpreted.areaKeyword ?? '');
+      setAreaOptions([]);
+      setPromptLabels(interpreted.labels);
+      setPromptNotice('지역 검색을 확인하지 못해 나머지 조건만 적용했어요.');
+      setPage(0);
+    } finally {
+      setPromptApplying(false);
+    }
+  };
+
+  const clearPrompt = () => {
+    setPromptText('');
+    setPromptLabels([]);
+    setPromptNotice(null);
+    setPromptStage('idle');
+    setPromptSearchStarted(false);
   };
 
   const toggleCompare = (id: string) => {
@@ -318,6 +475,19 @@ export function Vacancies() {
                 입지 분석 시작
               </Link>
             </div>
+            {canUseLlmPrompt && (
+              <PromptFilter
+                value={promptText}
+                applying={promptApplying || promptStage === 'querying'}
+                labels={promptLabels}
+                notice={promptNotice}
+                stage={promptStage}
+                resultCount={result?.total ?? null}
+                onChange={setPromptText}
+                onApply={applyPrompt}
+                onClear={clearPrompt}
+              />
+            )}
           </header>
 
           <section className="vacancy-summary-grid" aria-label="공실 탐색 요약">
@@ -571,6 +741,128 @@ function KeywordFilter({ value, onChange }: { value: string; onChange: (value: s
   );
 }
 
+function PromptFilter({ value, applying, labels, notice, stage, resultCount, onChange, onApply, onClear }: {
+  value: string;
+  applying: boolean;
+  labels: string[];
+  notice: string | null;
+  stage: PromptStage;
+  resultCount: number | null;
+  onChange: (value: string) => void;
+  onApply: () => void;
+  onClear: () => void;
+}) {
+  const busy = applying || stage === 'parsing' || stage === 'matchingArea' || stage === 'querying';
+
+  return (
+    <form
+      className="vacancy-prompt-filter"
+      onSubmit={event => {
+        event.preventDefault();
+        onApply();
+      }}
+    >
+      <div className="vacancy-prompt-card">
+        <div className="vacancy-prompt-head">
+          <div className="vacancy-prompt-title">
+            <span className="vacancy-prompt-mark" aria-hidden="true">
+              <Icon name="cpu" size={15} />
+            </span>
+            <label htmlFor="vacancy-prompt">AI 공실 탐색</label>
+          </div>
+          <span className="vacancy-prompt-tier">Pro</span>
+        </div>
+        <div className={`vacancy-prompt-shell ${busy ? 'is-busy' : ''}`}>
+          <textarea
+            id="vacancy-prompt"
+            name="vacancyPrompt"
+            value={value}
+            rows={2}
+            spellCheck={false}
+            autoCorrect="off"
+            autoCapitalize="off"
+            onChange={event => onChange(event.target.value)}
+            onKeyDown={event => {
+              if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+              event.preventDefault();
+              onApply();
+            }}
+            placeholder="송파구 방이동쯤 월세 500만원 내외, 고기집하기 좋은 1층 공실"
+          />
+          <div className="vacancy-prompt-toolbar">
+            <PromptProgress stage={stage} notice={notice} resultCount={resultCount} />
+            <div className="vacancy-prompt-buttons">
+              {value && (
+                <button type="button" className="vacancy-prompt-clear" onClick={onClear} title="프롬프트 지우기" aria-label="프롬프트 지우기">
+                  <Icon name="close" size={14} />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="vacancy-prompt-submit"
+                disabled={!value.trim() || busy}
+                title="AI 탐색 실행"
+                aria-label="AI 탐색 실행"
+              >
+                <Icon name={busy ? 'dot' : 'arrow-up'} size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+        {labels.length > 0 && (
+          <div className="vacancy-prompt-tags" aria-label="적용된 자연어 조건">
+            {labels.map(label => (
+              <span key={label}>{label}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </form>
+  );
+}
+
+function PromptProgress({ stage, notice, resultCount }: {
+  stage: PromptStage;
+  notice: string | null;
+  resultCount: number | null;
+}) {
+  const steps: Array<{ key: PromptStage; label: string }> = [
+    { key: 'parsing', label: '조건 해석' },
+    { key: 'matchingArea', label: '지역 매칭' },
+    { key: 'querying', label: '공실 조회' },
+  ];
+  const activeIndex = stage === 'complete' ? steps.length : Math.max(0, steps.findIndex(step => step.key === stage));
+  const isActiveFlow = stage !== 'idle' && stage !== 'error';
+
+  if (stage === 'idle') {
+    return <span className="vacancy-prompt-status">{notice ?? '준비됨'}</span>;
+  }
+
+  if (stage === 'error') {
+    return <span className="vacancy-prompt-status is-error">{notice ?? '조건 적용을 확인하지 못했어요.'}</span>;
+  }
+
+  return (
+    <div className="vacancy-prompt-progress" aria-live="polite">
+      {steps.map((step, index) => (
+        <span
+          key={step.key}
+          className={[
+            index < activeIndex ? 'is-done' : '',
+            isActiveFlow && step.key === stage ? 'is-current' : '',
+          ].filter(Boolean).join(' ')}
+        >
+          <i />
+          {step.label}
+        </span>
+      ))}
+      {stage === 'complete' && (
+        <b>{typeof resultCount === 'number' ? `${formatCount(resultCount)}개 적용` : '적용 완료'}</b>
+      )}
+    </div>
+  );
+}
+
 function CategoryFilter({ value, options, onChange }: {
   value: string;
   options: BusinessType[];
@@ -578,7 +870,7 @@ function CategoryFilter({ value, options, onChange }: {
 }) {
   return (
     <div className="vacancy-filter-group">
-      <label htmlFor="vacancy-category">최고 점수 업종</label>
+      <label htmlFor="vacancy-category">업종 적합도</label>
       <select id="vacancy-category" value={value} onChange={event => onChange(event.target.value)}>
         <option value="">전체 최고 점수</option>
         {options.map(option => (
@@ -632,6 +924,22 @@ function AreaFilter({ value, loading, options, selectedArea, onChange, onClear, 
       </div>
     </div>
   );
+}
+
+function pickPromptArea(areas: AreaSearchHit[], keyword: string, districtHint?: string): AreaSearchHit | undefined {
+  const normalizedKeyword = compactAreaText(keyword);
+  const normalizedDistrict = districtHint ? compactAreaText(districtHint) : undefined;
+  return areas.find(area =>
+    compactAreaText(area.name) === normalizedKeyword &&
+    (!normalizedDistrict || compactAreaText(area.region).includes(normalizedDistrict) || compactAreaText(area.fullName).includes(normalizedDistrict))
+  ) ?? areas.find(area =>
+    compactAreaText(area.fullName).includes(normalizedKeyword) &&
+    (!normalizedDistrict || compactAreaText(area.fullName).includes(normalizedDistrict))
+  ) ?? areas[0];
+}
+
+function compactAreaText(value: string): string {
+  return value.replace(/\s+/g, '').toLowerCase();
 }
 
 function errorMessage(error: unknown): string {

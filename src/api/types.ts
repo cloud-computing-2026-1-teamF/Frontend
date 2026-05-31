@@ -421,6 +421,66 @@ export type VacancySearchResponse = {
   summary: VacancySearchSummary;
 };
 
+export type VacancyStructuredFilter = {
+  q?: string | null;
+  location?: {
+    areaId?: string | null;
+    province?: string | null;
+    district?: string | null;
+    dong?: string | null;
+    address?: string | null;
+    subway?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    radiusM?: number | null;
+  } | null;
+  category?: {
+    categoryId?: string | null;
+    categoryLabel?: string | null;
+    scoreMode?: 'best' | 'category' | null;
+    scoreMin?: number | null;
+    recommendedOnly?: boolean | null;
+  } | null;
+  transactionType?: string | null;
+  price?: {
+    monthlyRentMin?: number | null;
+    monthlyRentMax?: number | null;
+    depositMin?: number | null;
+    depositMax?: number | null;
+    maintenanceFeeMin?: number | null;
+    maintenanceFeeMax?: number | null;
+    premiumMin?: number | null;
+    premiumMax?: number | null;
+    salePriceMin?: number | null;
+    salePriceMax?: number | null;
+    priceNegotiable?: boolean | null;
+    rentAdjustable?: boolean | null;
+    rentFreePeriodAvailable?: boolean | null;
+  } | null;
+  space?: {
+    dedicatedAreaMin?: number | null;
+    dedicatedAreaMax?: number | null;
+    supplyAreaMin?: number | null;
+    supplyAreaMax?: number | null;
+    floorText?: string | null;
+    groundFloor?: boolean | null;
+    basement?: boolean | null;
+  } | null;
+  sort?: VacancySearchSort | null;
+  page?: number | null;
+  size?: number | null;
+};
+
+export type VacancyPromptParseResponse = {
+  filters: VacancyStructuredFilter;
+  source: 'openai' | 'fallback' | 'cache' | 'empty' | string;
+  schemaVersion: string;
+};
+
+export type VacancyPromptSearchResponse = VacancyPromptParseResponse & {
+  result: VacancySearchResponse;
+};
+
 export type VacancyMetricDistribution = {
   selected?: number | null;
   average?: number | null;

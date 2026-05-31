@@ -30,6 +30,9 @@ import type {
   VacancySearchResponse,
   VacancySearchSort,
   VacancySearchSummary,
+  VacancyStructuredFilter,
+  VacancyPromptParseResponse,
+  VacancyPromptSearchResponse,
   VacancyMetricDistribution,
   VacancyMetricReference,
   VacancyShortlistPayload,
@@ -42,7 +45,7 @@ export type {
   AnalysisRecommendation, AnalysisDetail, AnalysisEventResponse, AnalysisPollingResponse, AnalysisRecommendationsSection, AnalysisSectionKey, AnalysisSectionTodo,
   CreateAnalysisResponse, CreateAnalysisRequest, CreateAnalysisClientRequest, ListAnalysesQuery, ListAnalysesResponse,
   PatchAnalysisRequest, UserStats,
-  Vacancy, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary, VacancyMetricDistribution, VacancyMetricReference, VacancyShortlistPayload,
+  Vacancy, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary, VacancyStructuredFilter, VacancyPromptParseResponse, VacancyPromptSearchResponse, VacancyMetricDistribution, VacancyMetricReference, VacancyShortlistPayload,
 } from './types';
 
 // ── Auth ────────────────────────────────────────────────────────────────────
@@ -171,6 +174,30 @@ export const vacanciesApi = {
       method: 'GET',
       path: '/vacancies/search',
       query: query as Record<string, unknown>,
+    }).then(r => r.data),
+
+  /** `POST /vacancies/structured-search` */
+  structuredSearch: (filters: VacancyStructuredFilter = {}) =>
+    apiRequest<VacancySearchResponse>({
+      method: 'POST',
+      path: '/vacancies/structured-search',
+      body: { filters },
+    }).then(r => r.data),
+
+  /** `POST /vacancies/prompt/parse` */
+  parsePrompt: (prompt: string) =>
+    apiRequest<VacancyPromptParseResponse>({
+      method: 'POST',
+      path: '/vacancies/prompt/parse',
+      body: { prompt },
+    }).then(r => r.data),
+
+  /** `POST /vacancies/prompt/search` */
+  promptSearch: (prompt: string, page?: number, size?: number) =>
+    apiRequest<VacancyPromptSearchResponse>({
+      method: 'POST',
+      path: '/vacancies/prompt/search',
+      body: { prompt, page, size },
     }).then(r => r.data),
 
   /** `GET /vacancies` */
