@@ -32,16 +32,55 @@
 }
 .dt-back:hover { border-color: var(--ink-400); color: var(--ink-900); }
 
-.dt-header-actions { display: flex; gap: 6px; }
-.dt-report-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 14px; border: none; border-radius: 8px;
-  background: #E85D1F; color: #fff; cursor: pointer;
-  font: 600 12.5px var(--font-sans); transition: opacity .12s, transform .12s;
+.dt-header-actions { display: flex; gap: 6px; align-items: center; }
+/* PDF 버튼 왼쪽 상태 배지: 생성 완료=초록 체크, 실패=빨강 X */
+.dt-report-status {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  animation: dt-status-pop .18s ease-out;
 }
-.dt-report-btn:hover { opacity: .92; }
-.dt-report-btn:active { transform: translateY(1px); }
-.dt-report-btn:disabled { opacity: .6; cursor: default; }
+.dt-report-status.ok  { background: #E6F6EC; color: #1A8F4C; }
+.dt-report-status.err { background: #FCE8E8; color: #D33A3A; }
+@keyframes dt-status-pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.dt-report-btn {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; gap: 11px;
+  padding: 11px 22px; border: none; border-radius: 13px;
+  background: linear-gradient(135deg, #FF8A4C 0%, #E85D1F 52%, #D63E6B 125%);
+  color: #fff; cursor: pointer; font-family: var(--font-sans);
+  box-shadow: 0 8px 22px rgba(232, 93, 31, .40), inset 0 1px 0 rgba(255, 255, 255, .28);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+.dt-report-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(232, 93, 31, .52); filter: saturate(1.08) brightness(1.03); }
+.dt-report-btn:active { transform: translateY(0); box-shadow: 0 6px 16px rgba(232, 93, 31, .42); }
+.dt-report-btn:disabled { cursor: default; transform: none; }
+/* 아이콘 배지(반투명 원) */
+.dt-report-btn-ic {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255, 255, 255, .18); flex: 0 0 auto;
+}
+.dt-report-btn-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.12; }
+.dt-report-btn-main { font: 700 14px var(--font-sans); letter-spacing: -.2px; }
+.dt-report-btn-sub { font: 600 10.5px var(--font-sans); opacity: .9; letter-spacing: .1px; }
+/* 평상시 은은한 sparkle 펄스 */
+.dt-report-btn:not(.is-loading) .dt-report-btn-ic { animation: dt-spark 2.6s ease-in-out infinite; }
+@keyframes dt-spark { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.12); opacity: .82; } }
+/* 화려한 광택 스윕(호버 시 빛이 지나감) */
+.dt-report-btn::after {
+  content: ''; position: absolute; top: 0; left: -60%; width: 45%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .42), transparent);
+  transform: skewX(-18deg); transition: left .55s ease;
+}
+.dt-report-btn:hover::after { left: 130%; }
+/* 생성 중: 그라데이션 흐름 + 아이콘 회전감 */
+.dt-report-btn.is-loading {
+  background: linear-gradient(110deg, #E85D1F, #FF8A4C, #D63E6B, #E85D1F);
+  background-size: 300% 100%; animation: dt-report-flow 1.5s linear infinite;
+}
+@keyframes dt-report-flow { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+.dt-report-btn.is-loading .dt-report-btn-ic { animation: dt-report-spin 1.1s linear infinite; }
+@keyframes dt-report-spin { to { transform: rotate(360deg); } }
 .dt-action-btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 12px; border: 1px solid var(--border); background: #fff;
