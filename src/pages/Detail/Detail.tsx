@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import './detail.css';
+import sampleReportHtml from './ai-report-sample.html?raw';
 import { Icon } from '../../shared/Icon';
 import { FactorCard, buildFactorViz } from '../../shared/FactorViz';
 import { Footer } from '../../shared/Nav';
@@ -176,13 +177,21 @@ export function Detail() {
   };
 
   const handleSampleReport = () => {
-    // 시연용: 확장판 샘플 보고서를 HTML 파일 그대로 다운로드 (브라우저로 열면 그대로 렌더).
-    const a = document.createElement('a');
-    a.href = `${import.meta.env.BASE_URL}ai-report-sample.html`;
-    a.download = '상권분석보고서_샘플.html';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    // 시연용: 번들에 포함된 확장판 샘플 보고서 HTML을 Blob으로 만들어 새 탭에 바로 띄운다.
+    // (public 정적 .html은 Amplify SPA 리라이트로 index.html이 반환돼 빈 문서가 됨 → 번들+Blob로 우회)
+    const blob = new Blob([sampleReportHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if (!win) {
+      // 팝업 차단 시 다운로드로 폴백
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '상권분석보고서_샘플.html';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 
   const sel = item.top3[selected];
@@ -259,7 +268,7 @@ export function Detail() {
                   type="button"
                   className="dt-report-sample-btn"
                   onClick={handleSampleReport}
-                  title="시연용 샘플 보고서(HTML) — 즉시 다운로드"
+                  title="시연용 샘플 보고서 — 새 탭으로 열기"
                 >
                   📄 AI 입지 분석 보고서 샘플
                 </button>
