@@ -35,6 +35,11 @@ type CompareRow = {
   format: (value: number | null | undefined) => string;
 };
 
+type CompareBest = {
+  value: number;
+  hasSpread: boolean;
+};
+
 const COMPARE_ROWS: CompareRow[] = [
   {
     label: '생존점수',
@@ -159,13 +164,17 @@ export function VacancyCompare() {
 
   const enoughItems = items.length >= MIN_COMPARE_VACANCIES;
   const bestByRow = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map<string, CompareBest>();
     COMPARE_ROWS.forEach(row => {
       const values = items
         .map(item => numericValue(row.getValue(item)))
         .filter((value): value is number => value !== null);
       if (!values.length) return;
-      map.set(row.label, row.higherBetter ? Math.max(...values) : Math.min(...values));
+      const roundedValues = new Set(values.map(value => value.toFixed(4)));
+      map.set(row.label, {
+        value: row.higherBetter ? Math.max(...values) : Math.min(...values),
+        hasSpread: roundedValues.size > 1,
+      });
     });
     return map;
   }, [items]);
@@ -260,7 +269,7 @@ export function VacancyCompare() {
                 <VacancyDetailMap vacancies={items} selectedId={selectedId} onSelect={setSelectedId} height={360} />
               </section>
 
-              <section className="vf-panel">
+              <section className="vf-panel vcmp-matrix-panel">
                 <div className="vf-panel-head">
                   <span>Matrix</span>
                   <h2>핵심 지표 비교</h2>
@@ -269,9 +278,22 @@ export function VacancyCompare() {
                   <table className="vcmp-table">
                     <thead>
                       <tr>
-                        <th>지표</th>
+                        <th className="vcmp-metric-th">
+                          <span>지표</span>
+                          <small>{COMPARE_ROWS.length}개 판단 기준</small>
+                        </th>
                         {items.map(item => (
-                          <th key={item.id}>{vacancyTitle(item)}</th>
+                          <th key={item.id} className={item.id === selectedId ? 'is-selected-col' : ''}>
+                            <button type="button" className="vcmp-column-head" onClick={() => setSelectedId(item.id)}>
+                              <span className={`vf-score-pill small ${scoreClass(item.survivalScore)}`}>
+                                {formatScore(item.survivalScore)}
+                              </span>
+                              <span className="vcmp-column-copy">
+                                <b>{vacancyTitle(item)}</b>
+                                <small>{vacancySubtitle(item)}</small>
+                              </span>
+                            </button>
+                          </th>
                         ))}
                       </tr>
                     </thead>
@@ -279,18 +301,36 @@ export function VacancyCompare() {
                       {COMPARE_ROWS.map(row => {
                         const best = bestByRow.get(row.label);
                         return (
-                          <tr key={row.label}>
+                          <tr key={row.label} className={row.higherBetter ? 'vcmp-row-up' : 'vcmp-row-down'}>
                             <td>
-                              <b>{row.label}</b>
-                              <span>{row.help}</span>
+                              <div className="vcmp-metric-cell">
+                                <span className={`vcmp-direction ${row.higherBetter ? 'is-up' : 'is-down'}`}>
+                                  {row.higherBetter ? '↑' : '↓'}
+                                </span>
+                                <div>
+                                  <b>{row.label}</b>
+                                  <span>{row.help}</span>
+                                </div>
+                              </div>
                             </td>
                             {items.map(item => {
                               const raw = row.getValue(item);
                               const numeric = numericValue(raw);
-                              const isBest = best !== undefined && numeric !== null && Math.abs(numeric - best) < 0.0001;
+                              const isBest = best !== undefined && best.hasSpread && numeric !== null && Math.abs(numeric - best.value) < 0.0001;
                               return (
-                                <td key={item.id} className={isBest ? 'is-best' : ''}>
-                                  {row.format(raw)}
+                                <td
+                                  key={item.id}
+                                  className={`${isBest ? 'is-best' : ''} ${item.id === selectedId ? 'is-selected-col' : ''}`.trim()}
+                                >
+                                  <div className="vcmp-value-card">
+                                    <strong>{row.format(raw)}</strong>
+                                    {isBest && (
+                                      <span className="vcmp-best-chip">
+                                        <Icon name="check" size={11} stroke={2.4} />
+                                        우세
+                                      </span>
+                                    )}
+                                  </div>
                                 </td>
                               );
                             })}

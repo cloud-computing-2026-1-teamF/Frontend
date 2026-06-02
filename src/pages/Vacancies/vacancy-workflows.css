@@ -880,8 +880,37 @@
   border-top: 1px solid var(--border);
 }
 
+.vcmp-matrix-panel {
+  padding: 18px;
+  border-color: #D8E1EE;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, .07);
+}
+
+.vcmp-matrix-panel .vf-panel-head {
+  margin-bottom: 16px;
+}
+
+.vcmp-matrix-panel .vcmp-table-wrap {
+  border-color: #D7E0EC;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
+}
+
 .vcmp-table {
-  min-width: 760px;
+  min-width: 1040px;
+  table-layout: fixed;
+}
+
+.vcmp-table th,
+.vcmp-table td {
+  border-color: #E1E7F0;
+}
+
+.vcmp-table th {
+  padding: 0;
+  background: #F5F7FB;
+  vertical-align: middle;
 }
 
 .vcmp-table th:first-child,
@@ -889,35 +918,201 @@
   position: sticky;
   left: 0;
   z-index: 1;
-  width: 190px;
-  background: #fff;
+  width: 230px;
+  box-shadow: 1px 0 0 #E1E7F0;
 }
 
 .vcmp-table th:first-child {
   z-index: 2;
-  background: var(--ink-50);
+  background: #F5F7FB;
 }
 
-.vcmp-table td:first-child b,
-.vcmp-table td:first-child span {
+.vcmp-table td:first-child {
+  background: #fff;
+}
+
+.vcmp-table tbody tr:hover td {
+  background: #FAFCFF;
+}
+
+.vcmp-table tbody tr:hover td:first-child {
+  background: #fff;
+}
+
+.vcmp-table th.is-selected-col {
+  background: #FFF8F3;
+}
+
+.vcmp-table td.is-selected-col {
+  background: linear-gradient(180deg, rgba(232, 93, 31, .035), rgba(255, 255, 255, 0));
+}
+
+.vcmp-table tbody tr:hover td.is-selected-col {
+  background: #FFF9F5;
+}
+
+.vcmp-metric-th {
+  padding: 15px 16px !important;
+}
+
+.vcmp-metric-th span,
+.vcmp-metric-th small,
+.vcmp-column-copy b,
+.vcmp-column-copy small {
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.vcmp-table td:first-child b {
+.vcmp-metric-th span {
   color: var(--ink-900);
   font-size: 12px;
+  font-weight: 900;
 }
 
-.vcmp-table td:first-child span {
+.vcmp-metric-th small {
   margin-top: 4px;
   color: var(--ink-400);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.vcmp-column-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 78px;
+  padding: 13px 16px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vcmp-column-head:hover {
+  background: rgba(255, 255, 255, .72);
+}
+
+.vcmp-column-copy {
+  min-width: 0;
+}
+
+.vcmp-column-copy b {
+  color: var(--ink-900);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.vcmp-column-copy small {
+  margin-top: 4px;
+  color: var(--ink-500);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.vcmp-table td {
+  height: 68px;
+  padding: 9px 12px;
+  vertical-align: middle;
+}
+
+.vcmp-metric-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.vcmp-direction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.vcmp-direction.is-up {
+  background: rgba(15, 181, 166, .12);
+  color: #087F75;
+}
+
+.vcmp-direction.is-down {
+  background: rgba(47, 111, 237, .11);
+  color: var(--blue-500);
+}
+
+.vcmp-metric-cell div {
+  min-width: 0;
+}
+
+.vcmp-metric-cell div b,
+.vcmp-metric-cell div span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vcmp-metric-cell div b {
+  color: var(--ink-900);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.vcmp-metric-cell div span {
+  margin-top: 4px;
+  color: var(--ink-500);
   font-size: 10px;
   font-weight: 800;
 }
 
-.vcmp-table td.is-best {
-  background: var(--brand-50);
+.vcmp-value-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 11px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+
+.vcmp-value-card strong {
+  overflow: hidden;
+  color: var(--ink-900);
+  font-size: 14px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.vcmp-table td.is-best .vcmp-value-card {
+  border-color: rgba(232, 93, 31, .30);
+  background: linear-gradient(135deg, #FFF3EA 0%, #fff 100%);
+  box-shadow: 0 1px 0 rgba(232, 93, 31, .10);
+}
+
+.vcmp-best-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  height: 23px;
+  padding: 0 8px;
+  border: 1px solid rgba(232, 93, 31, .24);
+  border-radius: 999px;
+  background: #fff;
   color: var(--brand-700);
+  font-size: 10px;
   font-weight: 900;
 }
 
