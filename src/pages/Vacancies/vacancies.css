@@ -995,8 +995,8 @@
 }
 
 .vacancy-area-cluster {
-  --cluster-accent: var(--brand-600);
-  --cluster-accent-soft: rgba(232, 93, 31, .14);
+  --cluster-accent: var(--blue-500);
+  --cluster-accent-soft: rgba(47, 111, 237, .14);
   position: relative;
   display: grid;
   grid-template-areas:

@@ -6,7 +6,7 @@ import {
 } from 'react-kakao-maps-sdk';
 import type { Vacancy } from '../../../api';
 import { Icon } from '../../../shared/Icon';
-import { compactText, formatScore, scoreClass, vacancyPrimaryPrice, vacancyTitle } from '../model';
+import { compactText, vacancyPrimaryPrice, vacancyTitle } from '../model';
 
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.9780 };
 const DISTRICT_CLUSTER_LEVEL = 8;
@@ -246,7 +246,7 @@ export function VacancyMapPanel({ items, selectedId, onSelect, loading = false }
       <div className="vacancy-map-toolbar">
         <div>
           <b>{showDistrictClusters ? '구 클러스터' : showAreaClusters ? '행정동 클러스터' : focusedCluster ? `${focusedCluster.label} 확대` : '개별 공실'}</b>
-          <span>{showDistrictClusters ? '확대하면 행정동 단위로 나뉩니다' : '평균 점수 기준으로 색상이 구분됩니다'}</span>
+          <span>{showDistrictClusters ? '확대하면 행정동 단위로 나뉩니다' : '확대하면 개별 공실로 나뉩니다'}</span>
         </div>
         <div className="vacancy-map-toolbar-actions">
           {focusedCluster && (
@@ -355,7 +355,7 @@ function DistrictClusterMarker({ cluster, selected, onClick }: {
   return (
     <button
       type="button"
-      className={`vacancy-area-cluster vacancy-district-cluster ${sizeClass} ${selected ? 'is-selected' : ''} ${scoreClass(cluster.averageScore)}`}
+      className={`vacancy-area-cluster vacancy-district-cluster ${sizeClass} ${selected ? 'is-selected' : ''}`}
       onClick={onClick}
       title={`${cluster.label} 공실 ${cluster.count}개`}
     >
@@ -375,13 +375,12 @@ function AreaClusterMarker({ cluster, selected, onClick }: {
   return (
     <button
       type="button"
-      className={`vacancy-area-cluster ${sizeClass} ${selected ? 'is-selected' : ''} ${scoreClass(cluster.averageScore)}`}
+      className={`vacancy-area-cluster ${sizeClass} ${selected ? 'is-selected' : ''}`}
       onClick={onClick}
       title={`${cluster.label} 공실 ${cluster.count}개`}
     >
       <span className="vacancy-area-cluster-count">{cluster.count}</span>
       <span className="vacancy-area-cluster-label">{cluster.label}</span>
-      <em>평균 {formatScore(cluster.averageScore)}</em>
     </button>
   );
 }
