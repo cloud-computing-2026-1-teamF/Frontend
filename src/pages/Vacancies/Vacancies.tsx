@@ -470,10 +470,6 @@ export function Vacancies() {
                 <h1>공실 탐색</h1>
                 <p>후보 공실을 조건별로 검토하고, 상권 지표와 임대 조건을 한 화면에서 비교합니다.</p>
               </div>
-              <Link to="/analyze" className="btn btn-primary vacancy-title-action">
-                <Icon name="sparkles" size={15} />
-                입지 분석 시작
-              </Link>
             </div>
             {canUseLlmPrompt && (
               <PromptFilter
