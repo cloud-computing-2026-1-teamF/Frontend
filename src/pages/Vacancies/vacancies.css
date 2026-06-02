@@ -1028,12 +1028,15 @@
   grid-template-columns: auto auto;
   justify-content: center;
   column-gap: 6px;
+  max-width: 160px;   /* 글자만큼 박스가 늘어나게 (잘림 방지) */
 }
 
 .vacancy-area-cluster:not(.vacancy-district-cluster) .vacancy-area-cluster-label {
   text-align: center;
   font-size: 15px;
   line-height: 1.1;
+  overflow: visible;       /* 말줄임(…) 제거 — 동 이름 전체 표시 */
+  text-overflow: clip;
 }
 .vacancy-area-cluster:not(.vacancy-district-cluster) .vacancy-area-cluster-count {
   min-width: 24px;
