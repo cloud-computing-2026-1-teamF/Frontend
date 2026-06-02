@@ -175,6 +175,16 @@ export function Detail() {
     }
   };
 
+  const handleSampleReport = () => {
+    // 시연용: 사전 렌더된 확장판 샘플 보고서 PDF를 즉시 다운로드 (AI 생성 실패 시 대체 제시용).
+    const a = document.createElement('a');
+    a.href = `${import.meta.env.BASE_URL}ai-report-sample.pdf`;
+    a.download = '상권분석보고서_샘플.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
   const sel = item.top3[selected];
   const selRank = selected + 1;
 
@@ -205,6 +215,7 @@ export function Detail() {
                     <Icon name="close" size={15} />
                   </span>
                 )}
+                <div className="dt-report-col">
                 <button
                   className={`dt-report-btn${reportLoading ? ' is-loading' : ''}`}
                   onClick={handleReport}
@@ -223,6 +234,15 @@ export function Detail() {
                     </span>
                   )}
                 </button>
+                <button
+                  type="button"
+                  className="dt-report-sample-btn"
+                  onClick={handleSampleReport}
+                  title="시연용 샘플 보고서 — 즉시 다운로드"
+                >
+                  📄 AI 입지 분석 보고서 샘플 PDF
+                </button>
+                </div>
               </div>
             </div>
 
