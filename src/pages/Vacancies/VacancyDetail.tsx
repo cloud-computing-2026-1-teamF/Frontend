@@ -152,153 +152,151 @@ export function VacancyDetail() {
 
           <VacancyMetricGrid vacancy={vacancy} />
 
-          <section className="vf-detail-layout">
-            <div className="vf-main-stack">
-              <Panel eyebrow="Map" title="위치와 주변 분포">
-                <VacancyDetailMap vacancies={[vacancy]} selectedId={vacancy.id} height={420} />
-              </Panel>
+          <section className="vf-detail-dashboard">
+            <Panel className="vf-panel-map" eyebrow="Map" title="위치와 주변 분포">
+              <VacancyDetailMap vacancies={[vacancy]} selectedId={vacancy.id} height={400} />
+            </Panel>
 
-              <Panel eyebrow="Demand" title="인구 비율">
-                <RatioBars vacancy={vacancy} />
-                <div className="vf-row-grid three">
-                  <DataPoint label="상주/유동" value={formatPercent(vacancy.residentToFloatingRatio)} />
-                  <DataPoint label="직장/유동" value={formatPercent(vacancy.workerToFloatingRatio)} />
-                  <DataPoint label="시간대 매출 비율" value={formatPercent(vacancy.timeBasedSalesRatio)} />
-                </div>
-              </Panel>
+            <Panel className="vf-panel-property" eyebrow="Property" title="매물 정보">
+              <div className="vf-list">
+                <DetailRow label="도로명주소" value={vacancy.roadAddress || '-'} />
+                <DetailRow label="지번주소" value={vacancy.lotAddress || '-'} />
+                <DetailRow label="상세주소" value={vacancy.detailAddress || '-'} />
+                <DetailRow label="거래유형" value={vacancy.transactionType || '-'} />
+                <DetailRow label="층 / 총층" value={`${vacancy.floor || '-'} / ${vacancy.totalFloors || '-'}`} />
+                <DetailRow label="건물유형" value={vacancy.buildingType || '-'} />
+                <DetailRow label="건물용도" value={vacancy.buildingUse || '-'} />
+                <DetailRow label="지하철" value={vacancy.subway || '-'} />
+              </div>
+            </Panel>
 
-              <Panel eyebrow="Population" title="인구 규모">
-                <div className="vf-table-wrap">
-                  <table className="vf-data-table">
-                    <thead>
-                      <tr>
-                        <th>구분</th>
-                        <th>연간 합계</th>
-                        <th>분기 평균</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>유동</td>
-                        <td>{formatPeople(vacancy.floatingPopulationAnnualTotal)}</td>
-                        <td>{formatPeople(vacancy.floatingPopulationQuarterlyAverage)}</td>
-                      </tr>
-                      <tr>
-                        <td>상주</td>
-                        <td>{formatPeople(vacancy.residentPopulationAnnualTotal)}</td>
-                        <td>{formatPeople(vacancy.residentPopulationQuarterlyAverage)}</td>
-                      </tr>
-                      <tr>
-                        <td>직장</td>
-                        <td>{formatPeople(vacancy.workerPopulationAnnualTotal)}</td>
-                        <td>{formatPeople(vacancy.workerPopulationQuarterlyAverage)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </Panel>
-            </div>
+            <Panel className="vf-panel-demand" eyebrow="Demand" title="인구 비율">
+              <RatioBars vacancy={vacancy} />
+              <div className="vf-row-grid three">
+                <DataPoint label="상주/유동" value={formatPercent(vacancy.residentToFloatingRatio)} />
+                <DataPoint label="직장/유동" value={formatPercent(vacancy.workerToFloatingRatio)} />
+                <DataPoint label="시간대 매출" value={formatPercent(vacancy.timeBasedSalesRatio)} />
+              </div>
+            </Panel>
 
-            <aside className="vf-side-stack">
-              <Panel eyebrow="Property" title="매물 정보">
-                <div className="vf-list">
-                  <DetailRow label="도로명주소" value={vacancy.roadAddress || '-'} />
-                  <DetailRow label="지번주소" value={vacancy.lotAddress || '-'} />
-                  <DetailRow label="상세주소" value={vacancy.detailAddress || '-'} />
-                  <DetailRow label="거래유형" value={vacancy.transactionType || '-'} />
-                  <DetailRow label="층 / 총층" value={`${vacancy.floor || '-'} / ${vacancy.totalFloors || '-'}`} />
-                  <DetailRow label="건물유형" value={vacancy.buildingType || '-'} />
-                  <DetailRow label="건물용도" value={vacancy.buildingUse || '-'} />
-                  <DetailRow label="지하철" value={vacancy.subway || '-'} />
-                </div>
-              </Panel>
+            <Panel className="vf-panel-facilities" eyebrow="Facilities" title="시설 옵션">
+              <div className="vf-list">
+                <DetailRow label="주차" value={formatBoolean(vacancy.parkingAvailable, vacancy.parkingCount == null ? undefined : `${formatCount(vacancy.parkingCount)}면`)} />
+                <DetailRow label="엘리베이터" value={formatBoolean(vacancy.elevatorAvailable, vacancy.elevatorCount == null ? undefined : `${formatCount(vacancy.elevatorCount)}대`)} />
+                <DetailRow label="화장실" value={[vacancy.restroomType, vacancy.restroomCount == null ? null : `${formatCount(vacancy.restroomCount)}개`].filter(Boolean).join(' · ') || '-'} />
+                <DetailRow label="냉난방" value={[vacancy.heatingType, vacancy.airConditioner ? '에어컨' : null, vacancy.heater ? '난방기' : null].filter(Boolean).join(' · ') || '-'} />
+                <DetailRow label="운영 옵션" value={[
+                  vacancy.lateNightOperationAvailable ? '심야영업 가능' : null,
+                  vacancy.priceNegotiable ? '가격협의' : null,
+                  vacancy.rentAdjustable ? '임대료 조정' : null,
+                  vacancy.rentFreePeriodAvailable ? '무상임대기간' : null,
+                ].filter(Boolean).join(' · ') || '-'} />
+              </div>
+            </Panel>
 
-              <Panel eyebrow="Lease" title="임대 조건">
-                <div className="vf-list">
-                  <DetailRow label="월세" value={`${formatManWon(vacancy.monthlyRent)}만원`} />
-                  <DetailRow label="보증금" value={formatLargeManWon(vacancy.deposit)} />
-                  <DetailRow label="관리비" value={`${formatManWon(vacancy.maintenanceFee)}만원`} />
-                  <DetailRow label="권리금" value={formatLargeManWon(vacancy.premium)} />
-                  <DetailRow label="매매가" value={formatLargeManWon(vacancy.salePrice)} />
-                  <DetailRow label="임대 부담률" value={burden === null ? '-' : `${burden.toFixed(1)}%`} />
-                  <DetailRow label="전용면적" value={formatArea(vacancy.dedicatedArea ?? vacancy.locationArea)} />
-                  <DetailRow label="공급면적" value={formatArea(vacancy.supplyArea)} />
-                  <DetailRow label="시설 총규모" value={formatArea(vacancy.facilityTotalSize)} />
-                  <DetailRow label="공시지가" value={formatWon(vacancy.officialLandPrice)} />
-                </div>
-              </Panel>
+            <Panel className="vf-panel-lease" eyebrow="Lease" title="임대 조건">
+              <div className="vf-lease-grid">
+                <DataPoint label="월세" value={`${formatManWon(vacancy.monthlyRent)}만원`} />
+                <DataPoint label="보증금" value={formatLargeManWon(vacancy.deposit)} />
+                <DataPoint label="관리비" value={`${formatManWon(vacancy.maintenanceFee)}만원`} />
+                <DataPoint label="권리금" value={formatLargeManWon(vacancy.premium)} />
+                <DataPoint label="임대 부담률" value={burden === null ? '-' : `${burden.toFixed(1)}%`} />
+                <DataPoint label="전용면적" value={formatArea(vacancy.dedicatedArea ?? vacancy.locationArea)} />
+                <DataPoint label="공급면적" value={formatArea(vacancy.supplyArea)} />
+                <DataPoint label="공시지가" value={formatWon(vacancy.officialLandPrice)} />
+              </div>
+              <div className="vf-list vf-list-compact">
+                <DetailRow label="매매가" value={formatLargeManWon(vacancy.salePrice)} />
+                <DetailRow label="시설 총규모" value={formatArea(vacancy.facilityTotalSize)} />
+              </div>
+            </Panel>
 
-              <Panel eyebrow="Facilities" title="시설 옵션">
-                <div className="vf-list">
-                  <DetailRow label="주차" value={formatBoolean(vacancy.parkingAvailable, vacancy.parkingCount == null ? undefined : `${formatCount(vacancy.parkingCount)}면`)} />
-                  <DetailRow label="엘리베이터" value={formatBoolean(vacancy.elevatorAvailable, vacancy.elevatorCount == null ? undefined : `${formatCount(vacancy.elevatorCount)}대`)} />
-                  <DetailRow label="화장실" value={[vacancy.restroomType, vacancy.restroomCount == null ? null : `${formatCount(vacancy.restroomCount)}개`].filter(Boolean).join(' · ') || '-'} />
-                  <DetailRow label="냉난방" value={[vacancy.heatingType, vacancy.airConditioner ? '에어컨' : null, vacancy.heater ? '난방기' : null].filter(Boolean).join(' · ') || '-'} />
-                  <DetailRow label="운영 옵션" value={[
-                    vacancy.lateNightOperationAvailable ? '심야영업 가능' : null,
-                    vacancy.priceNegotiable ? '가격협의' : null,
-                    vacancy.rentAdjustable ? '임대료 조정' : null,
-                    vacancy.rentFreePeriodAvailable ? '무상임대기간' : null,
-                  ].filter(Boolean).join(' · ') || '-'} />
-                </div>
-              </Panel>
+            <Panel className="vf-panel-population" eyebrow="Population" title="인구 규모">
+              <div className="vf-table-wrap">
+                <table className="vf-data-table">
+                  <thead>
+                    <tr>
+                      <th>구분</th>
+                      <th>연간 합계</th>
+                      <th>분기 평균</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>유동</td>
+                      <td>{formatPeople(vacancy.floatingPopulationAnnualTotal)}</td>
+                      <td>{formatPeople(vacancy.floatingPopulationQuarterlyAverage)}</td>
+                    </tr>
+                    <tr>
+                      <td>상주</td>
+                      <td>{formatPeople(vacancy.residentPopulationAnnualTotal)}</td>
+                      <td>{formatPeople(vacancy.residentPopulationQuarterlyAverage)}</td>
+                    </tr>
+                    <tr>
+                      <td>직장</td>
+                      <td>{formatPeople(vacancy.workerPopulationAnnualTotal)}</td>
+                      <td>{formatPeople(vacancy.workerPopulationQuarterlyAverage)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
 
-              <Panel eyebrow="Competition" title="경쟁과 성장">
-                <div className="vf-table-wrap">
-                  <table className="vf-data-table compact">
-                    <thead>
-                      <tr>
-                        <th>반경</th>
-                        <th>동종</th>
-                        <th>식당</th>
-                        <th>카페</th>
-                        <th>성장률</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>250m</td>
-                        <td>{formatCount(vacancy.sameCategoryRestaurantCount250m)}</td>
-                        <td>{formatCount(vacancy.restaurantCount250m)}</td>
-                        <td>{formatCount(vacancy.cafeCount250m)}</td>
-                        <td>{formatPercent(vacancy.industryGrowthRate250m)}</td>
-                      </tr>
-                      <tr>
-                        <td>500m</td>
-                        <td>{formatCount(vacancy.sameCategoryRestaurantCount500m)}</td>
-                        <td>{formatCount(vacancy.restaurantCount500m)}</td>
-                        <td>{formatCount(vacancy.cafeCount500m)}</td>
-                        <td>{formatPercent(vacancy.industryGrowthRate500m)}</td>
-                      </tr>
-                      <tr>
-                        <td>1000m</td>
-                        <td>{formatCount(vacancy.sameCategoryRestaurantCount1000m)}</td>
-                        <td>{formatCount(vacancy.restaurantCount1000m)}</td>
-                        <td>{formatCount(vacancy.cafeCount1000m)}</td>
-                        <td>{formatPercent(vacancy.industryGrowthRate1000m)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div className="vf-mini-summary">
-                  <DataPoint label="500m 동종 경쟁" value={`${formatCount(totalCompetition(vacancy))}개`} />
-                </div>
-              </Panel>
+            <Panel className="vf-panel-competition" eyebrow="Competition" title="경쟁과 성장">
+              <div className="vf-table-wrap">
+                <table className="vf-data-table compact">
+                  <thead>
+                    <tr>
+                      <th>반경</th>
+                      <th>동종</th>
+                      <th>식당</th>
+                      <th>카페</th>
+                      <th>성장률</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>250m</td>
+                      <td>{formatCount(vacancy.sameCategoryRestaurantCount250m)}</td>
+                      <td>{formatCount(vacancy.restaurantCount250m)}</td>
+                      <td>{formatCount(vacancy.cafeCount250m)}</td>
+                      <td>{formatPercent(vacancy.industryGrowthRate250m)}</td>
+                    </tr>
+                    <tr>
+                      <td>500m</td>
+                      <td>{formatCount(vacancy.sameCategoryRestaurantCount500m)}</td>
+                      <td>{formatCount(vacancy.restaurantCount500m)}</td>
+                      <td>{formatCount(vacancy.cafeCount500m)}</td>
+                      <td>{formatPercent(vacancy.industryGrowthRate500m)}</td>
+                    </tr>
+                    <tr>
+                      <td>1000m</td>
+                      <td>{formatCount(vacancy.sameCategoryRestaurantCount1000m)}</td>
+                      <td>{formatCount(vacancy.restaurantCount1000m)}</td>
+                      <td>{formatCount(vacancy.cafeCount1000m)}</td>
+                      <td>{formatPercent(vacancy.industryGrowthRate1000m)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="vf-mini-summary">
+                <DataPoint label="500m 동종 경쟁" value={`${formatCount(totalCompetition(vacancy))}개`} />
+              </div>
+            </Panel>
 
-              <Panel eyebrow="Sales" title="매출과 리스크">
-                <div className="vf-list">
-                  <DetailRow label="가게당 평균 매출" value={formatWon(vacancy.averageSalesPerStore)} />
-                  <DetailRow label="업종 성장률 500m" value={formatPercent(vacancy.industryGrowthRate500m)} />
-                  <DetailRow label="개업률" value={formatPercent(vacancy.openingRate)} />
-                  <DetailRow label="폐업률" value={formatPercent(vacancy.closureRate)} />
-                  <DetailRow label="저녁 매출 비율" value={formatPercent(vacancy.timeBasedSalesRatio)} />
-                  <DetailRow label="심야 매출 비율" value={formatPercent(vacancy.lateNightSalesRatio)} />
-                  <DetailRow label="주말 매출 비율" value={formatPercent(vacancy.weekendSalesRatio)} />
-                  <DetailRow label="총 지출" value={formatWon(vacancy.totalSpending)} />
-                  <DetailRow label="음식 지출" value={formatWon(vacancy.foodSpending)} />
-                </div>
-              </Panel>
-            </aside>
+            <Panel className="vf-panel-sales" eyebrow="Sales" title="매출과 리스크">
+              <div className="vf-sales-grid">
+                <DetailRow label="가게당 평균 매출" value={formatWon(vacancy.averageSalesPerStore)} />
+                <DetailRow label="업종 성장률 500m" value={formatPercent(vacancy.industryGrowthRate500m)} />
+                <DetailRow label="개업률" value={formatPercent(vacancy.openingRate)} />
+                <DetailRow label="폐업률" value={formatPercent(vacancy.closureRate)} />
+                <DetailRow label="저녁 매출 비율" value={formatPercent(vacancy.timeBasedSalesRatio)} />
+                <DetailRow label="심야 매출 비율" value={formatPercent(vacancy.lateNightSalesRatio)} />
+                <DetailRow label="주말 매출 비율" value={formatPercent(vacancy.weekendSalesRatio)} />
+                <DetailRow label="총 지출" value={formatWon(vacancy.totalSpending)} />
+                <DetailRow label="음식 지출" value={formatWon(vacancy.foodSpending)} />
+              </div>
+            </Panel>
           </section>
         </div>
       </main>
@@ -318,9 +316,9 @@ function VacancyPageShell({ children }: { children: ReactNode }) {
   );
 }
 
-function Panel({ eyebrow, title, children }: { eyebrow: string; title: string; children: ReactNode }) {
+function Panel({ className, eyebrow, title, children }: { className?: string; eyebrow: string; title: string; children: ReactNode }) {
   return (
-    <section className="vf-panel">
+    <section className={`vf-panel${className ? ` ${className}` : ''}`}>
       <div className="vf-panel-head">
         <span>{eyebrow}</span>
         <h2>{title}</h2>
