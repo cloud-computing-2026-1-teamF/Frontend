@@ -1021,6 +1021,19 @@
   transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
 
+/* 평균 점수 라벨 제거 후: 행정동(area) 마커는 라벨+카운트를 한 줄로 가운데 정렬.
+   구(district) 마커는 'N개 행정동' meta 줄이 있어 2행 그리드를 그대로 유지. */
+.vacancy-area-cluster:not(.vacancy-district-cluster) {
+  grid-template-areas: "label count";
+  grid-template-columns: auto auto;
+  justify-content: center;
+  column-gap: 6px;
+}
+
+.vacancy-area-cluster:not(.vacancy-district-cluster) .vacancy-area-cluster-label {
+  text-align: center;
+}
+
 .vacancy-area-cluster::after {
   content: '';
   position: absolute;
