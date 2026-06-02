@@ -1032,6 +1032,13 @@
 
 .vacancy-area-cluster:not(.vacancy-district-cluster) .vacancy-area-cluster-label {
   text-align: center;
+  font-size: 15px;
+  line-height: 1.1;
+}
+.vacancy-area-cluster:not(.vacancy-district-cluster) .vacancy-area-cluster-count {
+  min-width: 24px;
+  height: 24px;
+  font-size: 13px;
 }
 
 .vacancy-area-cluster::after {
