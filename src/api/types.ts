@@ -430,6 +430,7 @@ export type VacancyStructuredFilter = {
     dong?: string | null;
     address?: string | null;
     subway?: string | null;
+    subwayKeywords?: string[] | null;
     latitude?: number | null;
     longitude?: number | null;
     radiusM?: number | null;

@@ -305,8 +305,15 @@ export function promptPatchFromStructuredFilter(
     if (sortLabel && structured.sort !== 'score_desc') labels.push(sortLabel);
   }
 
-  const areaKeyword = location?.dong || location?.district || location?.address || location?.subway || undefined;
+  const stationKeywords = (location?.subwayKeywords ?? [])
+    .filter((keyword): keyword is string => typeof keyword === 'string' && keyword.trim().length > 0)
+    .map(keyword => keyword.trim());
+  const stationLabel = stationKeywords.length
+    ? `역세권 ${stationKeywords.slice(0, 3).join(' · ')}${stationKeywords.length > 3 ? ` 외 ${stationKeywords.length - 3}` : ''}`
+    : location?.subway || undefined;
+  const areaKeyword = location?.dong || location?.district || location?.address || undefined;
   if (areaKeyword) labels.push(areaKeyword);
+  if (stationLabel) labels.push(stationLabel);
 
   return {
     filters,

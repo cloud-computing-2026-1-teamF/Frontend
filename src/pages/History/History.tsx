@@ -183,7 +183,7 @@ export function History() {
             <div className="hist-title-row">
               <div>
                 <h1>분석 이력</h1>
-                <p>{USE_MOCK ? '지금까지 분석한 상권과 공실매물을 다시 살펴보고 비교할 수 있어요.' : '서버에 저장된 분석 이력을 불러오고, 진행 상태는 폴링으로 갱신해요.'}</p>
+                <p>{USE_MOCK ? '지금까지 분석한 상권과 공실매물을 다시 살펴보고 비교할 수 있어요.' : '진행 중인 분석부터 완료된 추천 결과까지 한곳에서 다시 확인할 수 있어요.'}</p>
               </div>
               <Link to="/analyze" className="btn btn-primary">
                 <Icon name="plus" size={14} />
