@@ -401,7 +401,7 @@ export function Vacancies() {
       setAreaOptions([]);
       setPromptLabels(interpreted.labels);
       setPromptNotice(areaMiss
-        ? `${interpreted.areaKeyword} 행정동을 정확히 찾지 못해 ${structuredFilters ? '주소 조건' : '키워드'}로 적용했어요.`
+        ? promptAreaFallbackNotice(interpreted.areaKeyword, Boolean(structuredFilters))
         : parseSource === 'openai' || parseSource === 'cache'
           ? 'AI가 해석한 조건을 적용했어요.'
           : '조건을 적용했어요.');
@@ -940,6 +940,12 @@ function pickPromptArea(areas: AreaSearchHit[], keyword: string, districtHint?: 
 
 function compactAreaText(value: string): string {
   return value.replace(/\s+/g, '').toLowerCase();
+}
+
+function promptAreaFallbackNotice(keyword: string | undefined, structured: boolean): string {
+  const areaLabel = keyword?.trim() || '입력한 지역';
+  const filterLabel = structured ? '주소·동 조건' : '키워드 조건';
+  return `${areaLabel} 일대를 놓치지 않도록 ${filterLabel}으로 넓게 적용했어요.`;
 }
 
 function errorMessage(error: unknown): string {
