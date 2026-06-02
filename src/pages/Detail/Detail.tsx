@@ -6,7 +6,7 @@ import { FactorCard, buildFactorViz } from '../../shared/FactorViz';
 import { Footer } from '../../shared/Nav';
 import type { SavedAnalysis } from '../../lib/savedAnalyses';
 import { api, type AnalysisPollingResponse, type BusinessType } from '../../api';
-import { USE_MOCK } from '../../api/client';
+import { USE_MOCK, BASE_URL, getAccessToken } from '../../api/client';
 import { HISTORY_ITEMS } from '../../data/history';
 import { readSavedAnalyses } from '../../lib/savedAnalyses';
 import {
@@ -24,6 +24,9 @@ import { useVacancyMetricReference } from '../../features/vacancies/useVacancyMe
 
 export function Detail() {
   const [selected, setSelected] = useState(0);
+  const [reportLoading, setReportLoading] = useState(false);
+  // 보고서 PDF 버튼 상태: 생성 완료(success)면 초록 체크, 실패(error)면 빨강 X 를 버튼 왼쪽에 표시.
+  const [reportStatus, setReportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const { id: idParam } = useParams<{ id: string }>();
 
   const [item, setItem] = useState<SavedAnalysis | null>(null);
@@ -125,6 +128,53 @@ export function Detail() {
     );
   }
 
+  const handleReport = async () => {
+    // 라이브: 백엔드가 OpenAI로 보고서 PDF를 생성(POST /analyses/{id}/report) → 파일로 다운로드.
+    // mock 또는 생성 실패 시: 사전 생성 샘플 PDF 다운로드로 폴백.
+    setReportLoading(true);
+    setReportStatus('idle'); // 재요청 시 이전 체크/X 초기화
+    const sampleUrl = `${import.meta.env.BASE_URL}uploads/sample-report.pdf`;
+    const filename = `상권분석보고서-${idParam ?? 'report'}.pdf`;
+    const triggerDownload = (href: string) => {
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+    try {
+      if (USE_MOCK) {
+        await new Promise(resolve => setTimeout(resolve, 600)); // 생성되는 듯한 연출
+        triggerDownload(sampleUrl);
+        setReportStatus('success');
+        return;
+      }
+      const res = await fetch(`${BASE_URL}/analyses/${idParam}/report`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getAccessToken() ?? ''}` },
+      });
+      if (!res.ok) throw new Error(`report ${res.status}`);
+      const blob = await res.blob();
+      // 잘린/깨진 PDF 방어: 헤더 %PDF- + 꼬리 %%EOF 확인. 타임아웃 마진 경계에서 본문이 잘리면 여기서 실패 처리.
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const decoder = new TextDecoder('latin1');
+      const head = decoder.decode(bytes.slice(0, 5));
+      const tail = decoder.decode(bytes.slice(-1024));
+      if (head !== '%PDF-' || !tail.includes('%%EOF')) throw new Error('손상된 PDF(응답 잘림)');
+      const url = URL.createObjectURL(blob);
+      triggerDownload(url);
+      setReportStatus('success'); // 정상 생성 → 초록 체크
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (err) {
+      console.warn('보고서 생성 실패 — 샘플로 폴백:', err);
+      triggerDownload(sampleUrl);
+      setReportStatus('error'); // 실패 → 빨강 X
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   const sel = item.top3[selected];
   const selRank = selected + 1;
 
@@ -144,6 +194,36 @@ export function Detail() {
                 <Icon name="chevron-left" size={14} />
                 <span>목록으로</span>
               </Link>
+              <div className="dt-header-actions">
+                {reportStatus === 'success' && (
+                  <span className="dt-report-status ok" role="status" title="보고서 생성 완료">
+                    <Icon name="check" size={15} />
+                  </span>
+                )}
+                {reportStatus === 'error' && (
+                  <span className="dt-report-status err" role="status" title="생성 실패 — 다시 시도해 주세요">
+                    <Icon name="close" size={15} />
+                  </span>
+                )}
+                <button
+                  className={`dt-report-btn${reportLoading ? ' is-loading' : ''}`}
+                  onClick={handleReport}
+                  disabled={reportLoading}
+                >
+                  <span className="dt-report-btn-ic"><Icon name="sparkles" size={18} /></span>
+                  {reportLoading ? (
+                    <span className="dt-report-btn-text">
+                      <span className="dt-report-btn-main">AI가 보고서 작성 중…</span>
+                      <span className="dt-report-btn-sub">약 1분 소요</span>
+                    </span>
+                  ) : (
+                    <span className="dt-report-btn-text">
+                      <span className="dt-report-btn-main">AI 입지 분석 보고서</span>
+                      <span className="dt-report-btn-sub">PDF 다운로드 · GPT 생성</span>
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="dt-title-block">

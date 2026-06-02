@@ -417,6 +417,18 @@ const MOCK_VACANCIES: Vacancy[] = [
   ...seededVacanciesFromTemplate(MOCK_VACANCY_SEEDS[0], EXTRA_SEOUL_VACANCY_AREAS),
 ];
 
+const handleAnalysisReport: Handler = (_spec, params) => {
+  // TODO(live): tier 게이트(PRO/BUSINESS) + 실제 생성 잡. 데모는 사전 생성 샘플 PDF 반환(Track B).
+  return ok({
+    id: `rpt_${params.id}`,
+    analysisId: params.id,
+    status: 'done',
+    format: 'pdf',
+    url: '/uploads/sample-report.pdf',
+    generatedAt: new Date().toISOString(),
+  });
+};
+
 const handleCreateAnalysis: Handler = (spec) => {
   const u = requireUser();
   if ('error' in u) return u;
@@ -753,6 +765,7 @@ const ROUTES: Route[] = [
   route('GET /areas/search',          handleSearchAreas),
 
   route('POST /analyses',             handleCreateAnalysis),
+  route('POST /analyses/:id/report',  handleAnalysisReport),
   route('GET /analyses',              handleListAnalyses),
   route('GET /analyses/:id',          handlePollAnalysis),
   route('GET /analyses/:id/:section', handleSection),
