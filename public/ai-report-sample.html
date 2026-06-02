@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"/>
+<title>[서교동] 일식 입지 분석 보고서 — 확장판</title>
+<style>
+  :root{
+    --ink:#1B2330; --muted:#5A6678; --faint:#8A94A6;
+    --orange:#E85D1F; --orange2:#FF8A4C;
+    --green:#1A8F4C; --green-bg:#E9F7EF;
+    --red:#D33A3A; --red-bg:#FCEAEA;
+    --amber:#B9791A; --amber-bg:#FBF1DD;
+    --blue:#2D6FE0; --blue-bg:#EAF1FD;
+    --line:#E7EAF0; --bg:#EDEFF3; --card:#fff;
+    --font:'Pretendard',system-ui,-apple-system,'Segoe UI','Malgun Gothic',sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .sheet{width:820px;margin:24px auto;background:var(--card);border-radius:14px;box-shadow:0 6px 28px rgba(20,30,50,.10);overflow:hidden}
+  .pad{padding:30px 34px}
+  .muted{color:var(--muted)} .faint{color:var(--faint)}
+  h2.sec{font-size:13px;letter-spacing:.4px;color:var(--orange);margin:0 0 14px;display:flex;align-items:center;gap:9px;font-weight:800}
+  h2.sec .n{display:inline-flex;width:24px;height:24px;border-radius:7px;background:var(--orange);color:#fff;align-items:center;justify-content:center;font-size:12px}
+  .grid{display:flex;gap:16px}
+
+  .cover{background:linear-gradient(135deg,#2A1C16 0%,#5B2A12 55%,#E85D1F 160%);color:#fff;padding:34px}
+  .brand{font-size:11px;letter-spacing:1px;opacity:.85}
+  .cover h1{font-size:27px;margin:10px 0 6px;font-weight:800}
+  .cover .sub{opacity:.9;font-size:14px}
+  .badges{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+  .badge{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:20px;background:rgba(255,255,255,.16)}
+  .badge.grade{background:#fff;color:var(--amber)} .badge.warn{background:var(--red);color:#fff}
+
+  .kpis{display:flex;gap:12px;margin-top:4px}
+  .kpi{flex:1;border:1px solid var(--line);border-radius:11px;padding:14px}
+  .kpi .lab{font-size:11.5px;color:var(--muted);font-weight:600}
+  .kpi .val{font-size:22px;font-weight:800;margin-top:4px}
+  .kpi .val small{font-size:12px;color:var(--faint);font-weight:600}
+
+  .callout{border-left:4px solid var(--orange);background:#FCF5F1;border-radius:0 10px 10px 0;padding:13px 16px;font-weight:600;margin:16px 0}
+  .callout.blue{border-color:var(--blue);background:var(--blue-bg)}
+  .callout.green{border-color:var(--green);background:var(--green-bg)}
+  .callout.amber{border-color:var(--amber);background:var(--amber-bg)}
+  p.body{font-size:13.5px;line-height:1.65;color:#374050;margin:8px 0}
+
+  .gauge{width:150px;height:150px;position:relative;flex:0 0 auto}
+  .gauge .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .gauge .ctr b{font-size:34px;line-height:1} .gauge .ctr span{font-size:11px;color:var(--muted)}
+
+  .risk{border:1px solid var(--line);border-left:4px solid var(--red);border-radius:0 10px 10px 0;padding:12px 14px;margin:8px 0;background:#fff}
+  .risk .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .risk .t{font-weight:700;font-size:13px}
+  .pill{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:12px;white-space:nowrap}
+  .pill.hi{background:var(--red-bg);color:var(--red)} .pill.mid{background:var(--amber-bg);color:var(--amber)}
+  .risk .d{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.55}
+
+  .act{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .act:last-child{border:0}
+  .act .no{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--orange);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .act .txt b{font-size:13px} .act .txt p{margin:3px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
+  .act .dur{margin-left:auto;font-size:11px;color:var(--faint);white-space:nowrap}
+
+  table.cmp{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.cmp th{background:#F7F8FB;color:var(--muted);font-weight:700;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  table.cmp td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.cmp tr.best td{background:#FCF5F1}
+  table.cmp td.r,table.cmp th.r{text-align:right}
+  .tag{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:11px;white-space:nowrap}
+  .tag.g{background:var(--green-bg);color:var(--green)} .tag.r{background:var(--red-bg);color:var(--red)} .tag.a{background:var(--amber-bg);color:var(--amber)} .tag.b{background:var(--blue-bg);color:var(--blue)}
+  .recmark{font-size:10px;font-weight:800;color:#fff;background:var(--orange);padding:2px 7px;border-radius:10px;margin-left:6px}
+
+  .bar{display:flex;align-items:center;gap:10px;margin:7px 0}
+  .bar .nm{width:108px;font-size:12px;color:var(--muted)}
+  .bar.hl .nm{color:var(--ink);font-weight:800}
+  .bar .track{flex:1;height:18px;background:#EEF0F4;border-radius:6px;overflow:hidden}
+  .bar .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#FFB37E,var(--orange))}
+  .bar.hl .fill{background:linear-gradient(90deg,#FF8A4C,#D63E6B)}
+  .bar .vv{width:42px;text-align:right;font-size:12px;font-weight:700}
+
+  .twocol{display:flex;gap:18px} .twocol>div{flex:1}
+  .panel{border:1px solid var(--line);border-radius:11px;padding:15px}
+  .panel h3{margin:0 0 12px;font-size:13px}
+
+  .range{position:relative;height:30px;margin:18px 4px 6px}
+  .range .tk{position:absolute;top:12px;left:0;right:0;height:7px;border-radius:4px;background:linear-gradient(90deg,#E7EAF0,#FFB37E 70%,#FFD8BE)}
+  .range .me{position:absolute;top:4px;width:3px;height:23px;background:var(--orange);border-radius:2px}
+  .range .me::after{content:'내 매물';position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:var(--orange);white-space:nowrap}
+  .range .lab{position:absolute;top:22px;font-size:10px;color:var(--faint);transform:translateX(-50%)}
+
+  .difftags{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .dtag{font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;background:var(--blue-bg);color:var(--blue);border:1px solid #CFE0FA}
+  .dtag .g{font-size:10px;color:var(--green);font-weight:800;margin-left:5px}
+
+  .disc{border:1px dashed #D6DAE3;border-radius:11px;background:#FAFBFC;padding:16px 18px}
+  .disc li{font-size:12.5px;color:var(--muted);line-height:1.7;margin:2px 0}
+
+  /* ── 확장 섹션용 신규 컴포넌트 ── */
+  .swot{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .swot .q{border-radius:12px;padding:15px 16px;border:1px solid var(--line)}
+  .swot .q h4{margin:0 0 8px;font-size:13px;display:flex;align-items:center;gap:8px}
+  .swot .q h4 .lt{width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800}
+  .swot .q p{margin:0;font-size:12.5px;line-height:1.6;color:#374050}
+  .swot .s{background:var(--green-bg)} .swot .s .lt{background:var(--green)}
+  .swot .w{background:var(--red-bg)} .swot .w .lt{background:var(--red)}
+  .swot .o{background:var(--blue-bg)} .swot .o .lt{background:var(--blue)}
+  .swot .t{background:var(--amber-bg)} .swot .t .lt{background:var(--amber)}
+
+  .opcards{display:flex;gap:12px;margin-top:4px}
+  .opcard{flex:1;border:1px solid var(--line);border-radius:12px;padding:15px;border-top:3px solid var(--orange)}
+  .opcard h4{margin:0;font-size:14px}
+  .opcard .sz{font-size:11px;color:var(--faint);font-weight:700;margin-top:2px}
+  .opcard .ln{height:1px;background:var(--line);margin:11px 0}
+  .opcard .lbl{font-size:10.5px;font-weight:800;color:var(--green);margin-top:8px}
+  .opcard .lbl.bad{color:var(--red)}
+  .opcard ul{margin:4px 0 0;padding-left:16px}
+  .opcard li{font-size:11.5px;color:var(--muted);line-height:1.55;margin:2px 0}
+  .opcard .strat{font-size:11.5px;color:#374050;font-weight:700;margin-top:10px;line-height:1.5}
+
+  .optgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .optbox{border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+  .optbox .k{font-size:11px;font-weight:800;color:var(--orange);margin-bottom:5px}
+  .optbox .v{font-size:12px;color:var(--muted);line-height:1.55}
+
+  .foot{padding:14px 34px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint)}
+  .note{max-width:820px;margin:8px auto 30px;font-size:11px;color:var(--faint);text-align:center}
+</style></head>
+<body>
+
+<!-- ===== 1 표지 + 임원 요약 ===== -->
+<div class="sheet">
+  <div class="cover">
+    <div class="brand">상권을 부탁해 · AI 입지 분석 보고서</div>
+    <h1>[서교동] 일식 입지 분석 보고서</h1>
+    <div class="sub">유동·매출은 강하나, 투자수익성은 점검이 필요합니다</div>
+    <div class="badges">
+      <span class="badge grade">등급 B</span><span class="badge warn">보류 권장</span>
+      <span class="badge">🍣 일식</span><span class="badge">📍 서교동 · 반경 500m</span><span class="badge">2026.06.01</span>
+    </div>
+  </div>
+  <div class="pad">
+    <h2 class="sec"><span class="n">1</span> 임원 요약</h2>
+    <div class="grid" style="align-items:center">
+      <div class="gauge">
+        <svg width="150" height="150" viewBox="0 0 150 150">
+          <circle cx="75" cy="75" r="62" fill="none" stroke="#EEF0F4" stroke-width="14"/>
+          <circle cx="75" cy="75" r="62" fill="none" stroke="url(#g)" stroke-width="14" stroke-linecap="round" stroke-dasharray="389.6" stroke-dashoffset="140.3" transform="rotate(-90 75 75)"/>
+          <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8A4C"/><stop offset="1" stop-color="#E85D1F"/></linearGradient></defs>
+        </svg>
+        <div class="ctr"><b>64</b><span>생존 점수</span></div>
+      </div>
+      <div style="flex:1">
+        <div class="kpis">
+          <div class="kpi"><div class="lab">하루 유동인구</div><div class="val">126,607<small> 명</small></div></div>
+          <div class="kpi"><div class="lab">동네 월평균 매출</div><div class="val">₩1,467<small> 만</small></div></div>
+          <div class="kpi"><div class="lab">500m 경쟁점</div><div class="val">134<small> 곳</small></div></div>
+        </div>
+        <div class="callout">“서교동은 수요가 있으나, 임대조건 대비 수익성 점검이 핵심입니다.”</div>
+      </div>
+    </div>
+    <p class="body">유동인구가 두텁고(동일 업종 상위 30%) 매출 기반도 형성돼 있습니다. 다만 동일 업종 경쟁이 평균 대비 약 4배로 과밀하고, 1순위 매물은 월 순이익이 적자로 추정되어 임대조건·객단가·피크 운영 설계의 점검이 권장됩니다. <b>단순 일식집보다 ‘신선도·혼밥’ 수요를 흡수하는 대표 메뉴 중심의 1인 일식 콘셉트</b>가 차별화 방향입니다(상세: §10·§11).</p>
+    <div class="grid" style="gap:18px;margin-top:6px">
+      <div style="flex:1">
+        <div class="faint" style="font-size:11px;font-weight:800;margin-bottom:6px">⚠ 핵심 리스크</div>
+        <div class="risk"><div class="top"><div class="t">동일 업종 경쟁 과밀</div><span class="pill hi">심각 높음</span></div><div class="d">500m 내 134곳(평균 34). 메뉴·가격·회전 차별화로 대체 가능성을 낮춰야 합니다.</div></div>
+        <div class="risk"><div class="top"><div class="t">투자수익성 불리 가능</div><span class="pill hi">심각 높음</span></div><div class="d">1순위 매물 월순이익 −652만원(적자). 월세·층 조건별로 회수기간 상이.</div></div>
+      </div>
+      <div style="flex:1">
+        <div class="faint" style="font-size:11px;font-weight:800;margin-bottom:6px">✓ 액션 아이템</div>
+        <div class="act"><div class="no">1</div><div class="txt"><b>피크 시간대 운영 가능성 현장 확인</b><p>유동은 강하나 경쟁도 높아 피크가 매출 성패와 직결.</p></div><div class="dur">~1주</div></div>
+        <div class="act"><div class="no">2</div><div class="txt"><b>월세·관리비 조건별 회수 재계산</b><p>1순위 적자, 2순위 ‘3년 이상’ 등 상이.</p></div><div class="dur">~1주</div></div>
+        <div class="act"><div class="no">3</div><div class="txt"><b>객단가 기준 메뉴/프로모션 설계</b><p>손익분기·피크 목표를 실행 수치로.</p></div><div class="dur">~2주</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>상권을 부탁해 · AI 입지 분석</span><span>1 / 13</span></div>
+</div>
+
+<!-- ===== 2 상권 유형 진단 (신규) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">2</span> 상권 유형 진단</h2>
+  <p class="body" style="margin-top:-4px">개별 매물을 보기 전, 이 상권이 어떤 성격인지 먼저 정의합니다. 상권 유형에 따라 적합한 메뉴·운영 방식이 달라지기 때문입니다.</p>
+  <div class="callout">본 상권(서교동·홍대 인근)은 <b>유동인구가 풍부하고 2030세대 비중이 높은 관광·유흥형</b> 성격이 강하며, 야간·주말 수요가 두텁습니다. 다만 동일 업종 경쟁 밀도가 높아, 단순 일식보다 <b>대표 메뉴가 명확하고 혼밥·저녁 식사·가벼운 모임 수요를 동시에 흡수하는 1인 식사형 일식</b>이 적합합니다.</div>
+  <table class="cmp">
+    <thead><tr><th>상권 유형</th><th>특징</th><th>적합한 일식 모델</th><th>본 상권 부합도</th></tr></thead>
+    <tbody>
+      <tr><td>오피스 상권</td><td>점심 수요 강함, 회전율 중요</td><td>덮밥·정식·런치 세트</td><td><span class="tag a">보통</span></td></tr>
+      <tr><td>회식 상권</td><td>저녁·술자리 수요 강함</td><td>이자카야, 나베, 안주형 일식</td><td><span class="tag g">높음</span></td></tr>
+      <tr><td>주거 밀집 상권</td><td>저녁·배달 수요 강함</td><td>덮밥, 카츠, 포장·도시락</td><td><span class="tag a">보통</span></td></tr>
+      <tr><td>배달형 상권</td><td>플랫폼 주문 중심</td><td>소형 주방, 포장 특화 메뉴</td><td><span class="tag r">낮음</span></td></tr>
+      <tr class="best"><td>관광·유흥 상권 <span class="recmark">해당</span></td><td>유동 많고 2030·야간 강함</td><td>브랜드형·특색 일식, 1인 일식</td><td><span class="tag g">매우 높음</span></td></tr>
+      <tr><td>저가 소비형 상권</td><td>가격 민감도 높음</td><td>8,000~10,000원대 덮밥</td><td><span class="tag a">보통</span></td></tr>
+    </tbody>
+  </table>
+  <div class="callout blue" style="font-weight:500;font-size:12.5px">진단: 서교동은 <b>관광·유흥형 + 회식형</b>이 결합된 상권입니다. 따라서 <b>점심은 빠른 회전(덮밥·정식), 저녁은 가벼운 술·모임 수요(사시미·꼬치·사케 세트)</b>를 동시에 잡는 이원화 전략이 유효합니다. → §3 입지·§11 콘셉트로 연결.</div>
+</div><div class="foot"><span>상권을 부탁해</span><span>2 / 13</span></div></div>
+
+<!-- ===== 3 입지 특성 (기존 ch4) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">3</span> 입지 특성</h2>
+  <div class="panel" style="margin-bottom:16px">
+    <h3>시간대별 유동인구 <span class="faint" style="font-weight:500;font-size:11px">— 피크 20~21시</span></h3>
+    <svg width="100%" height="120" viewBox="0 0 740 120" preserveAspectRatio="none">
+      <polyline fill="rgba(232,93,31,.10)" stroke="none" points="0,110 0,98 32,104 64,108 96,112 128,113 160,108 192,88 224,62 256,52 288,46 320,28 352,20 384,40 416,50 448,46 480,40 512,28 544,12 576,4 608,2 640,12 672,40 704,70 740,90 740,120 0,120"/>
+      <polyline fill="none" stroke="#E85D1F" stroke-width="2.5" points="0,98 32,104 64,108 96,112 128,113 160,108 192,88 224,62 256,52 288,46 320,28 352,20 384,40 416,50 448,46 480,40 512,28 544,12 576,4 608,2 640,12 672,40 704,70 740,90"/>
+      <circle cx="608" cy="2" r="4" fill="#E85D1F"/>
+    </svg>
+    <div class="faint" style="font-size:10px;display:flex;justify-content:space-between;margin-top:2px"><span>0시</span><span>6시</span><span>12시</span><span>18시</span><span>24시</span></div>
+    <p class="body" style="font-size:11.5px;margin-top:8px;color:var(--faint)">점심(12시)·저녁(20~21시) 더블 피크. 저녁 피크가 더 높아 <b>저녁 객단가 설계</b>가 매출 핵심.</p>
+  </div>
+  <div class="twocol">
+    <div class="panel"><h3>동네 매출 분포 내 위치</h3>
+      <div class="range"><div class="tk"></div><div class="me" style="left:70%"></div>
+        <div class="lab" style="left:0%">620만</div><div class="lab" style="left:50%">중앙 1,180</div><div class="lab" style="left:100%">1,950만</div></div>
+      <p class="body" style="font-size:12px;margin-top:14px">내 매물 추정 <b>1,467만원</b> · 동일 업종 <b>상위 30%</b>.</p>
+    </div>
+    <div class="panel"><h3>경쟁 강도 (500m 동일 업종)</h3>
+      <div class="bar hl"><div class="nm">내 상권</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="vv">134</div></div>
+      <div class="bar"><div class="nm">업종 평균</div><div class="track"><div class="fill" style="width:25%"></div></div><div class="vv">34</div></div>
+      <p class="body" style="font-size:12px;margin-top:10px">평균 대비 <b style="color:var(--red)">약 4배</b> 과밀 → 차별화 필수.</p>
+    </div>
+  </div>
+</div><div class="foot"><span>상권을 부탁해</span><span>3 / 13</span></div></div>
+
+<!-- ===== 4 업종 적합도 (기존 ch5) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">4</span> 업종 적합도 — 9개 업종 비교</h2>
+  <p class="body" style="margin-top:-4px">이 입지에 <b>일식(64)</b>은 무난하나, <b>카페·디저트(71)·주점(66)</b>이 더 높게 나옵니다. 일식을 선택한다면 주점적 요소(저녁 술·안주)를 결합한 콘셉트가 점수 차를 메우는 전략이 됩니다.</p>
+  <div style="margin-top:8px">
+    <div class="bar"><div class="nm">카페·디저트</div><div class="track"><div class="fill" style="width:71%"></div></div><div class="vv">71</div></div>
+    <div class="bar"><div class="nm">주점</div><div class="track"><div class="fill" style="width:66%"></div></div><div class="vv">66</div></div>
+    <div class="bar hl"><div class="nm">일식 (선택)</div><div class="track"><div class="fill" style="width:64%"></div></div><div class="vv">64</div></div>
+    <div class="bar"><div class="nm">양식</div><div class="track"><div class="fill" style="width:61%"></div></div><div class="vv">61</div></div>
+    <div class="bar"><div class="nm">한식</div><div class="track"><div class="fill" style="width:57%"></div></div><div class="vv">57</div></div>
+    <div class="bar"><div class="nm">패스트푸드</div><div class="track"><div class="fill" style="width:52%"></div></div><div class="vv">52</div></div>
+    <div class="bar"><div class="nm">중식</div><div class="track"><div class="fill" style="width:48%"></div></div><div class="vv">48</div></div>
+    <div class="bar"><div class="nm">기타</div><div class="track"><div class="fill" style="width:45%"></div></div><div class="vv">45</div></div>
+    <div class="bar"><div class="nm">구내식당</div><div class="track"><div class="fill" style="width:39%"></div></div><div class="vv">39</div></div>
+  </div>
+  <div class="callout amber" style="font-weight:500;font-size:12.5px">시사점: 일식 단독 점수(64)는 중상위지만 1·2위 업종과 격차가 있습니다. <b>‘일식 + 저녁 이자카야(주점)’ 하이브리드</b>로 설계하면 두 수요를 동시에 흡수해 실질 적합도를 끌어올릴 수 있습니다.</div>
+</div><div class="foot"><span>상권을 부탁해</span><span>4 / 13</span></div></div>
+
+<!-- ===== 12 폐업 데이터 리스크 진단 (신규) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">5</span> 점포·폐업 데이터 리스크 진단 <span class="faint" style="font-weight:500;font-size:11px;margin-left:8px">서울시 상권분석서비스</span></h2>
+  <p class="body" style="margin-top:-4px">현재 점포 수만으로는 경쟁 강도를 정확히 판단하기 어렵습니다. <b>개업·폐업 수와 폐업률</b>을 함께 보면 ‘버티기 어려운 상권’인지 진단할 수 있습니다.</p>
+  <table class="cmp">
+    <thead><tr><th>지표</th><th>해석</th></tr></thead>
+    <tbody>
+      <tr><td>일식 점포 수</td><td>현재 경쟁 강도 확인</td></tr>
+      <tr><td>일식 개업 점포 수</td><td>최근 신규 진입이 많은지 확인</td></tr>
+      <tr><td>일식 폐업 점포 수</td><td>업종 리스크 확인</td></tr>
+      <tr><td>프랜차이즈 점포 수</td><td>개인 창업자가 경쟁하기 어려운지 확인</td></tr>
+      <tr><td>유사 업종 폐업률</td><td>해당 상권에서 일식이 버티기 어려운지 판단</td></tr>
+      <tr><td>분기별 점포 증감</td><td>상권 성장·침체 여부 확인</td></tr>
+    </tbody>
+  </table>
+  <h3 style="font-size:13px;margin:20px 0 8px">점포 수 × 폐업 수 해석 매트릭스</h3>
+  <table class="cmp">
+    <thead><tr><th>데이터 결과</th><th>해석</th></tr></thead>
+    <tbody>
+      <tr><td>점포 多 · 폐업 少</td><td><span class="tag g">경쟁은 있으나 수요도 탄탄</span></td></tr>
+      <tr><td>점포 多 · 폐업 多</td><td><span class="tag r">경쟁 과밀, 생존 난이도 높음</span></td></tr>
+      <tr><td>점포 少 · 폐업 少</td><td><span class="tag b">틈새시장 가능성</span></td></tr>
+      <tr><td>점포 少 · 폐업 多</td><td><span class="tag a">수요 자체가 약할 수 있음</span></td></tr>
+      <tr><td>개업 多 · 폐업 多</td><td><span class="tag a">유행성 창업·변동성 큰 상권</span></td></tr>
+    </tbody>
+  </table>
+  <div class="callout amber" style="font-size:12.5px;font-weight:500">진단: 서교동은 점포 수가 평균 대비 약 4배로 많은 상권입니다. 폐업 수까지 함께 높다면 <b>‘점포 多 · 폐업 多’(과밀·고난도)</b> 구간일 가능성이 있어, 유동이 많더라도 임대료·경쟁·회전율 부담으로 생존 난이도가 높을 수 있습니다. 입점 전 최근 분기 일식 개·폐업 추이 확인을 권장합니다.</div>
+</div><div class="foot"><span>상권을 부탁해</span><span>5 / 13</span></div></div>
+
+<!-- ===== 9 추천 매물 Top3 (기존 ch3) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">6</span> 추천 매물 Top 3</h2>
+  <p class="body" style="margin-top:-4px">세 매물 모두 생존 점수 64로 ‘기본 수요’는 동일. 최종 선택은 <b>월세·층·투자회수</b> 차이로 좁힙니다.</p>
+  <table class="cmp">
+    <thead><tr><th>매물</th><th>층</th><th class="r">월세</th><th class="r">보증금</th><th class="r">점수</th><th class="r">월순이익</th><th>회수 평가</th></tr></thead>
+    <tbody>
+      <tr><td>동교로 194</td><td>1층</td><td class="r">₩1,400만</td><td class="r">₩1.0억</td><td class="r"><b>64</b></td><td class="r" style="color:var(--red);font-weight:700">−652만</td><td><span class="tag r">적자</span></td></tr>
+      <tr class="best"><td>동교로 195 <span class="recmark">추천</span></td><td>지하1층</td><td class="r">₩190만</td><td class="r">₩2,000만</td><td class="r"><b>64</b></td><td class="r" style="color:var(--green);font-weight:700">+558만</td><td><span class="tag a">3년 이상</span></td></tr>
+      <tr><td>동교로25길 34</td><td>2층</td><td class="r">₩550만</td><td class="r">₩5,000만</td><td class="r"><b>64</b></td><td class="r" style="color:var(--green);font-weight:700">+210만</td><td><span class="tag a">3년 이상</span></td></tr>
+    </tbody>
+  </table>
+  <h3 style="font-size:13px;margin:20px 0 8px">매물 유형 분류</h3>
+  <table class="cmp">
+    <thead><tr><th>매물</th><th>특징</th><th>위험요인</th><th>분류</th></tr></thead>
+    <tbody>
+      <tr><td>동교로 194</td><td>1층·유동 노출 높음, 임대료 높음</td><td>고정비 과다로 손익분기 높음</td><td><span class="tag r">고위험 고수익형</span></td></tr>
+      <tr class="best"><td>동교로 195</td><td>월세 낮아 흑자 여력 큼</td><td>지하층 체감(환기·간판) 확인 필요</td><td><span class="tag g">안정형</span></td></tr>
+      <tr><td>동교로25길 34</td><td>2층, 중간 임대료</td><td>2층 접근성·간판 노출 점검</td><td><span class="tag a">균형형</span></td></tr>
+    </tbody>
+  </table>
+  <div class="callout amber" style="font-size:12.5px;font-weight:500">기존 일식 매장이 폐업한 자리라면 인테리어·주방 설비 재활용으로 초기비용을 절감할 수 있으나, <b>‘왜 폐업했는지’(입지·메뉴 경쟁력·임대료·배달 리뷰 관리 실패 등)를 먼저 확인</b>해야 합니다. → §5 폐업 데이터 진단 참조.</div>
+  <div class="callout" style="margin-top:12px">최종 권장: <b>동교로 195</b> — 고정비 부담이 가장 낮아(월세 190만) 흑자 전환 여력이 큼. 단, 지하층 체감(환기·간판) 실사 필요.</div>
+</div><div class="foot"><span>상권을 부탁해</span><span>6 / 13</span></div></div>
+
+<!-- ===== 10 투자 회수 분석 (기존 ch9) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">7</span> 투자 회수 분석</h2>
+  <div class="twocol">
+    <div class="panel"><h3>매물별 월 순이익</h3>
+      <div class="bar"><div class="nm">동교로194</div><div class="track" style="background:#FCEAEA"><div class="fill" style="width:62%;background:var(--red)"></div></div><div class="vv" style="color:var(--red)">−652</div></div>
+      <div class="bar hl"><div class="nm">동교로195</div><div class="track" style="background:var(--green-bg)"><div class="fill" style="width:54%;background:var(--green)"></div></div><div class="vv" style="color:var(--green)">+558</div></div>
+      <div class="bar"><div class="nm">동교로25길</div><div class="track" style="background:var(--green-bg)"><div class="fill" style="width:21%;background:var(--green)"></div></div><div class="vv" style="color:var(--green)">+210</div></div>
+      <p class="body" style="font-size:11.5px;margin-top:10px;color:var(--faint)">* 초기투자비에 인테리어·설비 capex 미포함</p>
+    </div>
+    <div class="panel"><h3>1순위 투자 회수 요약</h3>
+      <div class="kpi" style="margin-bottom:8px"><div class="lab">초기투자비</div><div class="val" style="font-size:18px">₩2.6억</div></div>
+      <div class="kpi" style="margin-bottom:8px"><div class="lab">투자 회수 평가</div><div class="val" style="font-size:18px;color:var(--red)">적자 <span class="tag r" style="vertical-align:middle">점검 필요</span></div></div>
+      <div class="kpi"><div class="lab">손익분기 — 피크 필요 판매량</div><div class="val" style="font-size:18px">시간당 약 38<small> 그릇</small></div></div>
+    </div>
+  </div>
+  <div class="callout blue" style="font-size:12.5px;font-weight:500">손익분기 ‘시간당 38그릇’은 점심 단일 채널로는 부담스러운 수치입니다. <b>점심 회전(덮밥·정식) + 저녁 객단가(사시미·사케 세트) + 포장</b>의 3개 매출원을 합산해 분산 달성하는 설계가 필요합니다(§11 메뉴 전략 참조).</div>
+</div><div class="foot"><span>상권을 부탁해</span><span>7 / 13</span></div></div>
+
+<!-- ===== 11 SWOT 분석 (신규) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">8</span> SWOT 분석 <span class="faint" style="font-weight:500;font-size:11px;margin-left:8px">— 상권·추천 콘셉트 기준</span></h2>
+  <div class="swot">
+    <div class="q s"><h4><span class="lt">S</span> 강점 Strength</h4><p>유동인구가 두텁고(동일 업종 상위 30%) 2030 비중이 높아 신규 브랜드 노출 기회가 큼. 리뷰상 ‘신선도·혼밥’ 수요가 명확.</p></div>
+    <div class="q w"><h4><span class="lt">W</span> 약점 Weakness</h4><p>동일 업종 500m 내 134곳(평균 4배)으로 과밀. 1순위 매물은 월 순이익 적자 추정으로 일반 일식집으로는 차별화가 어려움.</p></div>
+    <div class="q o"><h4><span class="lt">O</span> 기회 Opportunity</h4><p>혼밥·신선 사시미·빠른 회전을 결합한 ‘1인 일식’ 공백이 존재. 저녁 술·모임 수요까지 흡수하는 하이브리드 콘셉트 여지.</p></div>
+    <div class="q t"><h4><span class="lt">T</span> 위협 Threat</h4><p>임대료·권리금 상승, 배달 플랫폼 수수료, 기존 경쟁점의 가격 경쟁 가능성. 지하·2층 매물은 노출·접근성 리스크.</p></div>
+  </div>
+  <div class="callout" style="margin-top:16px;font-size:12.5px;font-weight:500">본 상권의 가장 큰 강점은 <b>유동인구와 젊은 소비층</b>입니다. 그러나 동시에 일식 경쟁이 두껍기 때문에 단순히 “일식”이라는 업종만으로는 경쟁력이 부족합니다. 따라서 <b>대표 메뉴 · 빠른 회전 · 1인 식사 편의 · 저녁 객단가 상승</b> 전략을 함께 설계해야 합니다.</div>
+</div><div class="foot"><span>상권을 부탁해</span><span>8 / 13</span></div></div>
+
+<!-- ===== 6 리뷰 인사이트 (기존 ch8) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">9</span> 주변 리뷰 인사이트 <span class="faint" style="font-weight:500;font-size:11px;margin-left:8px">반경 50m 동종 8곳 (태그 보유 6곳)</span></h2>
+  <p class="body" style="margin-top:-4px">주변 일식집들의 방문자 리뷰 키워드를 모아, 가게별 리뷰수 차이를 비율로 보정하고 ‘잘되는 집’ 의견에 가중치를 둔 결과입니다.</p>
+  <div class="twocol" style="margin-top:8px">
+    <div class="panel"><h3>동네 수요 태그 TOP 5</h3>
+      <div class="bar hl"><div class="nm">재료가 신선해요</div><div class="track"><div class="fill" style="width:92%"></div></div><div class="vv">강</div></div>
+      <div class="bar"><div class="nm">혼밥하기 좋아요</div><div class="track"><div class="fill" style="width:74%"></div></div><div class="vv">강</div></div>
+      <div class="bar"><div class="nm">가성비 좋아요</div><div class="track"><div class="fill" style="width:61%"></div></div><div class="vv">중</div></div>
+      <div class="bar"><div class="nm">양이 많아요</div><div class="track"><div class="fill" style="width:48%"></div></div><div class="vv">중</div></div>
+      <div class="bar"><div class="nm">분위기가 좋아요</div><div class="track"><div class="fill" style="width:35%"></div></div><div class="vv">하</div></div>
+    </div>
+    <div class="panel"><h3>차별화 기회 <span class="faint" style="font-weight:500;font-size:11px">— 잘되는 집엔 강한데 동네 평균엔 약함</span></h3>
+      <div class="difftags">
+        <span class="dtag">혼밥하기 좋아요 <span class="g">+0.42</span></span>
+        <span class="dtag">플레이팅 예뻐요 <span class="g">+0.31</span></span>
+        <span class="dtag">웨이팅 짧아요 <span class="g">+0.22</span></span>
+      </div>
+      <div class="callout blue" style="margin-top:14px;font-weight:500;font-size:12.5px">이 동네 일식 손님은 <b>신선도</b>와 <b>혼밥 편의</b>를 중시합니다. <b>1인석 구성·신선 재료 강조·빠른 회전</b> 컨셉이 차별화 포인트로 유효합니다. → §11 콘셉트, §10 틈새시장과 연결.</div>
+    </div>
+  </div>
+</div><div class="foot"><span>상권을 부탁해</span><span>9 / 13</span></div></div>
+
+<!-- ===== 7 경쟁 매장 분석 + 틈새시장 (신규) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">10</span> 주변 경쟁 매장 분석 &amp; 틈새시장</h2>
+  <p class="body" style="margin-top:-4px">반경 내 대표 경쟁 매장의 강점·고객 평가·한계를 정리해, 아직 채워지지 않은 ‘공백’을 도출합니다.</p>
+  <table class="cmp">
+    <thead><tr><th>경쟁 매장</th><th>강점</th><th>고객 평가 포인트</th><th>약점·한계</th></tr></thead>
+    <tbody>
+      <tr><td>A 일식</td><td>가격 저렴, 양 많음</td><td>가성비 좋음, 점심 회전 빠름</td><td>메뉴 차별성 낮음</td></tr>
+      <tr><td>B 일식</td><td>대표 사시미 명확</td><td>맛 안정적, 재방문 많음</td><td>웨이팅 길고 좌석 부족</td></tr>
+      <tr><td>C 일식</td><td>인테리어·분위기 좋음</td><td>데이트·모임 적합</td><td>가격대 높음</td></tr>
+      <tr><td>D 일식</td><td>배달 리뷰 많음</td><td>포장·배달 편리</td><td>홀 매력 약함</td></tr>
+    </tbody>
+  </table>
+  <h3 style="font-size:13px;margin:20px 0 8px">발견된 공백 → 제안 콘셉트</h3>
+  <table class="cmp">
+    <thead><tr><th>발견된 공백</th><th>제안 콘셉트</th></tr></thead>
+    <tbody>
+      <tr><td>가성비 점심집은 많지만 1인 신선 사시미동 부족</td><td>1인 신선 카이센동·사케동 전문</td></tr>
+      <tr><td>이자카야는 많지만 혼자 가기 어려움</td><td>1인석 중심 미니 이자카야</td></tr>
+      <tr><td>배달 일식 브랜드 약함</td><td>덮밥+카츠 포장 특화</td></tr>
+      <tr><td>분위기 좋은 곳은 가격대 높음</td><td>중간 가격대 1인 다이닝 일식</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">주변에는 가성비 덮밥집·이자카야·고급 일식은 다수지만, <b>2030이 혼자 방문하기 좋고 저녁에도 가볍게 먹을 수 있는 ‘신선도 강조 1인 일식’은 상대적으로 부족</b>합니다. 대표 메뉴와 콘셉트가 명확한 매장이 차별화 가능성이 높습니다.</div>
+</div><div class="foot"><span>상권을 부탁해</span><span>10 / 13</span></div></div>
+
+<!-- ===== 5 추천 콘셉트 + 메뉴 전략 (신규) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">11</span> 추천 창업 콘셉트 &amp; 메뉴 전략</h2>
+  <div class="callout green" style="font-weight:600">핵심: 일식 경쟁이 이미 두껍기 때문에 “그냥 일식집”은 위험합니다. <b>대표 메뉴가 뚜렷한 1인 식사형 일식</b>으로, 점심엔 빠른 회전·저녁엔 객단가 상승을 노립니다.</div>
+  <table class="cmp">
+    <thead><tr><th>창업 방향</th><th>설명</th><th>적합도</th></tr></thead>
+    <tbody>
+      <tr><td>일반 일식당</td><td>경쟁 많고 차별화 어려움</td><td><span class="tag r">낮음</span></td></tr>
+      <tr><td>저가 덮밥 분식형</td><td>객단가 낮고 대체재 많음</td><td><span class="tag a">낮음~보통</span></td></tr>
+      <tr class="best"><td>카이센동·사케동 전문 <span class="recmark">추천</span></td><td>1인 식사, 신선도 어필, 회전율 확보</td><td><span class="tag g">높음</span></td></tr>
+      <tr class="best"><td>1인 이자카야형 <span class="recmark">추천</span></td><td>저녁 술·안주 객단가, 2030 SNS 확산</td><td><span class="tag g">높음</span></td></tr>
+      <tr><td>오마카세·고급 다이닝</td><td>저녁 객단가 매우 높음</td><td><span class="tag a">입지에 따라</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:13px;margin:20px 0 8px">점심 타깃 메뉴 <span class="faint" style="font-weight:500;font-size:11px">— 빠른 조리·회전·1인 식사 중심</span></h3>
+  <table class="cmp">
+    <thead><tr><th>메뉴</th><th class="r">가격대</th><th class="r">조리</th><th>특징</th></tr></thead>
+    <tbody>
+      <tr><td>연어 사케동</td><td class="r">10,900~12,900원</td><td class="r">5~7분</td><td>신선도 어필, 사진 잘 받음</td></tr>
+      <tr><td>규동(소고기덮밥)</td><td class="r">8,900~9,900원</td><td class="r">5~7분</td><td>회전율 좋고 대중성 높음</td></tr>
+      <tr><td>치킨카츠 정식</td><td class="r">9,500~10,500원</td><td class="r">7~10분</td><td>가성비 점심 수요 적합</td></tr>
+      <tr><td>사바 시오야키 정식</td><td class="r">10,500~11,500원</td><td class="r">8~10분</td><td>혼밥·건강식 이미지</td></tr>
+      <tr><td>가츠동</td><td class="r">9,500~10,500원</td><td class="r">6~8분</td><td>2030 선호도 높음</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:13px;margin:20px 0 8px">저녁 타깃 메뉴 <span class="faint" style="font-weight:500;font-size:11px">— 식사 + 가벼운 술·모임 수요</span></h3>
+  <table class="cmp">
+    <thead><tr><th>메뉴</th><th class="r">가격대</th><th class="r">조리</th><th>특징</th></tr></thead>
+    <tbody>
+      <tr><td>모둠 사시미 (1인/2인)</td><td class="r">1인 18,000 / 2인 32,000</td><td class="r">5~8분</td><td>신선도 대표 메뉴화 가능</td></tr>
+      <tr><td>야키토리 꼬치 모둠</td><td class="r">12,000~16,000원</td><td class="r">10~15분</td><td>안주·이자카야 수요</td></tr>
+      <tr><td>나베(전골) 소/중/대</td><td class="r">25,000 / 35,000 / 45,000</td><td class="r">12~18분</td><td>2~4인 모임 대응</td></tr>
+      <tr><td>미니 카이센 오마카세</td><td class="r">25,000~32,000원</td><td class="r">10~15분</td><td>저녁 객단가 상승</td></tr>
+      <tr><td>사케·하이볼 세트</td><td class="r">14,000~20,000원</td><td class="r">5~8분</td><td>저녁 객단가 상승</td></tr>
+    </tbody>
+  </table>
+
+  <div class="optgrid">
+    <div class="optbox"><div class="k">신선도 / 등급</div><div class="v">당일 입고 사시미 등급 표기, 원산지·입고시간 게시로 ‘신선도’ 수요 직접 공략</div></div>
+    <div class="optbox"><div class="k">추가 토핑</div><div class="v">연어알·성게·아보카도·온천란·튀김 토핑으로 객단가 상향</div></div>
+    <div class="optbox"><div class="k">세트 구성</div><div class="v">1인 정식 / 2인 세트 / 모둠 대(大)로 회식·모임 흡수</div></div>
+    <div class="optbox"><div class="k">포장 대응</div><div class="v">덮밥·도시락·나베 밀키트형 포장으로 배달 수요 일부 흡수</div></div>
+  </div>
+  <p class="body faint" style="font-size:11px;margin-top:10px">* 메뉴·가격은 상권 평균과 경쟁점 기준의 예시값이며, 실제 원가·공급가에 따라 조정 필요.</p>
+</div><div class="foot"><span>상권을 부탁해</span><span>11 / 13</span></div></div>
+
+<!-- ===== 8 운영 전략 — 매장 규모별 + 홀vs배달 (신규) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">12</span> 운영 전략 — 매장 규모 &amp; 홀·배달</h2>
+  <p class="body" style="margin-top:-4px">“이 매장은 지나가다 들어오는 가게인가, 일부러 찾아오게 만드는 브랜드인가?” — 규모와 채널 결정이 손익 구조를 좌우합니다.</p>
+  <div class="opcards">
+    <div class="opcard"><h4>소형 매장</h4><div class="sz">~10평</div><div class="ln"></div>
+      <div class="lbl">장점</div><ul><li>임대료 부담 낮음</li><li>대기줄로 인기 연출</li></ul>
+      <div class="lbl bad">단점</div><ul><li>매출 천장이 낮음</li></ul>
+      <div class="strat">→ 1인 식사·포장·빠른 회전 중심</div>
+    </div>
+    <div class="opcard"><h4>중형 매장</h4><div class="sz">10~25평</div><div class="ln"></div>
+      <div class="lbl">장점</div><ul><li>홀+배달 병행 가능</li></ul>
+      <div class="lbl bad">단점</div><ul><li>운영 인력 필요</li></ul>
+      <div class="strat">→ 점심 회전 + 저녁 세트 메뉴</div>
+    </div>
+    <div class="opcard"><h4>대형 매장</h4><div class="sz">25평~</div><div class="ln"></div>
+      <div class="lbl">장점</div><ul><li>단체석·다이닝바</li><li>객단가 상승 여력</li></ul>
+      <div class="lbl bad">단점</div><ul><li>고정비 부담 큼</li></ul>
+      <div class="strat">→ 브랜드형 일식·회식 수요 공략</div>
+    </div>
+  </div>
+  <div class="callout" style="font-size:12.5px;font-weight:500">작은 평수는 회전율과 대기줄로 “잘 되는 집”처럼 보이게 만들기 쉽지만 좌석 제한으로 매출 천장이 낮습니다. 넓은 매장은 임대료 부담이 크지만 단체석·다이닝바·저녁 세트로 객단가를 높일 수 있습니다.</div>
+
+  <h3 style="font-size:13px;margin:20px 0 8px">홀 장사 vs 배달 장사</h3>
+  <table class="cmp">
+    <thead><tr><th>구분</th><th>홀 중심 매장</th><th>배달 중심 매장</th></tr></thead>
+    <tbody>
+      <tr><td>핵심 조건</td><td>유동인구, 1층 노출, 역세권</td><td>반경 내 주거·오피스 인구</td></tr>
+      <tr><td>장점</td><td>플랫폼 수수료 없음, 브랜드 경험</td><td>입지 부담 낮음, 소형 주방 가능</td></tr>
+      <tr><td>단점</td><td>임대료·권리금 높음</td><td>배달 수수료·광고비 부담</td></tr>
+      <tr><td>적합 메뉴</td><td>사시미, 꼬치, 정식, 다이닝</td><td>덮밥, 도시락, 카츠, 나베 밀키트</td></tr>
+      <tr><td>매출 변수</td><td>지나가는 사람 수</td><td>배달앱 노출, 리뷰, 재주문율</td></tr>
+    </tbody>
+  </table>
+  <div class="callout blue" style="font-size:12.5px;font-weight:500">서교동은 유동·노출이 강한 <b>홀 중심형</b>에 적합합니다. 다만 배달은 수수료·광고비가 발생하므로 단순 매출이 아닌 <b>실제 마진 구조</b>로 검토해야 합니다.</div>
+</div><div class="foot"><span>상권을 부탁해</span><span>12 / 13</span></div></div>
+
+<!-- ===== 13 부록/한계 (기존 ch7) ===== -->
+<div class="sheet"><div class="pad">
+  <h2 class="sec"><span class="n">13</span> 부록 — 본 보고서의 한계</h2>
+  <div class="disc"><ul style="margin:0;padding-left:18px">
+    <li><b>가게 자체 특성</b>(맛·서비스·운영 역량)은 분석에 반영되지 않습니다.</li>
+    <li>매출·순이익은 <b>동네 평균 추정치</b>로, 개별 매물의 실제 매출과 다를 수 있습니다.</li>
+    <li>§11 메뉴·가격, §10 경쟁 매장 표, §5 폐업 매트릭스의 진단 수치는 <b>상권 평균 기반 예시</b>이며, 실데이터(개·폐업 추이 등) 반영 시 조정이 필요합니다.</li>
+    <li>본 보고서는 <b>참고용</b>이며, 최종 결정 전 현장 실사·전문가 상담을 권장합니다.</li>
+  </ul></div>
+  <p class="body faint" style="font-size:11.5px;margin-top:14px">분석 모델: XGBoost · 학습 14,388건 · 5-fold CV · Test AUC 0.64 · 데이터: 인허가/상권분석/소상공인/공시지가 공공데이터</p>
+</div><div class="foot"><span>상권을 부탁해 · AI 입지 분석 보고서</span><span>13 / 13</span></div></div>
+
+<div class="note">※ 확장판 — 기존 7챕터(요약·매물·입지·적합도·리뷰·회수·한계)에 컨설팅 구성안 6개 섹션(상권 유형 진단·콘셉트/메뉴 전략·경쟁/틈새·운영 전략·SWOT·폐업 데이터)을 일식·서교동 맥락으로 통합. 실데이터 일부 + 메뉴·경쟁·진단 일부는 예시값. 실제 PDF는 openhtmltopdf로 렌더.</div>
+</body></html>

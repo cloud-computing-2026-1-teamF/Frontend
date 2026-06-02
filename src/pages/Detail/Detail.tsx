@@ -176,10 +176,10 @@ export function Detail() {
   };
 
   const handleSampleReport = () => {
-    // 시연용: 사전 렌더된 확장판 샘플 보고서 PDF를 즉시 다운로드 (AI 생성 실패 시 대체 제시용).
+    // 시연용: 확장판 샘플 보고서를 HTML 파일 그대로 다운로드 (브라우저로 열면 그대로 렌더).
     const a = document.createElement('a');
-    a.href = `${import.meta.env.BASE_URL}ai-report-sample.pdf`;
-    a.download = '상권분석보고서_샘플.pdf';
+    a.href = `${import.meta.env.BASE_URL}ai-report-sample.html`;
+    a.download = '상권분석보고서_샘플.html';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -204,18 +204,39 @@ export function Detail() {
                 <Icon name="chevron-left" size={14} />
                 <span>목록으로</span>
               </Link>
-              <div className="dt-header-actions">
-                {reportStatus === 'success' && (
-                  <span className="dt-report-status ok" role="status" title="보고서 생성 완료">
-                    <Icon name="check" size={15} />
-                  </span>
+            </div>
+
+            <div className="dt-title-row">
+              <div className="dt-title-block">
+              <h1>상세 보기</h1>
+              <div className="dt-title-meta">
+                <span className="dt-chip">
+                  <Icon name="map-pin" size={11} /> {item.regionDetail || item.region}
+                </span>
+                {item.radius && (
+                  <span className="dt-chip">반경 {item.radius}m</span>
                 )}
-                {reportStatus === 'error' && (
-                  <span className="dt-report-status err" role="status" title="생성 실패 — 다시 시도해 주세요">
-                    <Icon name="close" size={15} />
-                  </span>
-                )}
-                <div className="dt-report-col">
+                <span className="dt-chip">{item.categoryEmoji} {item.category}</span>
+                <span className="dt-chip"><Icon name="calendar" size={11} /> {item.date} · {item.time}</span>
+                <span className="dt-chip"><Icon name="database" size={11} /> {item.count > 0 ? `공실매물 ${item.count}개 검토` : '검토 수 집계 전'}</span>
+              </div>
+              <p className="dt-budget">
+                <span className="dt-budget-lab">예산 조건</span>
+                <span className="dt-budget-val">{item.budget}</span>
+              </p>
+            </div>
+            <div className="dt-header-actions">
+              {reportStatus === 'success' && (
+                <span className="dt-report-status ok" role="status" title="보고서 생성 완료">
+                  <Icon name="check" size={15} />
+                </span>
+              )}
+              {reportStatus === 'error' && (
+                <span className="dt-report-status err" role="status" title="생성 실패 — 다시 시도해 주세요">
+                  <Icon name="close" size={15} />
+                </span>
+              )}
+              <div className="dt-report-col">
                 <button
                   className={`dt-report-btn${reportLoading ? ' is-loading' : ''}`}
                   onClick={handleReport}
@@ -238,31 +259,12 @@ export function Detail() {
                   type="button"
                   className="dt-report-sample-btn"
                   onClick={handleSampleReport}
-                  title="시연용 샘플 보고서 — 즉시 다운로드"
+                  title="시연용 샘플 보고서(HTML) — 즉시 다운로드"
                 >
-                  📄 AI 입지 분석 보고서 샘플 PDF
+                  📄 AI 입지 분석 보고서 샘플
                 </button>
-                </div>
               </div>
             </div>
-
-            <div className="dt-title-block">
-              <h1>상세 보기</h1>
-              <div className="dt-title-meta">
-                <span className="dt-chip">
-                  <Icon name="map-pin" size={11} /> {item.regionDetail || item.region}
-                </span>
-                {item.radius && (
-                  <span className="dt-chip">반경 {item.radius}m</span>
-                )}
-                <span className="dt-chip">{item.categoryEmoji} {item.category}</span>
-                <span className="dt-chip"><Icon name="calendar" size={11} /> {item.date} · {item.time}</span>
-                <span className="dt-chip"><Icon name="database" size={11} /> {item.count > 0 ? `공실매물 ${item.count}개 검토` : '검토 수 집계 전'}</span>
-              </div>
-              <p className="dt-budget">
-                <span className="dt-budget-lab">예산 조건</span>
-                <span className="dt-budget-val">{item.budget}</span>
-              </p>
             </div>
           </header>
 
