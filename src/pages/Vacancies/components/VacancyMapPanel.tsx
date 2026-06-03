@@ -73,6 +73,11 @@ export function VacancyMapPanel({ items, selectedId, onSelect, loading = false }
         score: Number(item.survivalScore ?? 0),
       }));
   }, [items]);
+  const resultSetKey = useMemo(() => {
+    return points
+      .map(point => `${point.item.id}:${point.item.latitude.toFixed(6)},${point.item.longitude.toFixed(6)}`)
+      .join('|');
+  }, [points]);
 
   const center = useMemo(() => {
     if (!points.length) return SEOUL_CENTER;
@@ -94,10 +99,31 @@ export function VacancyMapPanel({ items, selectedId, onSelect, loading = false }
   const [mapLevel, setMapLevel] = useState(overviewLevel);
 
   useEffect(() => {
+    pendingViewportRef.current = null;
     setFocusedAreaId(null);
     setMapCenter(overviewCenter);
     setMapLevel(overviewLevel);
-  }, [overviewCenter, overviewLevel]);
+
+    const map = mapRef.current;
+    if (!map || !points.length) return;
+
+    const applyOverview = () => {
+      const currentMap = mapRef.current;
+      if (!currentMap) return;
+      currentMap.relayout();
+      currentMap.setLevel(overviewLevel);
+      currentMap.setCenter(new kakao.maps.LatLng(overviewCenter.lat, overviewCenter.lng));
+      refreshOverlayPortal(version => version + 1);
+    };
+
+    const frame = window.requestAnimationFrame(applyOverview);
+    const timer = window.setTimeout(applyOverview, 80);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [overviewCenter, overviewLevel, points.length, resultSetKey]);
 
   const focusedCluster = areaClusters.find(cluster => cluster.areaId === focusedAreaId) ?? null;
   const visiblePoints = focusedCluster
@@ -283,7 +309,7 @@ export function VacancyMapPanel({ items, selectedId, onSelect, loading = false }
         )}
         {!sdkLoading && !sdkError && points.length > 0 && (
           <KakaoMapView
-            key={showDistrictClusters ? 'district-clusters' : showAreaClusters ? 'area-clusters' : `area-vacancies-${focusedCluster?.areaId ?? 'all'}`}
+            key={`${resultSetKey}:${showDistrictClusters ? 'district-clusters' : showAreaClusters ? 'area-clusters' : `area-vacancies-${focusedCluster?.areaId ?? 'all'}`}`}
             center={mapCenter}
             isPanto
             level={mapLevel}
