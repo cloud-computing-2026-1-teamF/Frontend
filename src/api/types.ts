@@ -427,6 +427,7 @@ export type VacancyStructuredFilter = {
     areaId?: string | null;
     province?: string | null;
     district?: string | null;
+    districtKeywords?: string[] | null;
     dong?: string | null;
     dongKeywords?: string[] | null;
     address?: string | null;

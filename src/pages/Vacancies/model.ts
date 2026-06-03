@@ -314,20 +314,26 @@ export function promptPatchFromStructuredFilter(
   const stationLabel = stationKeywords.length
     ? `역세권 ${stationKeywords.slice(0, 3).join(' · ')}${stationKeywords.length > 3 ? ` 외 ${stationKeywords.length - 3}` : ''}`
     : location?.subway || undefined;
+  const districtKeywords = (location?.districtKeywords ?? [])
+    .filter((keyword): keyword is string => typeof keyword === 'string' && keyword.trim().length > 0)
+    .map(keyword => keyword.trim());
+  const districtLabel = districtKeywords.length
+    ? districtKeywords.slice(0, 3).join(' · ') + (districtKeywords.length > 3 ? ` 외 ${districtKeywords.length - 3}` : '')
+    : location?.district || undefined;
   const dongKeywords = (location?.dongKeywords ?? [])
     .filter((keyword): keyword is string => typeof keyword === 'string' && keyword.trim().length > 0)
     .map(keyword => keyword.trim());
   const dongLabel = dongKeywords.length
     ? dongKeywords.slice(0, 3).join(' · ') + (dongKeywords.length > 3 ? ` 외 ${dongKeywords.length - 3}` : '')
     : location?.dong || undefined;
-  const areaKeyword = dongLabel || location?.district || location?.address || undefined;
+  const areaKeyword = dongLabel || districtLabel || location?.address || undefined;
   if (areaKeyword) labels.push(areaKeyword);
   if (stationLabel) labels.push(stationLabel);
 
   return {
     filters,
     areaKeyword,
-    areaDistrictHint: location?.district || undefined,
+    areaDistrictHint: districtLabel,
     labels: Array.from(new Set(labels.filter(Boolean))).slice(0, 9),
   };
 }
