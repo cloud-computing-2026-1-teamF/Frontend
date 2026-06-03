@@ -307,6 +307,55 @@
   text-wrap: pretty;
 }
 
+/* 입지 접근성 (지하철·버스·주차) — factor 카드와 동일한 fv-card 안에 표시 */
+.fv-access-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.fv-access-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f6f8fc;
+  border: 1px solid #eef2f8;
+}
+
+.fv-access-ico {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fv-access-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fv-access-lab {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8b95ad;
+}
+
+.fv-access-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a2236;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
 @media (max-width: 760px) {
   .fv-card {
     padding: 18px;

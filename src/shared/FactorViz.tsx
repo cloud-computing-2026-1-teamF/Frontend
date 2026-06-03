@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { VacancyMetricDistribution, VacancyMetricReference } from '../api';
+import { Icon } from './Icon';
 
 export type Property = {
   foot: number;
@@ -56,6 +57,52 @@ export function FactorCard({ title, subtitle, value, unit, badge, viz, desc }: F
       )}
       {viz}
       {desc && <p className="fv-desc">{desc}</p>}
+    </div>
+  );
+}
+
+export function AccessibilityCard({
+  nearby,
+  subtitle = '주변 교통·주차 인프라',
+}: {
+  nearby: { subway: string; bus: string; parking: string };
+  subtitle?: string;
+}) {
+  return (
+    <div className="fv-card">
+      <div className="fv-card-head">
+        <div className="fv-card-title">입지 접근성</div>
+        <div className="fv-card-sub">{subtitle}</div>
+      </div>
+      <div className="fv-access-list">
+        <div className="fv-access-row">
+          <div className="fv-access-ico" style={{ background: 'rgba(59,111,232,.12)', color: '#3B6FE8' }}>
+            <Icon name="activity" size={14} />
+          </div>
+          <div className="fv-access-info">
+            <div className="fv-access-lab">지하철</div>
+            <div className="fv-access-val">{nearby.subway}</div>
+          </div>
+        </div>
+        <div className="fv-access-row">
+          <div className="fv-access-ico" style={{ background: 'rgba(22,185,129,.12)', color: '#16B981' }}>
+            <Icon name="users" size={14} />
+          </div>
+          <div className="fv-access-info">
+            <div className="fv-access-lab">버스</div>
+            <div className="fv-access-val">{nearby.bus}</div>
+          </div>
+        </div>
+        <div className="fv-access-row">
+          <div className="fv-access-ico" style={{ background: 'rgba(124,92,230,.12)', color: '#7C5CE6' }}>
+            <Icon name="building" size={14} />
+          </div>
+          <div className="fv-access-info">
+            <div className="fv-access-lab">주차</div>
+            <div className="fv-access-val">{nearby.parking}</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

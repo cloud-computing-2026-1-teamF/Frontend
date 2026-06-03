@@ -4,7 +4,7 @@ import {
   patchAnalysisSessionSaved,
   patchAnalysisSessionStatus,
 } from '../../analysisSessions/store';
-import { FactorCard, buildFactorViz } from '../../../shared/FactorViz';
+import { FactorCard, AccessibilityCard, buildFactorViz } from '../../../shared/FactorViz';
 import { Icon } from '../../../shared/Icon';
 import { useVacancyMetricReference } from '../../vacancies/useVacancyMetricReference';
 import type { AnalyzeArea, AnalyzeProperty, BizType } from '../model';
@@ -197,6 +197,7 @@ function PropertyDetail({
         {factors.map(factor => (
           <FactorCard key={factor.key} {...factor} />
         ))}
+        {property.nearby && <AccessibilityCard nearby={property.nearby} />}
       </div>
     </>
   );
