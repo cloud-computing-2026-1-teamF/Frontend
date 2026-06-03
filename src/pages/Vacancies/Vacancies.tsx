@@ -758,7 +758,7 @@ function PromptFilter({ value, applying, labels, notice, stage, resultCount, onC
         onApply();
       }}
     >
-      <div className="vacancy-prompt-card">
+      <div className={`vacancy-prompt-card ${busy ? 'is-busy' : ''} ${labels.length > 0 ? 'has-tags' : ''}`}>
         <div className="vacancy-prompt-head">
           <div className="vacancy-prompt-title">
             <span className="vacancy-prompt-mark" aria-hidden="true">
@@ -800,7 +800,7 @@ function PromptFilter({ value, applying, labels, notice, stage, resultCount, onC
                 title="AI 탐색 실행"
                 aria-label="AI 탐색 실행"
               >
-                <Icon name={busy ? 'dot' : 'arrow-up'} size={16} />
+                <Icon name={busy ? 'activity' : 'arrow-up'} size={16} />
               </button>
             </div>
           </div>
