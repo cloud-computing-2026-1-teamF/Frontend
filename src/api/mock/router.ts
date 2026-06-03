@@ -418,13 +418,13 @@ const MOCK_VACANCIES: Vacancy[] = [
 ];
 
 const handleAnalysisReport: Handler = (_spec, params) => {
-  // TODO(live): tier 게이트(PRO/BUSINESS) + 실제 생성 잡. 데모는 사전 생성 샘플 PDF 반환(Track B).
+  // TODO(live): tier 게이트(PRO/BUSINESS) + 실제 생성 잡. 데모는 사전 생성 샘플 HTML 반환(Track B).
   return ok({
     id: `rpt_${params.id}`,
     analysisId: params.id,
     status: 'done',
-    format: 'pdf',
-    url: '/uploads/sample-report.pdf',
+    format: 'html',
+    url: '/uploads/sample-report.html',
     generatedAt: new Date().toISOString(),
   });
 };

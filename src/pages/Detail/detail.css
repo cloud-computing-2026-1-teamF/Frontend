@@ -38,7 +38,7 @@
 .dt-title-row .dt-title-block { flex: 1; min-width: 0; }
 /* 메인 보고서 버튼 + 시연용 샘플 버튼 세로 스택 */
 .dt-report-col { display: flex; flex-direction: column; gap: 7px; align-items: stretch; }
-/* 시연용 샘플 PDF 버튼(보조, 아웃라인) */
+/* 시연용 샘플 HTML 버튼(보조, 아웃라인) */
 .dt-report-sample-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 8px 14px; border-radius: 11px; cursor: pointer;
@@ -48,7 +48,7 @@
 }
 .dt-report-sample-btn:hover { background: #FFF6F0; border-color: #E85D1F; transform: translateY(-1px); }
 .dt-report-sample-btn:active { transform: translateY(0); }
-/* PDF 버튼 왼쪽 상태 배지: 생성 완료=초록 체크, 실패=빨강 X */
+/* HTML 버튼 왼쪽 상태 배지: 생성 완료=초록 체크, 실패=빨강 X */
 .dt-report-status {
   display: inline-flex; align-items: center; justify-content: center;
   width: 26px; height: 26px; border-radius: 50%;

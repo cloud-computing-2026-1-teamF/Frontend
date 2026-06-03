@@ -161,9 +161,9 @@ export const analysesApi = {
   patch: (id: number | string, body: PatchAnalysisRequest) =>
     apiRequest<AnalysisPollingResponse>({ method: 'PATCH', path: `/analyses/${id}`, body }).then(r => r.data),
 
-  /** `POST /analyses/:id/report` — 분석 보고서 PDF 생성/조회. Track B: mock가 샘플 PDF 반환 */
+  /** `POST /analyses/:id/report` — 분석 보고서 HTML 생성/조회. Track B: mock가 샘플 HTML 반환 */
   report: (id: number | string) =>
-    apiRequest<{ id: string; analysisId: string; status: 'pending' | 'running' | 'done' | 'failed'; format: 'pdf'; url: string | null; generatedAt: string | null }>({ method: 'POST', path: `/analyses/${id}/report` }).then(r => r.data),
+    apiRequest<{ id: string; analysisId: string; status: 'pending' | 'running' | 'done' | 'failed'; format: 'html'; url: string | null; generatedAt: string | null }>({ method: 'POST', path: `/analyses/${id}/report` }).then(r => r.data),
 
   /** `DELETE /analyses/:id` */
   delete: (id: number | string) =>
