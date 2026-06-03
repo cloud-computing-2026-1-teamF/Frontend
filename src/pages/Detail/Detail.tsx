@@ -250,7 +250,7 @@ export function Detail() {
                   {reportLoading ? (
                     <span className="dt-report-btn-text">
                       <span className="dt-report-btn-main">AI가 보고서 작성 중…</span>
-                      <span className="dt-report-btn-sub">약 30초 소요</span>
+                      <span className="dt-report-btn-sub">약 1분 소요</span>
                     </span>
                   ) : (
                     <span className="dt-report-btn-text">
