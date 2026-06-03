@@ -329,6 +329,9 @@ export function promptPatchFromStructuredFilter(
   const areaKeyword = dongLabel || districtLabel || location?.address || undefined;
   if (areaKeyword) labels.push(areaKeyword);
   if (stationLabel) labels.push(stationLabel);
+  if (location?.subwayWalkMinutesMax != null) {
+    labels.push(`지하철 도보 ${formatPromptNumber(location.subwayWalkMinutesMax)}분 이내`);
+  }
 
   return {
     filters,
