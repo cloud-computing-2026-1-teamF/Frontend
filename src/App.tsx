@@ -14,11 +14,13 @@
 
 import { BrowserRouter } from 'react-router-dom';
 import { AppRoutes } from './app/AppRoutes';
+import { ScrollToTop } from './app/ScrollToTop';
 import { AuthProvider } from './auth/AuthContext';
 
 export function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>
