@@ -241,6 +241,7 @@ export function promptPatchFromStructuredFilter(
   const category = structured.category ?? undefined;
   const price = structured.price ?? undefined;
   const space = structured.space ?? undefined;
+  const commercial = structured.commercial ?? undefined;
 
   if (structured.q) {
     filters.q = structured.q;
@@ -299,6 +300,8 @@ export function promptPatchFromStructuredFilter(
     labels.push(`면적 ${formatPromptNumber(areaMax)}㎡ 이하`);
   }
 
+  labels.push(...commercialPromptLabels(commercial));
+
   if (structured.sort) {
     filters.sort = structured.sort;
     const sortLabel = SORT_OPTIONS.find(option => option.value === structured.sort)?.label;
@@ -325,8 +328,76 @@ export function promptPatchFromStructuredFilter(
     filters,
     areaKeyword,
     areaDistrictHint: location?.district || undefined,
-    labels: Array.from(new Set(labels.filter(Boolean))).slice(0, 6),
+    labels: Array.from(new Set(labels.filter(Boolean))).slice(0, 9),
   };
+}
+
+function commercialPromptLabels(commercial: VacancyStructuredFilter['commercial'] | undefined): string[] {
+  if (!commercial) return [];
+  const labels: string[] = [];
+
+  addRelativeMetricLabel(labels, '유동인구', commercial.floatingPopulationQuarterlyLevel, commercial.floatingPopulationQuarterlyMin, '명 이상');
+  if (commercial.restaurantCount500mLevel === 'high' || commercial.restaurantCount500mLevel === 'very_high') {
+    labels.push(commercial.restaurantCount500mLevel === 'very_high' ? '식당 매우 밀집' : '식당 밀집');
+  } else {
+    addRelativeMetricLabel(labels, '식당', commercial.restaurantCount500mLevel, commercial.restaurantCount500mMin, '개 이상');
+  }
+
+  if (commercial.cafeToRestaurantRatioMax != null) {
+    labels.push('식당 대비 카페 적음');
+  } else {
+    addRelativeMetricLabel(labels, '카페', commercial.cafeCount500mLevel, commercial.cafeCount500mMin, '개 이상', commercial.cafeCount500mMax, '개 이하');
+  }
+
+  addRelativeMetricLabel(labels, '직장인구', commercial.workerPopulationQuarterlyLevel, commercial.workerPopulationQuarterlyMin, '명 이상');
+  addRelativeMetricLabel(labels, '상주인구', commercial.residentPopulationQuarterlyLevel, commercial.residentPopulationQuarterlyMin, '명 이상');
+  addRelativeMetricLabel(labels, '평균 매출', commercial.averageSalesPerStoreLevel, commercial.averageSalesPerStoreMin, '원 이상');
+  addRelativeMetricLabel(labels, '음식 지출', commercial.foodSpendingLevel, commercial.foodSpendingMin, '원 이상');
+  addRelativeMetricLabel(labels, '상권 성장성', commercial.commercialGrowthTypeLevel, commercial.commercialGrowthTypeMin, ' 이상');
+
+  if (commercial.closureRateLevel) labels.push(`폐업률 ${relativeLowHighLabel(commercial.closureRateLevel)}`);
+  else if (commercial.closureRateMax != null) labels.push(`폐업률 ${formatPromptNumber(commercial.closureRateMax)}% 이하`);
+  if (commercial.openingRateLevel) labels.push(`개업률 ${relativeLowHighLabel(commercial.openingRateLevel)}`);
+  else if (commercial.openingRateMin != null) labels.push(`개업률 ${formatPromptNumber(commercial.openingRateMin)}% 이상`);
+
+  return labels;
+}
+
+function addRelativeMetricLabel(
+  labels: string[],
+  label: string,
+  level?: string | null,
+  min?: number | null,
+  minSuffix = ' 이상',
+  max?: number | null,
+  maxSuffix = ' 이하',
+): void {
+  if (level) {
+    labels.push(`${label} ${relativeLowHighLabel(level)}`);
+    return;
+  }
+  if (max != null) {
+    labels.push(`${label} ${formatPromptNumber(max)}${maxSuffix}`);
+    return;
+  }
+  if (min != null) {
+    labels.push(`${label} ${formatPromptNumber(min)}${minSuffix}`);
+  }
+}
+
+function relativeLowHighLabel(level: string): string {
+  switch (level) {
+    case 'very_high':
+      return '매우 많음';
+    case 'high':
+      return '많음';
+    case 'very_low':
+      return '매우 적음';
+    case 'low':
+      return '적은 편';
+    default:
+      return level;
+  }
 }
 
 export function withStructuredPromptArea(
