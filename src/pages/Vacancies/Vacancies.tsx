@@ -749,6 +749,7 @@ function PromptFilter({ value, applying, labels, notice, stage, resultCount, onC
   onClear: () => void;
 }) {
   const busy = applying || stage === 'parsing' || stage === 'matchingArea' || stage === 'querying';
+  const showProgress = stage === 'parsing' || stage === 'matchingArea' || stage === 'querying' || stage === 'error';
 
   return (
     <form
@@ -785,8 +786,8 @@ function PromptFilter({ value, applying, labels, notice, stage, resultCount, onC
             }}
             placeholder="송파구 방이동쯤 월세 500만원 내외, 고기집하기 좋은 1층 공실"
           />
-          <div className="vacancy-prompt-toolbar">
-            <PromptProgress stage={stage} notice={notice} resultCount={resultCount} />
+          <div className={`vacancy-prompt-toolbar ${showProgress ? '' : 'is-compact'}`}>
+            {showProgress && <PromptProgress stage={stage} notice={notice} resultCount={resultCount} />}
             <div className="vacancy-prompt-buttons">
               {value && (
                 <button type="button" className="vacancy-prompt-clear" onClick={onClear} title="프롬프트 지우기" aria-label="프롬프트 지우기">
@@ -829,10 +830,6 @@ function PromptProgress({ stage, notice, resultCount }: {
   ];
   const activeIndex = stage === 'complete' ? steps.length : Math.max(0, steps.findIndex(step => step.key === stage));
   const isActiveFlow = stage !== 'idle' && stage !== 'error';
-
-  if (stage === 'idle') {
-    return <span className="vacancy-prompt-status">{notice ?? '준비됨'}</span>;
-  }
 
   if (stage === 'error') {
     return <span className="vacancy-prompt-status is-error">{notice ?? '조건 적용을 확인하지 못했어요.'}</span>;
