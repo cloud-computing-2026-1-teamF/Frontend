@@ -36,18 +36,7 @@
 /* 제목과 보고서 버튼을 같은 행에 정렬 (버튼이 '상세 보기' 제목 줄 높이에 옴) */
 .dt-title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
 .dt-title-row .dt-title-block { flex: 1; min-width: 0; }
-/* 메인 보고서 버튼 + 시연용 샘플 버튼 세로 스택 */
 .dt-report-col { display: flex; flex-direction: column; gap: 7px; align-items: stretch; }
-/* 시연용 샘플 HTML 버튼(보조, 아웃라인) */
-.dt-report-sample-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 8px 14px; border-radius: 11px; cursor: pointer;
-  background: #fff; color: #C24A12; border: 1.5px solid #F1C7A6;
-  font: 700 12px var(--font-sans); letter-spacing: -.2px;
-  transition: background .15s ease, border-color .15s ease, transform .15s ease;
-}
-.dt-report-sample-btn:hover { background: #FFF6F0; border-color: #E85D1F; transform: translateY(-1px); }
-.dt-report-sample-btn:active { transform: translateY(0); }
 /* HTML 버튼 왼쪽 상태 배지: 생성 완료=초록 체크, 실패=빨강 X */
 .dt-report-status {
   display: inline-flex; align-items: center; justify-content: center;

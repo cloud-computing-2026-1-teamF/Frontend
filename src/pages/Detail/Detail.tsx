@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import './detail.css';
-import sampleReportHtml from './ai-report-sample.html?raw';
 import { Icon } from '../../shared/Icon';
 import { FactorCard, buildFactorViz } from '../../shared/FactorViz';
 import { Footer } from '../../shared/Nav';
@@ -130,8 +129,7 @@ export function Detail() {
   }
 
   const handleReport = async () => {
-    // 발표 시연: 백엔드가 검수된 standalone HTML 보고서를 30초 지연 후 반환 → 파일로 다운로드.
-    // mock 또는 생성 실패 시: 번들에 포함된 샘플 HTML 다운로드로 폴백.
+    // 백엔드가 OpenAI로 생성한 standalone HTML 보고서를 반환하면 파일로 다운로드한다.
     setReportLoading(true);
     setReportStatus('idle'); // 재요청 시 이전 체크/X 초기화
     const filename = `상권분석보고서-${idParam ?? 'report'}.html`;
@@ -148,45 +146,34 @@ export function Detail() {
     };
     try {
       if (USE_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 600)); // 생성되는 듯한 연출
-        triggerDownload(sampleReportHtml);
-        setReportStatus('success');
-        return;
+        throw new Error('mock mode에서는 실제 AI 보고서를 생성할 수 없어요.');
+      }
+      if (!idParam) {
+        throw new Error('분석 이력 ID가 없어요.');
+      }
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('로그인이 필요해요.');
       }
       const res = await fetch(`${BASE_URL}/analyses/${idParam}/report`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${getAccessToken() ?? ''}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error(`report ${res.status}`);
+      if (!res.ok) {
+        throw new Error(`report ${res.status}`);
+      }
       const html = await res.text();
-      if (!/<!doctype\s+html/i.test(html) || !/<html[\s>]/i.test(html)) throw new Error('손상된 HTML 보고서');
+      if (!/<!doctype\s+html/i.test(html) || !/<html[\s>]/i.test(html)) {
+        throw new Error('손상된 HTML 보고서');
+      }
       triggerDownload(html);
-      setReportStatus('success'); // 정상 생성 → 초록 체크
+      setReportStatus('success');
     } catch (err) {
-      console.warn('보고서 생성 실패 — 샘플로 폴백:', err);
-      triggerDownload(sampleReportHtml);
-      setReportStatus('error'); // 실패 → 빨강 X
+      console.warn('AI 보고서 생성 실패:', err);
+      setReportStatus('error');
     } finally {
       setReportLoading(false);
     }
-  };
-
-  const handleSampleReport = () => {
-    // 시연용: 번들에 포함된 확장판 샘플 보고서 HTML을 Blob으로 만들어 새 탭에 바로 띄운다.
-    // (public 정적 .html은 Amplify SPA 리라이트로 index.html이 반환돼 빈 문서가 됨 → 번들+Blob로 우회)
-    const blob = new Blob([sampleReportHtml], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const win = window.open(url, '_blank');
-    if (!win) {
-      // 팝업 차단 시 다운로드로 폴백
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '상권분석보고서_샘플.html';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 
   const sel = item.top3[selected];
@@ -258,14 +245,6 @@ export function Detail() {
                       <span className="dt-report-btn-sub">HTML 다운로드 · GPT 생성</span>
                     </span>
                   )}
-                </button>
-                <button
-                  type="button"
-                  className="dt-report-sample-btn"
-                  onClick={handleSampleReport}
-                  title="시연용 샘플 보고서 — 새 탭으로 열기"
-                >
-                  📄 AI 입지 분석 보고서 샘플
                 </button>
               </div>
             </div>
