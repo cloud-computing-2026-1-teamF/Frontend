@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import { api } from '../../../api';
 import {
   patchAnalysisSessionSaved,
@@ -113,6 +114,12 @@ export function AnalyzeResultsPanel({
                       <div className="rr-kpi-val">{property.mgmt}<span className="unit">만</span></div>
                     </div>
                   </div>
+                  {property.history && (
+                    <VacancyHistoryPreview history={property.history} currentScore={property.score} />
+                  )}
+                  {isSelected && property.history && (
+                    <VacancyHistoryPanel history={property.history} />
+                  )}
                   {isSelected && (
                     <div className="rr-card-footer">
                       <span>주변 상권 상세 보기</span>
@@ -168,6 +175,169 @@ export function AnalyzeResultsPanel({
       )}
     </div>
   );
+}
+
+function VacancyHistoryPreview({
+  history,
+  currentScore,
+}: {
+  history: NonNullable<AnalyzeProperty['history']>;
+  currentScore: number;
+}) {
+  const trend = history.scoreTrend ?? [];
+  const timeline = history.occupancyTimeline ?? [];
+  const delta = history.summary.scoreDelta ?? scoreDelta(trend);
+  const direction = directionFromDelta(delta);
+
+  return (
+    <div className="rr-history-preview">
+      <div className="rr-hp-top">
+        <div>
+          <div className="rr-hp-eyebrow">HISTORY INTELLIGENCE</div>
+          <div className="rr-hp-title">{history.summary.scoreLabel}</div>
+        </div>
+        <span className={`rr-hp-delta is-${direction}`}>
+          {formatSigned(delta)}
+        </span>
+      </div>
+      <div className="rr-hp-chart-row">
+        <ScoreTrendSparkline trend={trend} fallbackScore={currentScore} />
+        <div className="rr-hp-score-now">
+          <b>{currentScore}</b>
+          <span>현재</span>
+        </div>
+      </div>
+      <div className="rr-hp-life">
+        {timeline.slice(-4).map((event, index) => (
+          <span
+            key={event.id}
+            className={`rr-hp-life-dot is-${event.status === 'vacant' ? 'vacant' : 'occupied'}`}
+            style={{ '--i': index } as CSSProperties}
+            title={event.tenantLabel}
+          />
+        ))}
+        <b>{history.summary.occupancyPatternLabel}</b>
+      </div>
+    </div>
+  );
+}
+
+function VacancyHistoryPanel({
+  history,
+}: {
+  history: NonNullable<AnalyzeProperty['history']>;
+}) {
+  const latest = history.scoreTrend[history.scoreTrend.length - 1];
+  const first = history.scoreTrend[0];
+
+  return (
+    <div className="rr-history-panel">
+      <div className="rr-hi-head">
+        <div>
+          <div className="rr-hi-kicker">매물 기억 데이터</div>
+          <h4>점수 흐름과 점유 이탈 이력</h4>
+        </div>
+        <span className="rr-hi-source">{history.summary.source.startsWith('mock') ? 'MOCK' : 'DATA'}</span>
+      </div>
+      <div className="rr-hi-grid">
+        <div className="rr-hi-card">
+          <span>장기 점수 변화</span>
+          <b>{first && latest ? `${first.year} → ${latest.year}` : '준비 중'}</b>
+          <small>{formatSigned(history.summary.scoreDelta ?? scoreDelta(history.scoreTrend))}p</small>
+        </div>
+        <div className="rr-hi-card">
+          <span>마지막 이탈 시그널</span>
+          <b>{history.summary.lastExitReason ?? '이탈 사유 데이터 준비 중'}</b>
+        </div>
+      </div>
+      <div className="rr-hi-trend">
+        {history.scoreTrend.map(point => (
+          <div key={point.year} className="rr-hi-year">
+            <span>{String(point.year).slice(2)}</span>
+            <i style={{ height: `${Math.max(16, Math.min(54, point.score * 0.54))}px` }} />
+            <b>{Math.round(point.score)}</b>
+          </div>
+        ))}
+      </div>
+      <div className="rr-hi-timeline">
+        {history.occupancyTimeline.map(event => (
+          <div key={event.id} className={`rr-hi-event is-${event.status === 'vacant' ? 'vacant' : 'closed'}`}>
+            <div className="rr-hi-event-period">{formatPeriod(event.startedOn, event.endedOn)}</div>
+            <div className="rr-hi-event-body">
+              <strong>{event.tenantLabel}</strong>
+              <span>{event.businessCategory ?? (event.status === 'vacant' ? '공실' : '업종 미상')}</span>
+              <em>
+                {event.monthlyRent != null ? `월 ${formatMan(event.monthlyRent)}` : '월세 미상'}
+                {event.deposit != null ? ` · 보증 ${formatMan(event.deposit)}` : ''}
+              </em>
+              {event.exitReasonSummary && <p>{event.exitReasonSummary}</p>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ScoreTrendSparkline({
+  trend,
+  fallbackScore,
+}: {
+  trend: NonNullable<AnalyzeProperty['history']>['scoreTrend'];
+  fallbackScore: number;
+}) {
+  const points = trend.length > 0 ? trend : [{ year: 2026, score: fallbackScore }];
+  const width = 142;
+  const height = 42;
+  const min = Math.min(...points.map(point => point.score), 55);
+  const max = Math.max(...points.map(point => point.score), 90);
+  const range = Math.max(1, max - min);
+  const line = points.map((point, index) => {
+    const x = points.length === 1 ? width - 12 : 8 + (index * (width - 16)) / (points.length - 1);
+    const y = height - 7 - ((point.score - min) / range) * (height - 14);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+
+  return (
+    <svg className="rr-hp-sparkline" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="연도별 생존점수 추세">
+      <path d={`M 6 ${height - 8} H ${width - 6}`} />
+      <polyline points={line} />
+      {points.map((point, index) => {
+        const [x, y] = line.split(' ')[index].split(',').map(Number);
+        return <circle key={point.year} cx={x} cy={y} r={index === points.length - 1 ? 3.5 : 2.3} />;
+      })}
+    </svg>
+  );
+}
+
+function scoreDelta(trend: NonNullable<AnalyzeProperty['history']>['scoreTrend']): number | null {
+  if (trend.length < 2) return null;
+  return Math.round((trend[trend.length - 1].score - trend[0].score) * 10) / 10;
+}
+
+function directionFromDelta(delta: number | null): string {
+  if (delta == null) return 'flat';
+  if (delta >= 3) return 'up';
+  if (delta <= -3) return 'down';
+  return 'flat';
+}
+
+function formatSigned(value?: number | null): string {
+  if (value == null) return '±0.0';
+  const rounded = Math.round(value * 10) / 10;
+  if (rounded > 0) return `+${rounded.toFixed(1)}`;
+  if (rounded < 0) return rounded.toFixed(1);
+  return '±0.0';
+}
+
+function formatPeriod(start?: string | null, end?: string | null): string {
+  const startYear = start?.slice(0, 4) ?? '----';
+  const endYear = end?.slice(0, 4) ?? '현재';
+  return `${startYear} - ${endYear}`;
+}
+
+function formatMan(value: number): string {
+  return `${Math.round(value).toLocaleString('ko-KR')}만`;
 }
 
 function PropertyDetail({
