@@ -39,6 +39,17 @@
   - The task includes both implementation and large local artifact generation.
   - The task asks for broad or deep research plus implementation plus documentation.
   - The task is expected to produce more than one coherent review milestone.
+- These triggers are binding. Do not treat them as suggestions, and do not continue editing files until the shard plan is reflected in branches and PR targets.
+- Backend database/API separation is mandatory:
+  - If a backend task includes Liquibase changelogs, schema/index changes, seed CSV/data files, cleanup SQL, or database contract changes plus service/controller/DTO/repository/API code, split the work into stacked PRs.
+  - The first backend shard must contain only the database/data contract work, such as Liquibase files, seed data, cleanup scripts, manifests, and directly related documentation.
+  - A later backend shard must contain the application/API work, such as entities, repositories, services, controllers, DTOs, response mapping, and API behavior.
+  - The API/application shard must branch from and target the DB/data shard branch.
+  - Do not combine "Liquibase and data seeding" with "API update" in the same backend PR.
+- Cross-layer feature separation is mandatory:
+  - Backend DB/data contract, backend API/application code, frontend API types/client wiring, frontend UI, tests, and documentation are separate review milestones when more than one of them is non-trivial.
+  - Create stacked branches in dependency order instead of one broad branch.
+- Before file edits on any mandatory-stack task, state the shard plan in a brief progress update, including branch name, PR target, and success criteria for each shard.
 - For large research or evaluation jobs, split the stack by dependency stage, such as protocol or agent-rule updates, config/data-contract paths, label or source artifact construction, candidate evaluation, null/cost/MBP gates, tests, report generation, mirrored market-data READMEs, and final research-note documentation.
 - Do not put a broad research system, all gates, all generated README mirrors, and all final notes into one implementation branch when those pieces can be reviewed as dependent stages.
 - Break the task into concrete implementation jobs with clear dependency order, branch name, PR target, and success criteria for each job.
