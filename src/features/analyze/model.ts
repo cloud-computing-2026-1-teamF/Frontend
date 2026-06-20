@@ -211,7 +211,12 @@ export const buildPropertiesFromRecommendations = (
           bus: summarizePlaces(item.busStopInfo, '버스 정류장 정보 없음'),
           parking: summarizePlaces(item.parkingInfo, '주차장 정보 없음'),
         },
-        history: item.history ?? null,
+        history: item.history ?? createMockVacancyHistory(
+          Math.round(item.score),
+          item.monthlyRent ?? 0,
+          item.deposit ?? 0,
+          item.rank,
+        ),
       };
     });
 
