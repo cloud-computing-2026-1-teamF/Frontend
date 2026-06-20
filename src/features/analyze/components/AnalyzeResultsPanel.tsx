@@ -284,7 +284,7 @@ function HistoryTimeline({
 }) {
   const width = 312;
   const height = 158;
-  const pad = { left: 18, right: 18, top: 20, bottom: 20 };
+  const pad = { left: 18, right: 18 };
   const trendYears = trend.map(point => point.year);
   const eventStarts = events.map(event => dateToYearFraction(event.startedOn, trendYears[0] ?? 2026));
   const eventEnds = events.map(event => event.endedOn
@@ -293,14 +293,20 @@ function HistoryTimeline({
   const firstYear = Math.floor(Math.min(...trendYears, ...eventStarts));
   const lastLabelYear = Math.max(...trendYears, ...eventEnds.map(value => Math.floor(value)));
   const timelineEnd = lastLabelYear + 1;
-  const minScore = Math.max(0, Math.floor((Math.min(...trend.map(point => point.score), currentScore) - 4) / 5) * 5);
-  const maxScore = Math.min(100, Math.ceil((Math.max(...trend.map(point => point.score), currentScore) + 4) / 5) * 5);
-  const scoreRange = Math.max(10, maxScore - minScore);
+  const scoreValues = [...trend.map(point => point.score), currentScore];
+  const rawMinScore = Math.min(...scoreValues);
+  const rawMaxScore = Math.max(...scoreValues);
+  const rawScoreSpread = Math.max(0, rawMaxScore - rawMinScore);
+  const scoreCenter = (rawMinScore + rawMaxScore) / 2;
+  const visualScoreRange = Math.min(16, Math.max(6, rawScoreSpread * 1.25));
+  const visualMinScore = Math.max(0, scoreCenter - visualScoreRange / 2);
+  const visualMaxScore = Math.min(100, scoreCenter + visualScoreRange / 2);
+  const scoreRange = Math.max(1, visualMaxScore - visualMinScore);
   const timeRange = Math.max(1, timelineEnd - firstYear);
   const xOfTime = (value: number) =>
     pad.left + ((Math.max(firstYear, Math.min(timelineEnd, value)) - firstYear) / timeRange) * (width - pad.left - pad.right);
   const yOfScore = (score: number) =>
-    28 + (1 - ((score - minScore) / scoreRange)) * 48;
+    24 + (1 - ((score - visualMinScore) / scoreRange)) * 58;
   const points = trend.map(point => ({
     ...point,
     x: xOfTime(point.year + 0.5),
@@ -308,7 +314,7 @@ function HistoryTimeline({
   }));
   const line = points.map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
   const area = points.length > 0
-    ? `${points[0].x.toFixed(1)},82 ${line} ${points[points.length - 1].x.toFixed(1)},82`
+    ? `${points[0].x.toFixed(1)},88 ${line} ${points[points.length - 1].x.toFixed(1)},88`
     : '';
   const occupancyBands = events.map(event => {
     const start = dateToYearFraction(event.startedOn, firstYear);
@@ -353,8 +359,6 @@ function HistoryTimeline({
           y2="132"
         />
       ))}
-      <text className="rr-hi-lane-label" x={pad.left} y="16">점수</text>
-      <text className="rr-hi-lane-label" x={pad.left} y="98">점유</text>
       {area && <polygon className="rr-hi-score-area" points={area} />}
       <polyline className="rr-hi-score-line" points={line} />
       {points.map(point => (
