@@ -1,4 +1,4 @@
-import type { AnalysisRecommendation, BusinessType, Vacancy } from '../../api';
+import type { AnalysisRecommendation, BusinessType, Vacancy, VacancyHistory } from '../../api';
 
 export const DEFAULT_RADIUS = 500;
 export const MIN_RADIUS = 200;
@@ -52,6 +52,7 @@ export type AnalyzeProperty = {
     bus: string;
     parking: string;
   };
+  history?: VacancyHistory | null;
 };
 
 export const FALLBACK_BIZ_TYPES: BizType[] = [
@@ -154,6 +155,7 @@ export const buildProperties = (center: { lat: number; lng: number }): AnalyzePr
     ...p,
     lat: center.lat + TOP3_OFFSETS[i].dLat,
     lng: center.lng + TOP3_OFFSETS[i].dLng,
+    history: createMockVacancyHistory(p.score, p.rent, p.deposit, p.rank),
   }));
 
 export const buildPropertiesFromRecommendations = (
@@ -209,6 +211,7 @@ export const buildPropertiesFromRecommendations = (
           bus: summarizePlaces(item.busStopInfo, '버스 정류장 정보 없음'),
           parking: summarizePlaces(item.parkingInfo, '주차장 정보 없음'),
         },
+        history: item.history ?? null,
       };
     });
 
@@ -249,6 +252,7 @@ export const buildPropertiesFromVacancies = (vacancies: Vacancy[]): AnalyzePrope
           bus: summarizePlaces(vacancy.busStopInfo, '버스 정류장 정보 없음'),
           parking: summarizePlaces(vacancy.parkingInfo, '주차장 정보 없음'),
         },
+        history: createMockVacancyHistory(Math.round(vacancy.survivalScore ?? 0), vacancy.monthlyRent ?? 0, vacancy.deposit ?? 0, index + 1),
       };
     });
 
@@ -275,4 +279,99 @@ function summarizePlaces(value: string | null | undefined, fallback: string): st
   const parts = trimmed.split(';').map(part => part.trim()).filter(Boolean);
   if (parts.length <= 2) return parts.join(' · ') || trimmed;
   return `${parts[0]} 외 ${parts.length - 1}곳`;
+}
+
+function createMockVacancyHistory(score: number, rent: number, deposit: number, rank: number): VacancyHistory {
+  const offsets = [-8.2, -7.1, -5.6, -3.2, -1.4, 0.9, 2.0, 0];
+  const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
+  const scoreTrend = years.map((year, index) => {
+    const current = clampScore(score + offsets[index] - rank * 0.4);
+    const previous = index > 0 ? clampScore(score + offsets[index - 1] - rank * 0.4) : null;
+    return {
+      year,
+      score: current,
+      delta: previous == null ? null : roundOne(current - previous),
+      confidenceLabel: scoreLabel(current),
+      basis: year >= 2020 && year <= 2021 ? '코로나 충격 보정 포함' : '공공데이터 기반 모의 추세',
+      source: 'mock_preview',
+    };
+  });
+  const occupancyTimeline = [
+    {
+      id: `mock-${rank}-2018`,
+      startedOn: '2018-03-01',
+      endedOn: '2020-12-31',
+      tenantLabel: '이전 음식점 운영',
+      businessCategory: '일반음식점',
+      status: 'closed',
+      monthlyRent: Math.round(rent * 0.78),
+      deposit: Math.round(deposit * 0.8),
+      exitReasonCode: 'demand_shift',
+      exitReasonSummary: '코로나 이후 저녁·심야 수요 약화 추정',
+      source: 'mock_preview',
+    },
+    {
+      id: `mock-${rank}-2021`,
+      startedOn: '2021-04-01',
+      endedOn: '2023-08-31',
+      tenantLabel: '근린생활 업종 재입점',
+      businessCategory: '근린생활',
+      status: 'closed',
+      monthlyRent: Math.round(rent * 0.88),
+      deposit: Math.round(deposit * 0.9),
+      exitReasonCode: 'competition_pressure',
+      exitReasonSummary: '동종 경쟁과 임대료 부담이 겹친 이탈 가능성',
+      source: 'mock_preview',
+    },
+    {
+      id: `mock-${rank}-2024`,
+      startedOn: '2024-01-01',
+      endedOn: '2025-11-30',
+      tenantLabel: '단기 운영 업종',
+      businessCategory: '요식업',
+      status: 'closed',
+      monthlyRent: Math.round(rent * 0.96),
+      deposit,
+      exitReasonCode: 'fixed_cost_burden',
+      exitReasonSummary: '매출 대비 고정비 부담 추정',
+      source: 'mock_preview',
+    },
+    {
+      id: `mock-${rank}-2026`,
+      startedOn: '2026-01-01',
+      endedOn: null,
+      tenantLabel: '현재 공실',
+      businessCategory: null,
+      status: 'vacant',
+      monthlyRent: rent,
+      deposit,
+      exitReasonCode: null,
+      exitReasonSummary: null,
+      source: 'mock_preview',
+    },
+  ];
+
+  return {
+    scoreTrend,
+    occupancyTimeline,
+    summary: {
+      scoreDirection: 'up',
+      scoreDelta: roundOne(scoreTrend[scoreTrend.length - 1].score - scoreTrend[0].score),
+      scoreLabel: scoreLabel(score),
+      occupancyPatternLabel: '업종 교체 이력 보유',
+      lastExitReason: '매출 대비 고정비 부담 추정',
+      source: 'mock_preview',
+    },
+  };
+}
+
+function clampScore(value: number): number {
+  return Math.max(35, Math.min(97, roundOne(value)));
+}
+
+function scoreLabel(score: number): string {
+  if (score >= 84) return '강한 안정 신호';
+  if (score >= 75) return '양호한 안정 신호';
+  if (score >= 65) return '관찰 필요';
+  return '리스크 우선 점검';
 }

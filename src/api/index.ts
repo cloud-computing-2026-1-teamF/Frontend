@@ -35,6 +35,7 @@ import type {
   VacancyPromptSearchResponse,
   VacancyMetricDistribution,
   VacancyMetricReference,
+  VacancyHistory,
   VacancyShortlistPayload,
 } from './types';
 
@@ -45,7 +46,7 @@ export type {
   AnalysisRecommendation, AnalysisDetail, AnalysisEventResponse, AnalysisPollingResponse, AnalysisRecommendationsSection, AnalysisSectionKey, AnalysisSectionTodo,
   CreateAnalysisResponse, CreateAnalysisRequest, CreateAnalysisClientRequest, ListAnalysesQuery, ListAnalysesResponse,
   PatchAnalysisRequest, UserStats,
-  Vacancy, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary, VacancyStructuredFilter, VacancyPromptParseResponse, VacancyPromptSearchResponse, VacancyMetricDistribution, VacancyMetricReference, VacancyShortlistPayload,
+  Vacancy, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary, VacancyStructuredFilter, VacancyPromptParseResponse, VacancyPromptSearchResponse, VacancyMetricDistribution, VacancyMetricReference, VacancyHistory, VacancyShortlistPayload,
 } from './types';
 
 // ── Auth ────────────────────────────────────────────────────────────────────

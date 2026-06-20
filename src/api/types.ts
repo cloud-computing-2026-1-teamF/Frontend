@@ -174,6 +174,45 @@ export type AnalysisRecommendation = {
   subwayStationInfo?: string | null;
   parkingInfo?: string | null;
   hourlyFloatingPopulation?: number[] | null;
+  history?: VacancyHistory | null;
+};
+
+export type VacancyHistory = {
+  scoreTrend: VacancyScoreTrendPoint[];
+  occupancyTimeline: VacancyOccupancyHistory[];
+  summary: VacancyHistorySummary;
+};
+
+export type VacancyScoreTrendPoint = {
+  year: number;
+  score: number;
+  delta?: number | null;
+  confidenceLabel?: string | null;
+  basis?: string | null;
+  source?: string | null;
+};
+
+export type VacancyOccupancyHistory = {
+  id: string;
+  startedOn?: string | null;
+  endedOn?: string | null;
+  tenantLabel: string;
+  businessCategory?: string | null;
+  status: string;
+  monthlyRent?: number | null;
+  deposit?: number | null;
+  exitReasonCode?: string | null;
+  exitReasonSummary?: string | null;
+  source?: string | null;
+};
+
+export type VacancyHistorySummary = {
+  scoreDirection: 'up' | 'down' | 'flat' | string;
+  scoreDelta?: number | null;
+  scoreLabel: string;
+  occupancyPatternLabel: string;
+  lastExitReason?: string | null;
+  source: string;
 };
 
 export type CreateAnalysisRequest = {
