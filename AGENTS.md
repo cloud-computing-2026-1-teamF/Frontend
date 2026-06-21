@@ -18,6 +18,7 @@
   - `test/<short-task-name>` for test-only work.
   - `chore/<short-task-name>` for maintenance that does not fit the categories above.
 - Do not use `codex/` as a branch prefix in this repository.
+- Do not include personal names, usernames, or agent names in branch names, including `theo`; use task-purpose descriptors instead.
 - Do not place task commits directly on `main`.
 - Git commits must be made file by file. If a task changes 10 files, make 10 separate commits.
 - Stage only the file being committed.
