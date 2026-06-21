@@ -26,7 +26,8 @@
 - Git operations do not require additional user permission. Commit, push, branch, and related Git operations may be performed without asking first.
 - If a Git operation produces unwanted behavior, the user will revert it manually.
 - Never mix unrelated files in the same commit, even when changes were made during the same task.
-- When a simple task is finished, push the task branch to the configured private GitHub remote and open a pull request targeting `main`.
+- When a simple non-stacked task is finished, push the task branch to the configured private GitHub remote and open a pull request targeting `main`.
+- When a task is sharded into a stack, do not apply the simple-task target rule to child shards; each child PR must target its immediate parent branch.
 - Do not merge the pull request just because the task is finished. Wait for the user to invoke the merge command.
 - Preserve the one-file-per-commit history when merging. Do not squash unless the user explicitly asks for a squash merge.
 
@@ -62,6 +63,9 @@
   - Create the second shard branch from the first shard branch, not from `main`.
   - Open the second shard PR against the first shard branch.
   - Continue in dependency order: branch C starts from branch B and PR C targets branch B.
+  - The branch parent and the GitHub PR base must match the same immediate predecessor. For branch B, branch from A and open PR B against A; for branch C, branch from B and open PR C against B.
+  - Never flatten a stack by branching every shard from `main` or by opening every stacked PR against `main`; this breaks review lineage and can trigger unnecessary CI/CD workflows.
+  - Before opening or updating a stacked PR, verify its `headRefName` and `baseRefName` preserve the chain. If a child PR points at the wrong base, retarget it to the immediate parent branch before continuing.
   - Use the same gitflow-style prefixes for stacked branches, choosing the prefix by shard type.
 - Preserve the one-file-per-commit rule inside every stack branch.
 - When a lower stack branch changes, update higher stack branches by rebasing or merging the parent branch into the child branch, resolving only mechanical conflicts without asking.
