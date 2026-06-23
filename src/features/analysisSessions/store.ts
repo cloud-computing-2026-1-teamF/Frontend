@@ -5,6 +5,7 @@ import type {
   BusinessType,
   CreateAnalysisResponse,
 } from '../../api';
+import { normalizeHorizonScores } from '../../lib/horizonScores';
 import type { SavedAnalysis, Top3Item } from '../../lib/savedAnalyses';
 
 const SESSION_KEY = 'sg_backend_analysis_sessions';
@@ -171,6 +172,7 @@ export function buildSessionFromBackend(
       ? [{
         addr: '저장된 추천 매물',
         score: item.topScore,
+        horizonScores: normalizeHorizonScores(undefined, item.topScore),
         rent: 0, deposit: 0, mgmt: 0, area: 0,
         floor: '상가',
         foot: 0, comp: 0, rev: 0, growth: 0,
@@ -326,6 +328,7 @@ function makeTop3(lat: number, lng: number): Top3Item[] {
   return seed.map((item, index) => ({
     ...item,
     addr: `${item.addr} · ${lat + offsets[index].dLat > 0 ? 'N' : 'S'}${Math.abs(lat + offsets[index].dLat).toFixed(4)}, ${lng + offsets[index].dLng > 0 ? 'E' : 'W'}${Math.abs(lng + offsets[index].dLng).toFixed(4)}`,
+    horizonScores: normalizeHorizonScores(item.horizonScores, item.score),
     footHourly: makeHourly(item.foot),
     nearby: {
       subway: '상세 데이터 준비 중',
@@ -361,6 +364,7 @@ function recommendationsToTop3(recommendations: AnalysisRecommendation[]): Top3I
         salePrice: item.salePrice ?? 0,
         transactionType: item.transactionType,
         score: Math.round(item.score),
+        horizonScores: normalizeHorizonScores(item.horizonScores, item.score, item.recommended),
         recommended: item.recommended,
         foot,
         comp: (item.restaurantCount500m ?? 0) + (item.cafeCount500m ?? 0),
