@@ -2,6 +2,7 @@
 // will eventually return so the rest of the app doesn't need to change.
 
 import type { Property } from '../shared/FactorViz';
+import type { HorizonScore } from './horizonScores';
 
 export type Top3Item = Property & {
   vacancyId?: string;
@@ -9,6 +10,7 @@ export type Top3Item = Property & {
   addr: string;
   recommended?: boolean | null;
   score: number;
+  horizonScores?: HorizonScore[];
   rent: number;
   deposit: number;
   mgmt: number;
