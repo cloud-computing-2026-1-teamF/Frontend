@@ -277,6 +277,37 @@
 }
 .dt-top3-kpis > div span { color: var(--ink-500); }
 .dt-top3-kpis > div b { color: var(--ink-900); font-weight: 700; letter-spacing: -0.01em; }
+.dt-horizon-mini {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+.dt-horizon-mini span {
+  min-width: 0;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 6px;
+  border-radius: 7px;
+  background: var(--ink-50);
+  border: 1px solid var(--border);
+  color: var(--ink-500);
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.dt-horizon-mini span.is-primary {
+  background: #101828;
+  border-color: #101828;
+  color: #fff;
+}
+.dt-horizon-mini b {
+  color: var(--ink-900);
+  font-variant-numeric: tabular-nums;
+}
+.dt-horizon-mini span.is-primary b { color: #fff; }
 
 /* ===== Ring (gauge) ===== */
 .dt-ring { position: relative; display: inline-block; }
@@ -349,6 +380,111 @@
 }
 .dt-hk-val span { font-size: 10px; font-weight: 500; color: var(--ink-400); margin-left: 2px; }
 .dt-hero-right { position: relative; z-index: 1; }
+
+.dt-forecast {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 13px;
+  background: #fff;
+  border: 1px solid var(--border);
+}
+.dt-forecast-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.dt-forecast-head span {
+  font-size: 11px;
+  font-weight: 850;
+  color: var(--ink-600);
+}
+.dt-forecast-head b {
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #F1F5F9;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.dt-forecast-head b.is-up {
+  background: #E8F6F0;
+  color: #0A7A5B;
+}
+.dt-forecast-head b.is-down {
+  background: #FFF3E8;
+  color: #C2410C;
+}
+.dt-forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.dt-forecast-cell {
+  min-width: 0;
+  min-height: 72px;
+  padding: 9px;
+  border-radius: 10px;
+  background: #F8FAFC;
+  border: 1px solid #E7ECF4;
+}
+.dt-forecast-cell.is-primary {
+  background: #101828;
+  border-color: #101828;
+}
+.dt-forecast-cell span {
+  display: block;
+  font-size: 10px;
+  font-weight: 850;
+  color: #667085;
+}
+.dt-forecast-cell b {
+  display: block;
+  margin-top: 5px;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 950;
+  color: #101828;
+  font-variant-numeric: tabular-nums;
+}
+.dt-forecast-cell b em {
+  font-style: normal;
+  font-size: 11px;
+  color: #667085;
+}
+.dt-forecast-cell.is-primary span,
+.dt-forecast-cell.is-primary b,
+.dt-forecast-cell.is-primary b em {
+  color: #fff;
+}
+.dt-forecast-cell i {
+  display: block;
+  margin-top: 9px;
+  height: 5px;
+  border-radius: 999px;
+  background: #E5EAF2;
+  overflow: hidden;
+}
+.dt-forecast-cell i strong {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #0F766E;
+}
+.dt-forecast-cell.is-primary i {
+  background: rgba(255,255,255,.18);
+}
+.dt-forecast-cell.is-primary i strong {
+  background: #F4B431;
+}
+.dt-forecast-cell.is-watch i strong { background: #F4B431; }
+.dt-forecast-cell.is-risk i strong { background: #E85D1F; }
 
 /* ===== Factor cards container =====
    Card visuals (.fv-*) live in shared/factor-viz.css. We just lay them

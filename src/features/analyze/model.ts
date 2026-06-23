@@ -1,4 +1,6 @@
 import type { AnalysisRecommendation, BusinessType, Vacancy, VacancyHistory } from '../../api';
+import type { HorizonScore } from '../../lib/horizonScores';
+import { normalizeHorizonScores } from '../../lib/horizonScores';
 
 export const DEFAULT_RADIUS = 500;
 export const MIN_RADIUS = 200;
@@ -39,6 +41,7 @@ export type AnalyzeProperty = {
   salePrice?: number;
   transactionType?: string | null;
   score: number;
+  horizonScores?: HorizonScore[];
   foot: number;
   comp: number;
   rev: number;
@@ -155,6 +158,7 @@ export const buildProperties = (center: { lat: number; lng: number }): AnalyzePr
     ...p,
     lat: center.lat + TOP3_OFFSETS[i].dLat,
     lng: center.lng + TOP3_OFFSETS[i].dLng,
+    horizonScores: normalizeHorizonScores(undefined, p.score),
     history: createMockVacancyHistory(p.score, p.rent, p.deposit, p.rank),
   }));
 
@@ -195,6 +199,7 @@ export const buildPropertiesFromRecommendations = (
         salePrice: item.salePrice ?? 0,
         transactionType: item.transactionType,
         score: Math.round(item.score),
+        horizonScores: normalizeHorizonScores(item.horizonScores, item.score, item.recommended),
         foot,
         comp: restaurantCount + cafeCount,
         // Backend ships average_sales_per_store in won; the UI labels this
@@ -245,6 +250,7 @@ export const buildPropertiesFromVacancies = (vacancies: Vacancy[]): AnalyzePrope
         salePrice: vacancy.salePrice ?? 0,
         transactionType: vacancy.transactionType,
         score: Math.round(vacancy.survivalScore ?? 0),
+        horizonScores: normalizeHorizonScores(vacancy.horizonScores, vacancy.survivalScore ?? 0, vacancy.recommended),
         foot,
         comp: (vacancy.restaurantCount500m ?? 0) + (vacancy.cafeCount500m ?? 0),
         rev: Math.round((vacancy.averageSalesPerStore ?? 0) / 10000),

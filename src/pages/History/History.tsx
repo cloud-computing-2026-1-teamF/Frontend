@@ -11,6 +11,7 @@ import type {
 } from '../../api/types';
 import { api } from '../../api';
 import { USE_MOCK } from '../../api/client';
+import { normalizeHorizonScores, PRIMARY_HORIZON_YEARS } from '../../lib/horizonScores';
 import {
   type AnalysisSession,
   applyRecommendationsToSession,
@@ -385,7 +386,10 @@ function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: num
           {item.top3.map((p, i) => (
             <div className="hc-row" key={`${item.id}-${p.addr}-${i}`}>
               <div className="hc-rank" style={{ background: colors[i] }}>{i + 1}</div>
-              <div className="hc-addr">{p.addr}</div>
+              <div className="hc-addr-stack">
+                <div className="hc-addr">{p.addr}</div>
+                <HistoryHorizonMini item={p} />
+              </div>
               <div className="hc-score"><b className="num">{p.score}</b><span>/100</span></div>
             </div>
           ))}
@@ -395,7 +399,7 @@ function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: num
       <div className="hc-right">
         <div className="hc-score-big">
           <div className="hc-score-num num">{item.topScore}</div>
-          <div className="hc-score-lab">최고 생존율</div>
+          <div className="hc-score-lab">최고 3년 생존율</div>
         </div>
         <button type="button" className="btn btn-primary btn-sm" onClick={openDetail}>
           상세 보기 <Icon name="arrow-right" size={12} />
@@ -405,6 +409,22 @@ function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: num
           <span>삭제</span>
         </button>
       </div>
+    </div>
+  );
+}
+
+function HistoryHorizonMini({ item }: { item: HistoryItem['top3'][number] }) {
+  const horizons = normalizeHorizonScores(item.horizonScores, item.score, item.recommended);
+  return (
+    <div className="hc-horizons">
+      {horizons.map(score => (
+        <span
+          key={score.horizonYears}
+          className={score.horizonYears === PRIMARY_HORIZON_YEARS ? 'is-primary' : undefined}
+        >
+          {score.horizonYears}년 {score.survivalScore}
+        </span>
+      ))}
     </div>
   );
 }

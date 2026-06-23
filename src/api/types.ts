@@ -4,6 +4,7 @@
 // a status field. Mock and real transports share these types.
 
 import type { SavedAnalysis, Top3Item } from '../lib/savedAnalyses';
+import type { HorizonScore } from '../lib/horizonScores';
 
 export type ApiEnvelope<T> = { data: T };
 
@@ -148,6 +149,7 @@ export type AnalysisRecommendation = {
   vacancyId: string;
   recommended?: boolean | null;
   score: number;
+  horizonScores?: VacancyHorizonScore[] | null;
   distanceM: number;
   areaId: string;
   latitude: number;
@@ -176,6 +178,8 @@ export type AnalysisRecommendation = {
   hourlyFloatingPopulation?: number[] | null;
   history?: VacancyHistory | null;
 };
+
+export type VacancyHorizonScore = HorizonScore;
 
 export type VacancyHistory = {
   scoreTrend: VacancyScoreTrendPoint[];
@@ -310,6 +314,7 @@ export type Vacancy = {
   latitude?: number | null;
   longitude?: number | null;
   survivalScore?: number | null;
+  horizonScores?: VacancyHorizonScore[] | null;
   listingId?: string | null;
   listingNumber?: string | null;
   roadAddress?: string | null;
