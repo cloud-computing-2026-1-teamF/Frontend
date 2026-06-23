@@ -8,6 +8,7 @@ import type { SavedAnalysis } from '../../lib/savedAnalyses';
 import { api, type AnalysisPollingResponse, type BusinessType } from '../../api';
 import { USE_MOCK, BASE_URL, getAccessToken } from '../../api/client';
 import { HISTORY_ITEMS } from '../../data/history';
+import { horizonDelta, horizonTone, normalizeHorizonScores, PRIMARY_HORIZON_YEARS } from '../../lib/horizonScores';
 import { readSavedAnalyses } from '../../lib/savedAnalyses';
 import {
   buildSessionFromBackend,
@@ -279,6 +280,7 @@ export function Detail() {
                         <div><span>관리비</span><b>{p.mgmt}만</b></div>
                       </div>
                     </div>
+                    <DetailHorizonMini item={p} />
                   </button>
                 );
               })}
@@ -319,6 +321,7 @@ export function Detail() {
                   <div className="dt-hk-val">{sel.rev.toLocaleString()}<span>만원</span></div>
                 </div>
               </div>
+              <DetailForecastPanel item={sel} />
             </div>
             <div className="dt-hero-right">
               <ScoreRing score={sel.score} size={180} stroke={16} rank={selRank} showLabel />
@@ -413,6 +416,51 @@ export function Detail() {
       </div>
       <Footer />
     </>
+  );
+}
+
+function DetailHorizonMini({ item }: { item: SavedAnalysis['top3'][number] }) {
+  const horizons = normalizeHorizonScores(item.horizonScores, item.score, item.recommended);
+  return (
+    <div className="dt-horizon-mini">
+      {horizons.map(score => (
+        <span
+          key={score.horizonYears}
+          className={score.horizonYears === PRIMARY_HORIZON_YEARS ? 'is-primary' : undefined}
+        >
+          {score.horizonYears}년 <b>{score.survivalScore}%</b>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function DetailForecastPanel({ item }: { item: SavedAnalysis['top3'][number] }) {
+  const horizons = normalizeHorizonScores(item.horizonScores, item.score, item.recommended);
+  const delta = horizonDelta(horizons, item.score);
+  const deltaText = delta > 0 ? `+${delta.toFixed(1)}p` : `${delta.toFixed(1)}p`;
+
+  return (
+    <div className="dt-forecast">
+      <div className="dt-forecast-head">
+        <span>생존율 전망</span>
+        <b className={delta < 0 ? 'is-down' : delta > 0 ? 'is-up' : 'is-flat'}>{deltaText}</b>
+      </div>
+      <div className="dt-forecast-grid">
+        {horizons.map(score => (
+          <div
+            key={score.horizonYears}
+            className={`dt-forecast-cell is-${horizonTone(score.survivalScore)} ${score.horizonYears === PRIMARY_HORIZON_YEARS ? 'is-primary' : ''}`}
+          >
+            <div>
+              <span>{score.horizonYears}년</span>
+              <b>{score.survivalScore}<em>%</em></b>
+            </div>
+            <i><strong style={{ width: `${score.survivalScore}%` }} /></i>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
