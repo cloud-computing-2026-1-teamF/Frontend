@@ -6,6 +6,7 @@ import {
 } from '../../analysisSessions/store';
 import { FactorCard, AccessibilityCard, buildFactorViz } from '../../../shared/FactorViz';
 import { Icon } from '../../../shared/Icon';
+import { horizonDelta, horizonTone, normalizeHorizonScores, PRIMARY_HORIZON_YEARS } from '../../../lib/horizonScores';
 import { useVacancyMetricReference } from '../../vacancies/useVacancyMetricReference';
 import type { AnalyzeArea, AnalyzeProperty, BizType } from '../model';
 
@@ -79,6 +80,7 @@ export function AnalyzeResultsPanel({
               {properties.map(property => {
               const isSelected = property.rank === selected && detailOpen;
               const recommended = property.recommended !== false;
+              const horizons = normalizeHorizonScores(property.horizonScores, property.score, property.recommended);
               return (
                 <div
                   key={property.rank}
@@ -96,9 +98,10 @@ export function AnalyzeResultsPanel({
                     </div>
                     <div className="rr-score-box">
                       <div className="rr-score">{property.score}<span className="rr-score-suf">%</span></div>
-                      <div className="rr-score-lab">생존율</div>
+                      <div className="rr-score-lab">3년 생존율</div>
                     </div>
                   </div>
+                  <HorizonForecastStrip horizons={horizons} />
                   <div className="rr-kpis">
                     <div className="rr-kpi">
                       <div className="rr-kpi-lab">{property.transactionType === '매매' ? '매매가' : '월세'}</div>
@@ -501,6 +504,63 @@ function formatMan(value: number): string {
   return `${Math.round(value).toLocaleString('ko-KR')}만`;
 }
 
+function HorizonForecastStrip({ horizons }: { horizons: ReturnType<typeof normalizeHorizonScores> }) {
+  return (
+    <div className="rr-horizon-strip" aria-label="기간별 생존율">
+      {horizons.map(item => (
+        <div
+          key={item.horizonYears}
+          className={`rr-horizon-item is-${horizonTone(item.survivalScore)} ${item.horizonYears === PRIMARY_HORIZON_YEARS ? 'is-primary' : ''}`}
+        >
+          <div className="rr-horizon-top">
+            <span>{item.horizonYears}년</span>
+            <b>{item.survivalScore}%</b>
+          </div>
+          <div className="rr-horizon-track">
+            <i style={{ width: `${item.survivalScore}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SurvivalForecastCard({ property }: { property: AnalyzeProperty }) {
+  const horizons = normalizeHorizonScores(property.horizonScores, property.score, property.recommended);
+  const primary = horizons.find(item => item.horizonYears === PRIMARY_HORIZON_YEARS) ?? horizons[0];
+  const delta = horizonDelta(horizons, property.score);
+  const deltaLabel = delta > 0 ? `+${delta.toFixed(1)}p` : `${delta.toFixed(1)}p`;
+  const outlook = delta >= 2 ? '장기 상승' : delta <= -2 ? '장기 보수' : '장기 안정';
+
+  return (
+    <div className="rr-forecast-card">
+      <div className="rr-forecast-head">
+        <div>
+          <div className="rr-forecast-kicker">생존율 전망</div>
+          <h4>{PRIMARY_HORIZON_YEARS}년 기준 {primary?.survivalScore ?? property.score}%</h4>
+        </div>
+        <span className={`rr-forecast-delta ${delta < 0 ? 'is-down' : delta > 0 ? 'is-up' : 'is-flat'}`}>
+          {outlook} {deltaLabel}
+        </span>
+      </div>
+      <div className="rr-forecast-grid">
+        {horizons.map(item => (
+          <div
+            key={item.horizonYears}
+            className={`rr-forecast-cell is-${horizonTone(item.survivalScore)} ${item.horizonYears === PRIMARY_HORIZON_YEARS ? 'is-primary' : ''}`}
+          >
+            <span>{item.horizonYears}년</span>
+            <b>{item.survivalScore}<em>%</em></b>
+            <div className="rr-forecast-bar">
+              <i style={{ width: `${item.survivalScore}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PropertyDetail({
   property,
   metricReference,
@@ -525,6 +585,7 @@ function PropertyDetail({
         </div>
       </div>
       <div className="rr-detail-body">
+        <SurvivalForecastCard property={property} />
         {factors.map(factor => (
           <FactorCard key={factor.key} {...factor} />
         ))}
