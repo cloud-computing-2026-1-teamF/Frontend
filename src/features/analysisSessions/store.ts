@@ -365,6 +365,7 @@ function recommendationsToTop3(recommendations: AnalysisRecommendation[]): Top3I
         transactionType: item.transactionType,
         score: Math.round(item.score),
         horizonScores: normalizeHorizonScores(item.horizonScores, item.score, item.recommended),
+        scoreExplanation: item.scoreExplanation,
         recommended: item.recommended,
         foot,
         comp: (item.restaurantCount500m ?? 0) + (item.cafeCount500m ?? 0),
