@@ -417,6 +417,24 @@ export type Vacancy = {
   updatedAt: string;
 };
 
+export type MenuPriceEstimateRequest = {
+  menuName: string;
+};
+
+export type MenuPriceEstimate = {
+  vacancyId: string;
+  menuName: string;
+  recommendedPrice: number;
+  minPrice: number;
+  maxPrice: number;
+  currency: 'KRW' | string;
+  confidence: string;
+  positioning: string;
+  signals: string[];
+  estimatedLatencyMs: number;
+  source: string;
+};
+
 export type VacancySearchSort =
   | 'score_desc'
   | 'rent_asc'
