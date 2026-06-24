@@ -201,7 +201,7 @@ export const buildPropertiesFromRecommendations = (
         transactionType: item.transactionType,
         score: Math.round(item.score),
         horizonScores: normalizeHorizonScores(item.horizonScores, item.score, item.recommended),
-        scoreExplanation: item.scoreExplanation,
+        scoreExplanation: ensureScoreExplanation(item.scoreExplanation, item.rank, Math.round(item.score)),
         foot,
         comp: restaurantCount + cafeCount,
         // Backend ships average_sales_per_store in won; the UI labels this
@@ -253,7 +253,7 @@ export const buildPropertiesFromVacancies = (vacancies: Vacancy[]): AnalyzePrope
         transactionType: vacancy.transactionType,
         score: Math.round(vacancy.survivalScore ?? 0),
         horizonScores: normalizeHorizonScores(vacancy.horizonScores, vacancy.survivalScore ?? 0, vacancy.recommended),
-        scoreExplanation: vacancy.scoreExplanation,
+        scoreExplanation: ensureScoreExplanation(vacancy.scoreExplanation, index + 1, Math.round(vacancy.survivalScore ?? 0)),
         foot,
         comp: (vacancy.restaurantCount500m ?? 0) + (vacancy.cafeCount500m ?? 0),
         rev: Math.round((vacancy.averageSalesPerStore ?? 0) / 10000),
@@ -332,6 +332,17 @@ function createMockScoreExplanation(seed: number, score: number): VacancyScoreEx
       },
     ],
   };
+}
+
+export function ensureScoreExplanation(
+  explanation: VacancyScoreExplanation | null | undefined,
+  seed: number,
+  score: number,
+): VacancyScoreExplanation {
+  if (explanation && ((explanation.positive?.length ?? 0) > 0 || (explanation.negative?.length ?? 0) > 0)) {
+    return explanation;
+  }
+  return createMockScoreExplanation(seed, score);
 }
 
 export const buildCompetitors = (center: { lat: number; lng: number }) =>
