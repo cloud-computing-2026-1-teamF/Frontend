@@ -161,7 +161,7 @@ const makeHourly = (peak: number): number[] => HOURLY_BASE.map(r => Math.round(p
 
 function makeScoreExplanation(seed: number, score: number): VacancyScoreExplanation {
   const dailyFoot = Math.round(7400 + seed * 820 + score * 18);
-  const rent = Math.round(215 + seed * 34);
+  const rent = Math.round(335 + seed * 18);
   const premium = seed === 1 ? 0 : Math.round(seed * 1150);
   const sales = Math.round(1320 + seed * 170 + score * 2);
   const competition = Math.round(9 + seed * 3);
