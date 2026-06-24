@@ -536,16 +536,16 @@ function ScoreExplanationCue({ explanation }: { explanation: ScoreExplanationDat
   if (!positive && !negative) return null;
 
   return (
-    <div className="rr-xai-cue" aria-label="점수 주요 영향 요인">
+    <div className="rr-xai-cue" aria-label="추천 점수에 반영된 강점과 주의점">
       {positive && (
         <span className="is-positive">
-          <em>상승</em>
+          <em>강점</em>
           <b>{positive.featureLabel}</b>
         </span>
       )}
       {negative && (
         <span className="is-negative">
-          <em>하락</em>
+          <em>주의</em>
           <b>{negative.featureLabel}</b>
         </span>
       )}
@@ -598,35 +598,35 @@ function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
   const total = Math.max(1, positiveTotal + negativeTotal);
   const positiveWidth = Math.max(6, Math.round((positiveTotal / total) * 100));
   const negativeWidth = Math.max(6, 100 - positiveWidth);
-  const sourceLabel = explanation.source?.startsWith('mock') ? 'MOCK' : 'DATA';
+  const sourceLabel = explanation.source?.startsWith('mock') ? '예시' : '데이터';
 
   return (
     <div className="rr-xai-panel">
       <div className="rr-xai-head">
         <div>
-          <div className="rr-xai-kicker">점수 산출 근거</div>
-          <h4>{Math.round(property.score)}%를 만든 피처 영향</h4>
+          <div className="rr-xai-kicker">추천 이유</div>
+          <h4>이 매물이 {Math.round(property.score)}%로 평가된 이유</h4>
         </div>
-        <span className={`rr-xai-source ${sourceLabel === 'MOCK' ? 'is-mock' : ''}`}>{sourceLabel}</span>
+        <span className={`rr-xai-source ${sourceLabel === '예시' ? 'is-mock' : ''}`}>{sourceLabel}</span>
       </div>
 
-      <div className="rr-xai-balance" aria-label="상승 요인과 하락 요인 비중">
+      <div className="rr-xai-balance" aria-label="강점과 주의점 비중">
         <i className="is-positive" style={{ width: `${positiveWidth}%` }} />
         <i className="is-negative" style={{ width: `${negativeWidth}%` }} />
       </div>
       <div className="rr-xai-balance-labels">
-        <span>상승 요인 {positiveTotal}%</span>
-        <span>하락 요인 {negativeTotal}%</span>
+        <span>좋게 본 점 {positiveTotal}%</span>
+        <span>주의할 점 {negativeTotal}%</span>
       </div>
 
       <div className="rr-xai-columns">
         <ScoreContributionList
-          title="점수를 높인 요인"
+          title="좋게 본 점"
           tone="positive"
           items={explanation.positive}
         />
         <ScoreContributionList
-          title="점수를 낮춘 요인"
+          title="주의할 점"
           tone="negative"
           items={explanation.negative}
         />
