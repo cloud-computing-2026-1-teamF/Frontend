@@ -292,12 +292,8 @@ function HistoryTimeline({
   const height = 158;
   const pad = { left: 18, right: 18 };
   const trendYears = trend.map(point => point.year);
-  const eventStarts = events.map(event => dateToYearFraction(event.startedOn, trendYears[0] ?? 2026));
-  const eventEnds = events.map(event => event.endedOn
-    ? dateToYearFraction(event.endedOn, trendYears[trendYears.length - 1] ?? 2026)
-    : (trendYears[trendYears.length - 1] ?? 2026) + 0.92);
-  const firstYear = Math.floor(Math.min(...trendYears, ...eventStarts));
-  const lastLabelYear = Math.max(...trendYears, ...eventEnds.map(value => Math.floor(value)));
+  const firstYear = Math.floor(trendYears.length > 0 ? Math.min(...trendYears) : 2026);
+  const lastLabelYear = Math.floor(trendYears.length > 0 ? Math.max(...trendYears) : firstYear);
   const timelineEnd = lastLabelYear + 1;
   const scoreValues = [...trend.map(point => point.score), currentScore];
   const rawMinScore = Math.min(...scoreValues);
@@ -322,23 +318,30 @@ function HistoryTimeline({
   const area = points.length > 0
     ? `${points[0].x.toFixed(1)},88 ${line} ${points[points.length - 1].x.toFixed(1)},88`
     : '';
-  const occupancyBands = events.map(event => {
-    const start = dateToYearFraction(event.startedOn, firstYear);
-    const end = event.endedOn
+  const occupancyBands = events.flatMap(event => {
+    const rawStart = dateToYearFraction(event.startedOn, firstYear);
+    const rawEnd = event.endedOn
       ? dateToYearFraction(event.endedOn, timelineEnd)
       : timelineEnd - 0.08;
+    if (rawEnd < firstYear || rawStart > timelineEnd) return [];
+    const start = Math.max(firstYear, rawStart);
+    const end = Math.min(timelineEnd, rawEnd);
     const x = xOfTime(start);
     const nextX = xOfTime(end);
-    return {
+    return [{
       event,
       x,
       width: Math.max(14, nextX - x),
       label: compactCategory(event),
       isVacant: event.status === 'vacant',
-    };
+    }];
   });
   const exitMarkers = events
-    .filter(event => event.endedOn)
+    .filter(event => {
+      if (!event.endedOn) return false;
+      const ended = dateToYearFraction(event.endedOn, timelineEnd);
+      return ended >= firstYear && ended <= timelineEnd;
+    })
     .map(event => ({
       event,
       x: xOfTime(dateToYearFraction(event.endedOn, timelineEnd)),
