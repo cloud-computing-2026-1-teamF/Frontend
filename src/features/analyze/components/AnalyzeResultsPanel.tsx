@@ -8,13 +8,7 @@ import { FactorCard, AccessibilityCard, buildFactorViz } from '../../../shared/F
 import { Icon } from '../../../shared/Icon';
 import { horizonDelta, horizonTone, normalizeHorizonScores, PRIMARY_HORIZON_YEARS } from '../../../lib/horizonScores';
 import { useVacancyMetricReference } from '../../vacancies/useVacancyMetricReference';
-import {
-  ensureScoreExplanation,
-  getScoreFeatureBenchmark,
-  type AnalyzeArea,
-  type AnalyzeProperty,
-  type BizType,
-} from '../model';
+import { ensureScoreExplanation, type AnalyzeArea, type AnalyzeProperty, type BizType } from '../model';
 
 type SaveState = 'idle' | 'saving' | 'saved';
 
@@ -534,29 +528,38 @@ function HorizonForecastStrip({ horizons }: { horizons: ReturnType<typeof normal
 }
 
 type ScoreExplanationData = NonNullable<AnalyzeProperty['scoreExplanation']>;
-type ScoreContribution = ScoreExplanationData['positive'][number];
+type ScoreFeatureReason = ScoreExplanationData['features'][number];
 
 function ScoreExplanationCue({ explanation }: { explanation: ScoreExplanationData }) {
-  const positive = explanation.positive[0];
-  const negative = explanation.negative[0];
-  if (!positive && !negative) return null;
+  const features = topScoreFeatures(explanation);
+  const positive = features.find(item => effectTone(item.effect) === 'positive');
+  const caution = features.find(item => effectTone(item.effect) === 'negative')
+    ?? features.find(item => item.featureKey !== positive?.featureKey);
+  const cueItems = [positive, caution]
+    .filter((item): item is ScoreFeatureReason => Boolean(item))
+    .filter((item, index, items) => items.findIndex(candidate => candidate.featureKey === item.featureKey) === index);
+  if (!cueItems.length) return null;
 
   return (
-    <div className="rr-xai-cue" aria-label="추천 점수에 반영된 강점과 주의점">
-      {positive && (
-        <span className="is-positive">
-          <em>강점</em>
-          <b>{positive.featureLabel}</b>
-        </span>
-      )}
-      {negative && (
-        <span className="is-negative">
-          <em>주의</em>
-          <b>{negative.featureLabel}</b>
-        </span>
-      )}
+    <div className="rr-xai-cue" aria-label="추천 이유 요약">
+      {cueItems.map(item => {
+        const tone = effectTone(item.effect);
+        return (
+          <span key={item.featureKey} className={`is-${tone}`}>
+            <em>{cueLabel(tone)}</em>
+            <b>{item.featureLabel}</b>
+          </span>
+        );
+      })}
     </div>
   );
+}
+
+function cueLabel(tone: ReturnType<typeof effectTone>): string {
+  if (tone === 'positive') return '강점';
+  if (tone === 'negative') return '주의';
+  if (tone === 'neutral') return '보통';
+  return '조건';
 }
 
 function SurvivalForecastCard({ property }: { property: AnalyzeProperty }) {
@@ -597,8 +600,11 @@ function SurvivalForecastCard({ property }: { property: AnalyzeProperty }) {
 
 function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
   const explanation = ensureScoreExplanation(property.scoreExplanation, property.rank, property.score);
-  if (!explanation || (!explanation.positive.length && !explanation.negative.length)) return null;
+  const features = topScoreFeatures(explanation);
+  if (!features.length) return null;
 
+  const positiveCount = features.filter(item => effectTone(item.effect) === 'positive').length;
+  const cautionCount = features.filter(item => effectTone(item.effect) === 'negative').length;
   const sourceLabel = explanation.source?.startsWith('mock') ? '예시' : '데이터';
 
   return (
@@ -606,152 +612,111 @@ function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
       <div className="rr-xai-head">
         <div>
           <div className="rr-xai-kicker">추천 이유</div>
-          <h4>평균과 비교한 Top 3 이유</h4>
+          <h4>결정적으로 본 조건 Top 3</h4>
         </div>
         <span className={`rr-xai-source ${sourceLabel === '예시' ? 'is-mock' : ''}`}>{sourceLabel}</span>
       </div>
-      <p className="rr-xai-note">각 항목이 전체 평균에서 얼마나 벗어났는지 함께 보여드려요.</p>
 
-      <div className="rr-xai-columns">
-        <ScoreContributionList
-          title="좋게 본 점"
-          tone="positive"
-          items={explanation.positive}
-        />
-        <ScoreContributionList
-          title="주의할 점"
-          tone="negative"
-          items={explanation.negative}
-        />
+      <div className="rr-xai-summary" aria-label="평균 대비 조건 요약">
+        <span className="is-positive"><b>{positiveCount}</b> 유리</span>
+        <span className="is-negative"><b>{cautionCount}</b> 주의</span>
+        <span><b>{features.length}</b>개 조건</span>
+      </div>
+
+      <div className="rr-xai-feature-list">
+        {features.map(item => (
+          <ScoreFeatureReasonRow key={`${item.rank}-${item.featureKey}`} item={item} />
+        ))}
       </div>
     </div>
   );
 }
 
-function ScoreContributionList({
-  title,
-  tone,
-  items,
-}: {
-  title: string;
-  tone: 'positive' | 'negative';
-  items: ScoreContribution[];
-}) {
+function ScoreFeatureReasonRow({ item }: { item: ScoreFeatureReason }) {
+  const tone = effectTone(item.effect);
+  const marker = comparisonMarker(item);
+  const fillStyle = marker == null
+    ? undefined
+    : {
+        left: `${Math.min(50, marker)}%`,
+        width: `${Math.max(2, Math.abs(marker - 50))}%`,
+      };
+
   return (
-    <div className={`rr-xai-list is-${tone}`}>
-      <div className="rr-xai-list-title">
-        <span>{title}</span>
-        <em>Top 3</em>
-      </div>
-      {items.slice(0, 3).map(item => {
-        const comparison = buildFeatureComparison(item);
-        return (
-          <div key={`${item.direction}-${item.rank}-${item.featureKey}`} className="rr-xai-row">
-            <div className="rr-xai-row-top">
-              <span>{item.rank}</span>
-              <b>{item.featureLabel}</b>
-            </div>
-            <div className="rr-xai-row-values">
-              <div>
-                <small>현재</small>
-                <strong>{comparison.currentLabel}</strong>
-              </div>
-              <div>
-                <small>전체 평균</small>
-                <strong>{comparison.averageLabel}</strong>
-              </div>
-            </div>
-            {comparison.deltaLabel && (
-              <>
-                <div className={`rr-xai-row-delta ${comparison.tone}`}>
-                  평균보다 <strong>{comparison.deltaLabel}</strong>
-                </div>
-                <div className="rr-xai-row-bar" aria-label="전체 평균 대비 차이">
-                  <i
-                    className={`${comparison.side === 'right' ? 'is-right' : 'is-left'} ${comparison.tone}`}
-                    style={comparison.side === 'right'
-                      ? { left: '50%', width: `${comparison.width}%` }
-                      : { right: '50%', width: `${comparison.width}%` }}
-                  />
-                  <b />
-                </div>
-              </>
-            )}
+    <div className={`rr-xai-feature is-${tone}`}>
+      <div className="rr-xai-feature-main">
+        <span className="rr-xai-rank">{item.rank}</span>
+        <div className="rr-xai-feature-copy">
+          <div className="rr-xai-feature-top">
+            <b>{item.featureLabel}</b>
+            <em>{effectLabel(tone)}</em>
           </div>
-        );
-      })}
+          <p>{comparisonText(item)}</p>
+        </div>
+      </div>
+      <div className="rr-xai-rail" aria-hidden="true">
+        <span>평균</span>
+        <div className="rr-xai-rail-track">
+          {fillStyle && <i style={fillStyle} />}
+          {marker != null && <b style={{ left: `${marker}%` }} />}
+        </div>
+        <span>이 매물</span>
+      </div>
     </div>
   );
 }
 
-type FeatureComparison = {
-  currentLabel: string;
-  averageLabel: string;
-  deltaLabel?: string;
-  side: 'left' | 'right';
-  tone: 'is-favorable' | 'is-caution' | 'is-neutral';
-  width: number;
-};
-
-function buildFeatureComparison(item: ScoreContribution): FeatureComparison {
-  const benchmark = getScoreFeatureBenchmark(item.featureKey);
-  const currentLabel = item.featureDisplayValue || '값 준비 중';
-  if (!benchmark) {
-    return {
-      currentLabel,
-      averageLabel: '평균 준비 중',
-      side: 'right',
-      tone: 'is-neutral',
-      width: 0,
-    };
-  }
-
-  const currentValue = parseDisplayNumber(currentLabel);
-  const averageLabel = formatBenchmarkValue(benchmark.average, benchmark.unit);
-  if (currentValue == null) {
-    return {
-      currentLabel,
-      averageLabel,
-      side: 'right',
-      tone: 'is-neutral',
-      width: 0,
-    };
-  }
-
-  const delta = roundOne(currentValue - benchmark.average);
-  const side = delta < 0 ? 'left' : 'right';
-  const isFavorable = benchmark.lowerIsBetter ? delta <= 0 : delta >= 0;
-  const width = Math.min(48, Math.max(7, Math.round((Math.abs(delta) / benchmark.maxAbsDelta) * 48)));
-  return {
-    currentLabel,
-    averageLabel,
-    deltaLabel: formatDelta(delta, benchmark.deltaUnit ?? benchmark.unit),
-    side,
-    tone: delta === 0 ? 'is-neutral' : isFavorable ? 'is-favorable' : 'is-caution',
-    width,
-  };
+function topScoreFeatures(explanation: ScoreExplanationData): ScoreFeatureReason[] {
+  return explanation.features
+    .filter(item => item && item.featureKey && item.featureLabel)
+    .slice()
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, 3);
 }
 
-function parseDisplayNumber(value: string): number | null {
-  if (value.includes('없음')) return 0;
-  const match = value.replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
-  return match ? Number(match[0]) : null;
+function effectTone(effect: ScoreFeatureReason['effect']): 'positive' | 'negative' | 'neutral' | 'unknown' {
+  if (effect === 'positive') return 'positive';
+  if (effect === 'negative') return 'negative';
+  if (effect === 'neutral') return 'neutral';
+  return 'unknown';
 }
 
-function formatBenchmarkValue(value: number, unit: string): string {
-  const rounded = Number.isInteger(value) ? value : roundOne(value);
-  return `${rounded.toLocaleString('ko-KR')}${unit}`;
+function effectLabel(tone: ReturnType<typeof effectTone>): string {
+  if (tone === 'positive') return '유리';
+  if (tone === 'negative') return '주의';
+  if (tone === 'neutral') return '보통';
+  return '확인중';
 }
 
-function formatDelta(value: number, unit: string): string {
-  const sign = value > 0 ? '+' : value < 0 ? '-' : '';
-  const absValue = Math.abs(value);
-  const rounded = absValue >= 100 ? Math.round(absValue) : roundOne(absValue);
-  return `${sign}${rounded.toLocaleString('ko-KR')}${unit}`;
+function comparisonText(item: ScoreFeatureReason): string {
+  const current = finiteNumber(item.currentValue);
+  const average = finiteNumber(item.averageValue);
+  if (current == null || average == null) return '평균 비교 준비 중';
+
+  const delta = current - average;
+  if (Math.abs(delta) < 0.000001) return '상권 평균과 거의 같아요';
+
+  const signed = delta > 0 ? '+' : '-';
+  return `평균보다 ${signed}${formatFeatureValue(Math.abs(delta), item.displayUnit)}`;
 }
 
-function roundOne(value: number): number {
-  return Math.round(value * 10) / 10;
+function comparisonMarker(item: ScoreFeatureReason): number | null {
+  const current = finiteNumber(item.currentValue);
+  const average = finiteNumber(item.averageValue);
+  if (current == null || average == null) return null;
+  const base = Math.max(Math.abs(average), 1);
+  const deltaRatio = Math.max(-1, Math.min(1, (current - average) / base));
+  return Math.round((50 + deltaRatio * 38) * 10) / 10;
+}
+
+function finiteNumber(value: number | null | undefined): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function formatFeatureValue(value: number, unit?: string | null): string {
+  const rounded = value >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
+  const formatted = rounded.toLocaleString('ko-KR');
+  return `${formatted}${unit || ''}`;
 }
 
 function PropertyDetail({

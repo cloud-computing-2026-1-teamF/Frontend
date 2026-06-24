@@ -59,38 +59,6 @@ export type AnalyzeProperty = {
   history?: VacancyHistory | null;
 };
 
-export type ScoreFeatureBenchmark = {
-  average: number;
-  unit: string;
-  deltaUnit?: string;
-  lowerIsBetter: boolean;
-  maxAbsDelta: number;
-};
-
-export const SCORE_FEATURE_GLOBAL_AVERAGES: Record<string, ScoreFeatureBenchmark> = {
-  evening_foot_traffic: { average: 28, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 16 },
-  floating_population_annual_total: { average: 2600000, unit: '명', lowerIsBetter: false, maxAbsDelta: 1600000 },
-  daily_floating_population: { average: 7200, unit: '명/일', lowerIsBetter: false, maxAbsDelta: 5200 },
-  industry_growth_500m: { average: 7.5, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 8 },
-  industry_growth_rate_500m: { average: 7.5, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 8 },
-  sales_per_store: { average: 1300, unit: '만원', lowerIsBetter: false, maxAbsDelta: 900 },
-  average_sales_per_store: { average: 1300, unit: '만원', lowerIsBetter: false, maxAbsDelta: 900 },
-  monthly_rent: { average: 220, unit: '만원', lowerIsBetter: true, maxAbsDelta: 220 },
-  deposit: { average: 3000, unit: '만원', lowerIsBetter: true, maxAbsDelta: 3000 },
-  maintenance_fee: { average: 16, unit: '만원', lowerIsBetter: true, maxAbsDelta: 22 },
-  premium: { average: 900, unit: '만원', lowerIsBetter: true, maxAbsDelta: 3600 },
-  same_category_competition_500m: { average: 12, unit: '곳', lowerIsBetter: true, maxAbsDelta: 18 },
-  competition_500m: { average: 12, unit: '곳', lowerIsBetter: true, maxAbsDelta: 18 },
-  restaurant_count_500m: { average: 28, unit: '곳', lowerIsBetter: true, maxAbsDelta: 34 },
-  cafe_count_500m: { average: 18, unit: '곳', lowerIsBetter: true, maxAbsDelta: 24 },
-  closure_rate: { average: 7.6, unit: '%', deltaUnit: '%p', lowerIsBetter: true, maxAbsDelta: 6 },
-  opening_rate: { average: 8.2, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 6 },
-  weekend_population_ratio: { average: 30, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 16 },
-  age2030_population_ratio: { average: 41, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 22 },
-  resident_to_floating_ratio: { average: 0.22, unit: '', lowerIsBetter: false, maxAbsDelta: 0.2 },
-  worker_to_floating_ratio: { average: 0.24, unit: '', lowerIsBetter: false, maxAbsDelta: 0.2 },
-};
-
 export const FALLBACK_BIZ_TYPES: BizType[] = [
   { key: '1', label: '한식', emoji: '🍚' },
   { key: '2', label: '중식', emoji: '🥟' },
@@ -303,64 +271,64 @@ export const buildPropertiesFromVacancies = (vacancies: Vacancy[]): AnalyzePrope
     });
 
 function createMockScoreExplanation(seed: number, score: number): VacancyScoreExplanation {
+  const dailyFoot = Math.round(7200 + seed * 760 + score * 20);
+  const rent = Math.round(205 + seed * 32);
+  const sales = Math.round(1280 + seed * 190 + score * 2);
+  const competition = Math.round(8 + seed * 4);
+  const premium = seed === 1 ? 0 : Math.round(seed * 1200);
+
   return {
-    source: 'mock_score_explanation',
-    positive: [
+    source: 'mock_score_top_features',
+    features: [
       {
-        direction: 'positive',
         rank: 1,
-        featureKey: 'evening_foot_traffic',
-        featureLabel: '저녁 유동인구',
-        featureDisplayValue: `${Math.round(28 + seed * 3)}%`,
-        impactValue: Number((0.13 + score / 1000).toFixed(3)),
-        impactPercent: 34,
+        featureKey: 'daily_floating_population',
+        featureLabel: '하루 유동인구',
+        effect: dailyFoot >= 9200 ? 'positive' : 'negative',
+        currentValue: dailyFoot,
+        averageValue: 9200,
+        displayUnit: '명/일',
+        higherIsPositive: true,
       },
       {
-        direction: 'positive',
         rank: 2,
-        featureKey: 'industry_growth_500m',
-        featureLabel: '업종 성장률',
-        featureDisplayValue: `${Math.round(8 + seed * 1.4)}%`,
-        impactValue: Number((0.09 + score / 1600).toFixed(3)),
-        impactPercent: 25,
+        featureKey: 'monthly_rent',
+        featureLabel: '월세',
+        effect: rent <= 315 ? 'positive' : 'negative',
+        currentValue: rent,
+        averageValue: 315,
+        displayUnit: '만원',
+        higherIsPositive: false,
       },
       {
-        direction: 'positive',
         rank: 3,
         featureKey: 'sales_per_store',
         featureLabel: '점포당 평균매출',
-        featureDisplayValue: `${Math.round(1300 + seed * 180).toLocaleString('ko-KR')}만원`,
-        impactValue: Number((0.07 + score / 2200).toFixed(3)),
-        impactPercent: 18,
-      },
-    ],
-    negative: [
-      {
-        direction: 'negative',
-        rank: 1,
-        featureKey: 'monthly_rent',
-        featureLabel: '월세',
-        featureDisplayValue: `${Math.round(210 + seed * 34).toLocaleString('ko-KR')}만원`,
-        impactValue: Number((-0.12 - seed / 100).toFixed(3)),
-        impactPercent: 29,
+        effect: sales >= 1600 ? 'positive' : 'negative',
+        currentValue: sales,
+        averageValue: 1600,
+        displayUnit: '만원',
+        higherIsPositive: true,
       },
       {
-        direction: 'negative',
-        rank: 2,
+        rank: 4,
         featureKey: 'same_category_competition_500m',
         featureLabel: '동종 경쟁점포',
-        featureDisplayValue: `${Math.round(11 + seed * 4)}곳`,
-        impactValue: Number((-0.08 - seed / 120).toFixed(3)),
-        impactPercent: 22,
+        effect: competition <= 13 ? 'positive' : 'negative',
+        currentValue: competition,
+        averageValue: 13,
+        displayUnit: '곳',
+        higherIsPositive: false,
       },
       {
-        direction: 'negative',
-        rank: 3,
         featureKey: 'premium',
+        rank: 5,
         featureLabel: '권리금',
-        featureDisplayValue: `${Math.round(800 + seed * 700).toLocaleString('ko-KR')}만원`,
-        impactValue: Number((-0.05 - seed / 160).toFixed(3)),
-        impactPercent: 13,
+        effect: premium <= 2100 ? 'positive' : 'negative',
+        currentValue: premium,
+        averageValue: 2100,
+        displayUnit: '만원',
+        higherIsPositive: false,
       },
     ],
   };
@@ -371,14 +339,49 @@ export function ensureScoreExplanation(
   seed: number,
   score: number,
 ): VacancyScoreExplanation {
-  if (explanation && ((explanation.positive?.length ?? 0) > 0 || (explanation.negative?.length ?? 0) > 0)) {
+  if (explanation?.features?.length) {
     return explanation;
+  }
+  const legacyFeatures = legacyScoreFeatures(explanation);
+  if (legacyFeatures.length) {
+    return {
+      source: explanation?.source ?? 'legacy_score_explanation',
+      features: legacyFeatures,
+    };
   }
   return createMockScoreExplanation(seed, score);
 }
 
-export function getScoreFeatureBenchmark(featureKey: string): ScoreFeatureBenchmark | undefined {
-  return SCORE_FEATURE_GLOBAL_AVERAGES[featureKey];
+type LegacyScoreExplanation = VacancyScoreExplanation & {
+  positive?: LegacyScoreFeature[];
+  negative?: LegacyScoreFeature[];
+};
+
+type LegacyScoreFeature = {
+  rank?: number;
+  featureKey?: string;
+  featureLabel?: string;
+  featureDisplayValue?: string | null;
+  direction?: string;
+};
+
+function legacyScoreFeatures(explanation: VacancyScoreExplanation | null | undefined): VacancyScoreExplanation['features'] {
+  const legacy = explanation as LegacyScoreExplanation | null | undefined;
+  const positive = legacy?.positive ?? [];
+  const negative = legacy?.negative ?? [];
+  return [...positive, ...negative]
+    .filter(item => item.featureKey && item.featureLabel)
+    .slice(0, 5)
+    .map((item, index) => ({
+      rank: index + 1,
+      featureKey: item.featureKey || `legacy_${index + 1}`,
+      featureLabel: item.featureLabel || '조건',
+      effect: item.direction === 'negative' ? 'negative' : 'positive',
+      currentValue: null,
+      averageValue: null,
+      displayUnit: null,
+      higherIsPositive: null,
+    }));
 }
 
 export const buildCompetitors = (center: { lat: number; lng: number }) =>

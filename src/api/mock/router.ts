@@ -160,64 +160,65 @@ const HOURLY_BASE = [
 const makeHourly = (peak: number): number[] => HOURLY_BASE.map(r => Math.round(peak * r));
 
 function makeScoreExplanation(seed: number, score: number): VacancyScoreExplanation {
+  const dailyFoot = Math.round(7400 + seed * 820 + score * 18);
+  const rent = Math.round(215 + seed * 34);
+  const premium = seed === 1 ? 0 : Math.round(seed * 1150);
+  const sales = Math.round(1320 + seed * 170 + score * 2);
+  const competition = Math.round(9 + seed * 3);
+  const growth = Number((7.2 + seed * 1.25).toFixed(1));
+
   return {
-    source: 'mock_score_explanation',
-    positive: [
+    source: 'mock_score_top_features',
+    features: [
       {
-        direction: 'positive',
         rank: 1,
-        featureKey: 'evening_foot_traffic',
-        featureLabel: '저녁 유동인구',
-        featureDisplayValue: `${Math.round(29 + seed * 2.8)}%`,
-        impactValue: Number((0.13 + score / 1000).toFixed(3)),
-        impactPercent: 34,
+        featureKey: 'daily_floating_population',
+        featureLabel: '하루 유동인구',
+        effect: dailyFoot >= 9200 ? 'positive' : 'negative',
+        currentValue: dailyFoot,
+        averageValue: 9200,
+        displayUnit: '명/일',
+        higherIsPositive: true,
       },
       {
-        direction: 'positive',
         rank: 2,
-        featureKey: 'industry_growth_500m',
-        featureLabel: '업종 성장률',
-        featureDisplayValue: `${Math.round(7 + seed * 1.5)}%`,
-        impactValue: Number((0.09 + score / 1600).toFixed(3)),
-        impactPercent: 25,
+        featureKey: 'monthly_rent',
+        featureLabel: '월세',
+        effect: rent <= 315 ? 'positive' : 'negative',
+        currentValue: rent,
+        averageValue: 315,
+        displayUnit: '만원',
+        higherIsPositive: false,
       },
       {
-        direction: 'positive',
         rank: 3,
         featureKey: 'sales_per_store',
         featureLabel: '점포당 평균매출',
-        featureDisplayValue: `${Math.round(1280 + seed * 190).toLocaleString('ko-KR')}만원`,
-        impactValue: Number((0.07 + score / 2200).toFixed(3)),
-        impactPercent: 18,
-      },
-    ],
-    negative: [
-      {
-        direction: 'negative',
-        rank: 1,
-        featureKey: 'monthly_rent',
-        featureLabel: '월세',
-        featureDisplayValue: `${Math.round(210 + seed * 36).toLocaleString('ko-KR')}만원`,
-        impactValue: Number((-0.12 - seed / 100).toFixed(3)),
-        impactPercent: 29,
+        effect: sales >= 1600 ? 'positive' : 'negative',
+        currentValue: sales,
+        averageValue: 1600,
+        displayUnit: '만원',
+        higherIsPositive: true,
       },
       {
-        direction: 'negative',
-        rank: 2,
+        rank: 4,
         featureKey: 'same_category_competition_500m',
         featureLabel: '동종 경쟁점포',
-        featureDisplayValue: `${Math.round(10 + seed * 4)}곳`,
-        impactValue: Number((-0.08 - seed / 120).toFixed(3)),
-        impactPercent: 22,
+        effect: competition <= 13 ? 'positive' : 'negative',
+        currentValue: competition,
+        averageValue: 13,
+        displayUnit: '곳',
+        higherIsPositive: false,
       },
       {
-        direction: 'negative',
-        rank: 3,
-        featureKey: 'premium',
-        featureLabel: '권리금',
-        featureDisplayValue: `${Math.round(800 + seed * 700).toLocaleString('ko-KR')}만원`,
-        impactValue: Number((-0.05 - seed / 160).toFixed(3)),
-        impactPercent: 13,
+        rank: 5,
+        featureKey: seed % 2 === 0 ? 'industry_growth_500m' : 'premium',
+        featureLabel: seed % 2 === 0 ? '업종 성장률' : '권리금',
+        effect: seed % 2 === 0 ? (growth >= 9.5 ? 'positive' : 'negative') : (premium <= 2100 ? 'positive' : 'negative'),
+        currentValue: seed % 2 === 0 ? growth : premium,
+        averageValue: seed % 2 === 0 ? 9.5 : 2100,
+        displayUnit: seed % 2 === 0 ? '%' : '만원',
+        higherIsPositive: seed % 2 === 0,
       },
     ],
   };
