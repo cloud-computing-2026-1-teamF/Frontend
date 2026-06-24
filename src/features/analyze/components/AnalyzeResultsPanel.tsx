@@ -8,7 +8,7 @@ import { FactorCard, AccessibilityCard, buildFactorViz } from '../../../shared/F
 import { Icon } from '../../../shared/Icon';
 import { horizonDelta, horizonTone, normalizeHorizonScores, PRIMARY_HORIZON_YEARS } from '../../../lib/horizonScores';
 import { useVacancyMetricReference } from '../../vacancies/useVacancyMetricReference';
-import type { AnalyzeArea, AnalyzeProperty, BizType } from '../model';
+import { ensureScoreExplanation, type AnalyzeArea, type AnalyzeProperty, type BizType } from '../model';
 
 type SaveState = 'idle' | 'saving' | 'saved';
 
@@ -81,6 +81,7 @@ export function AnalyzeResultsPanel({
               const isSelected = property.rank === selected && detailOpen;
               const recommended = property.recommended !== false;
               const horizons = normalizeHorizonScores(property.horizonScores, property.score, property.recommended);
+              const scoreExplanation = ensureScoreExplanation(property.scoreExplanation, property.rank, property.score);
               return (
                 <div
                   key={property.rank}
@@ -102,9 +103,7 @@ export function AnalyzeResultsPanel({
                     </div>
                   </div>
                   <HorizonForecastStrip horizons={horizons} />
-                  {property.scoreExplanation && (
-                    <ScoreExplanationCue explanation={property.scoreExplanation} />
-                  )}
+                  <ScoreExplanationCue explanation={scoreExplanation} />
                   <div className="rr-kpis">
                     <div className="rr-kpi">
                       <div className="rr-kpi-lab">{property.transactionType === '매매' ? '매매가' : '월세'}</div>
@@ -591,7 +590,7 @@ function SurvivalForecastCard({ property }: { property: AnalyzeProperty }) {
 }
 
 function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
-  const explanation = property.scoreExplanation;
+  const explanation = ensureScoreExplanation(property.scoreExplanation, property.rank, property.score);
   if (!explanation || (!explanation.positive.length && !explanation.negative.length)) return null;
 
   const positiveTotal = totalImpact(explanation.positive);
