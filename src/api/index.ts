@@ -25,6 +25,8 @@ import type {
   ListAnalysesResponse,
   PatchAnalysisRequest,
   UserStats,
+  MenuPriceEstimate,
+  MenuPriceEstimateRequest,
   Vacancy,
   VacancyHorizonScore,
   VacancyScoreExplanation,
@@ -48,6 +50,7 @@ export type {
   AnalysisRecommendation, AnalysisDetail, AnalysisEventResponse, AnalysisPollingResponse, AnalysisRecommendationsSection, AnalysisSectionKey, AnalysisSectionTodo,
   CreateAnalysisResponse, CreateAnalysisRequest, CreateAnalysisClientRequest, ListAnalysesQuery, ListAnalysesResponse,
   PatchAnalysisRequest, UserStats,
+  MenuPriceEstimate, MenuPriceEstimateRequest,
   Vacancy, VacancyHorizonScore, VacancyScoreExplanation, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary, VacancyStructuredFilter, VacancyPromptParseResponse, VacancyPromptSearchResponse, VacancyMetricDistribution, VacancyMetricReference, VacancyHistory, VacancyShortlistPayload,
 } from './types';
 
@@ -219,6 +222,18 @@ export const vacanciesApi = {
   get: (id: string) =>
     apiRequest<Vacancy>({ method: 'GET', path: `/vacancies/${id}` }).then(r => r.data),
 
+  /** `POST /vacancies/:id/menu-price-estimate` */
+  estimateMenuPrice: async (id: string, menuName: string) => {
+    if (USE_MOCK) {
+      await delay(mockMenuPriceLatency(id, menuName));
+    }
+    return apiRequest<MenuPriceEstimate>({
+      method: 'POST',
+      path: `/vacancies/${id}/menu-price-estimate`,
+      body: { menuName } satisfies MenuPriceEstimateRequest,
+    }).then(r => r.data);
+  },
+
   /** `GET /vacancies/metric-reference` */
   metricReference: (query: { categoryId?: string | null; vacancyId?: string | null } = {}) =>
     apiRequest<VacancyMetricReference>({
@@ -353,6 +368,15 @@ async function readEventStream(
   } catch (error) {
     if (!controller.signal.aborted) handlers.onError?.(error);
   }
+}
+
+const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
+function mockMenuPriceLatency(id: string, menuName: string): number {
+  const hash = `${id}|${menuName}`
+    .split('')
+    .reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 0);
+  return 1800 + (hash % 900);
 }
 
 // ── User ────────────────────────────────────────────────────────────────────
