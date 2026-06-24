@@ -1,4 +1,4 @@
-import type { AnalysisRecommendation, BusinessType, Vacancy, VacancyHistory } from '../../api';
+import type { AnalysisRecommendation, BusinessType, Vacancy, VacancyHistory, VacancyScoreExplanation } from '../../api';
 import type { HorizonScore } from '../../lib/horizonScores';
 import { normalizeHorizonScores } from '../../lib/horizonScores';
 
@@ -42,6 +42,7 @@ export type AnalyzeProperty = {
   transactionType?: string | null;
   score: number;
   horizonScores?: HorizonScore[];
+  scoreExplanation?: VacancyScoreExplanation | null;
   foot: number;
   comp: number;
   rev: number;
@@ -148,9 +149,9 @@ const COMPETITOR_OFFSETS: [number, number][] = [
 ];
 
 const PROPERTY_SEED: Omit<AnalyzeProperty, 'lat' | 'lng'>[] = [
-  { rank: 1, addr: '서교동 367-12', floor: '1F', area: 33.5, rent: 280, deposit: 3000, mgmt: 15, score: 92, foot: 9200, comp: 3, rev: 1850, growth: 12 },
-  { rank: 2, addr: '동교동 154-8', floor: '1F', area: 28.0, rent: 245, deposit: 2500, mgmt: 12, score: 86, foot: 7800, comp: 5, rev: 1640, growth: 9 },
-  { rank: 3, addr: '서교동 401-3', floor: 'B1', area: 42.0, rent: 210, deposit: 2000, mgmt: 10, score: 79, foot: 6400, comp: 4, rev: 1380, growth: 11 },
+  { rank: 1, addr: '서교동 367-12', floor: '1F', area: 33.5, rent: 280, deposit: 3000, mgmt: 15, score: 92, scoreExplanation: createMockScoreExplanation(1, 92), foot: 9200, comp: 3, rev: 1850, growth: 12 },
+  { rank: 2, addr: '동교동 154-8', floor: '1F', area: 28.0, rent: 245, deposit: 2500, mgmt: 12, score: 86, scoreExplanation: createMockScoreExplanation(2, 86), foot: 7800, comp: 5, rev: 1640, growth: 9 },
+  { rank: 3, addr: '서교동 401-3', floor: 'B1', area: 42.0, rent: 210, deposit: 2000, mgmt: 10, score: 79, scoreExplanation: createMockScoreExplanation(3, 79), foot: 6400, comp: 4, rev: 1380, growth: 11 },
 ];
 
 export const buildProperties = (center: { lat: number; lng: number }): AnalyzeProperty[] =>
@@ -200,6 +201,7 @@ export const buildPropertiesFromRecommendations = (
         transactionType: item.transactionType,
         score: Math.round(item.score),
         horizonScores: normalizeHorizonScores(item.horizonScores, item.score, item.recommended),
+        scoreExplanation: item.scoreExplanation,
         foot,
         comp: restaurantCount + cafeCount,
         // Backend ships average_sales_per_store in won; the UI labels this
@@ -251,6 +253,7 @@ export const buildPropertiesFromVacancies = (vacancies: Vacancy[]): AnalyzePrope
         transactionType: vacancy.transactionType,
         score: Math.round(vacancy.survivalScore ?? 0),
         horizonScores: normalizeHorizonScores(vacancy.horizonScores, vacancy.survivalScore ?? 0, vacancy.recommended),
+        scoreExplanation: vacancy.scoreExplanation,
         foot,
         comp: (vacancy.restaurantCount500m ?? 0) + (vacancy.cafeCount500m ?? 0),
         rev: Math.round((vacancy.averageSalesPerStore ?? 0) / 10000),
@@ -266,6 +269,70 @@ export const buildPropertiesFromVacancies = (vacancies: Vacancy[]): AnalyzePrope
         history: createMockVacancyHistory(Math.round(vacancy.survivalScore ?? 0), vacancy.monthlyRent ?? 0, vacancy.deposit ?? 0, index + 1),
       };
     });
+
+function createMockScoreExplanation(seed: number, score: number): VacancyScoreExplanation {
+  return {
+    source: 'mock_score_explanation',
+    positive: [
+      {
+        direction: 'positive',
+        rank: 1,
+        featureKey: 'evening_foot_traffic',
+        featureLabel: '저녁 유동인구',
+        featureDisplayValue: `${Math.round(28 + seed * 3)}%`,
+        impactValue: Number((0.13 + score / 1000).toFixed(3)),
+        impactPercent: 34,
+      },
+      {
+        direction: 'positive',
+        rank: 2,
+        featureKey: 'industry_growth_500m',
+        featureLabel: '업종 성장률',
+        featureDisplayValue: `${Math.round(8 + seed * 1.4)}%`,
+        impactValue: Number((0.09 + score / 1600).toFixed(3)),
+        impactPercent: 25,
+      },
+      {
+        direction: 'positive',
+        rank: 3,
+        featureKey: 'sales_per_store',
+        featureLabel: '점포당 평균매출',
+        featureDisplayValue: `${Math.round(1300 + seed * 180).toLocaleString('ko-KR')}만원`,
+        impactValue: Number((0.07 + score / 2200).toFixed(3)),
+        impactPercent: 18,
+      },
+    ],
+    negative: [
+      {
+        direction: 'negative',
+        rank: 1,
+        featureKey: 'monthly_rent',
+        featureLabel: '월세',
+        featureDisplayValue: `${Math.round(210 + seed * 34).toLocaleString('ko-KR')}만원`,
+        impactValue: Number((-0.12 - seed / 100).toFixed(3)),
+        impactPercent: 29,
+      },
+      {
+        direction: 'negative',
+        rank: 2,
+        featureKey: 'same_category_competition_500m',
+        featureLabel: '동종 경쟁점포',
+        featureDisplayValue: `${Math.round(11 + seed * 4)}곳`,
+        impactValue: Number((-0.08 - seed / 120).toFixed(3)),
+        impactPercent: 22,
+      },
+      {
+        direction: 'negative',
+        rank: 3,
+        featureKey: 'premium',
+        featureLabel: '권리금',
+        featureDisplayValue: seed === 1 ? '없음' : `${Math.round(seed * 1200).toLocaleString('ko-KR')}만원`,
+        impactValue: Number((-0.05 - seed / 160).toFixed(3)),
+        impactPercent: 13,
+      },
+    ],
+  };
+}
 
 export const buildCompetitors = (center: { lat: number; lng: number }) =>
   COMPETITOR_OFFSETS.map(([dLat, dLng]) => ({
