@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { api } from '../../../api';
+import { useState, type FormEvent } from 'react';
+import { api, type MenuPriceEstimate } from '../../../api';
 import {
   patchAnalysisSessionSaved,
   patchAnalysisSessionStatus,
@@ -118,6 +118,7 @@ export function AnalyzeResultsPanel({
                       <div className="rr-kpi-val">{property.mgmt}<span className="unit">만</span></div>
                     </div>
                   </div>
+                  <MenuPriceEstimator property={property} selectedBiz={selectedBiz} />
                   {property.history && !isSelected && (
                     <VacancyHistoryCue history={property.history} />
                   )}
@@ -506,6 +507,10 @@ function formatMan(value: number): string {
   return `${Math.round(value).toLocaleString('ko-KR')}만`;
 }
 
+function formatWon(value: number): string {
+  return `${Math.round(value).toLocaleString('ko-KR')}원`;
+}
+
 function HorizonForecastStrip({ horizons }: { horizons: ReturnType<typeof normalizeHorizonScores> }) {
   return (
     <div className="rr-horizon-strip" aria-label="기간별 생존율">
@@ -523,6 +528,87 @@ function HorizonForecastStrip({ horizons }: { horizons: ReturnType<typeof normal
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function MenuPriceEstimator({
+  property,
+  selectedBiz,
+}: {
+  property: AnalyzeProperty;
+  selectedBiz?: BizType;
+}) {
+  const [menuName, setMenuName] = useState('');
+  const [estimate, setEstimate] = useState<MenuPriceEstimate | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const trimmed = menuName.trim();
+    if (!trimmed || loading) return;
+    const vacancyId = property.vacancyId;
+    if (!vacancyId) {
+      setError('매물 정보를 다시 불러와 주세요');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const nextEstimate = await api.vacancies.estimateMenuPrice(vacancyId, trimmed);
+      setEstimate(nextEstimate);
+    } catch {
+      setError('가격 계산에 실패했어요');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const placeholder = selectedBiz?.key === 'cafe' ? '아메리카노' : '대표 메뉴';
+
+  return (
+    <div className={`rr-menu-price ${estimate ? 'has-result' : ''}`} onClick={event => event.stopPropagation()}>
+      <form className="rr-menu-form" onSubmit={handleSubmit}>
+        <div className="rr-menu-label">
+          <Icon name="cpu" size={13} />
+          <span>메뉴 판매가</span>
+        </div>
+        <div className="rr-menu-input-wrap">
+          <input
+            value={menuName}
+            onChange={event => setMenuName(event.target.value)}
+            onFocus={event => event.stopPropagation()}
+            placeholder={placeholder}
+            aria-label="판매가를 계산할 메뉴"
+            disabled={loading}
+          />
+          <button type="submit" disabled={loading || !menuName.trim()} aria-label="판매가 계산">
+            {loading ? <span className="rr-menu-spinner" /> : <Icon name="arrow-right" size={13} />}
+          </button>
+        </div>
+      </form>
+
+      {loading && (
+        <div className="rr-menu-status">
+          <span className="rr-menu-pulse" />
+          가격 계산 중
+        </div>
+      )}
+
+      {!loading && estimate && (
+        <div className="rr-menu-result">
+          <div>
+            <span>{estimate.positioning}</span>
+            <b>{formatWon(estimate.recommendedPrice)}</b>
+          </div>
+          <p>{formatWon(estimate.minPrice)} - {formatWon(estimate.maxPrice)} · 신뢰도 {estimate.confidence}</p>
+        </div>
+      )}
+
+      {!loading && error && <div className="rr-menu-error">{error}</div>}
     </div>
   );
 }
