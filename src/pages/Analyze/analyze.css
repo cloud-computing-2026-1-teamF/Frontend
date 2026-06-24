@@ -1396,6 +1396,13 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
+.rr-xai-note {
+  margin: 9px 0 0;
+  color: #64748B;
+  font-size: 10.5px;
+  line-height: 1.35;
+  font-weight: 750;
+}
 .rr-xai-source {
   flex-shrink: 0;
   min-width: 46px;
@@ -1413,34 +1420,6 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .rr-xai-source.is-mock {
   background: #F1F5F9;
   color: #475569;
-}
-.rr-xai-balance {
-  margin-top: 12px;
-  height: 10px;
-  display: flex;
-  gap: 3px;
-}
-.rr-xai-balance i {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-}
-.rr-xai-balance i.is-positive {
-  background: linear-gradient(90deg, #0F766E, #16B981);
-}
-.rr-xai-balance i.is-negative {
-  background: linear-gradient(90deg, #F97316, #D9472B);
-}
-.rr-xai-balance-labels {
-  margin-top: 7px;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  color: #64748B;
-  font-size: 10px;
-  line-height: 1.2;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
 }
 .rr-xai-columns {
   margin-top: 13px;
@@ -1466,11 +1445,20 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .rr-xai-list-title {
   min-height: 18px;
   display: flex;
+  justify-content: space-between;
+  gap: 8px;
   align-items: center;
   font-size: 10px;
   line-height: 1.2;
   font-weight: 950;
   color: #334155;
+}
+.rr-xai-list-title em {
+  flex-shrink: 0;
+  font-style: normal;
+  color: #64748B;
+  font-size: 9px;
+  font-weight: 950;
 }
 .rr-xai-list.is-positive .rr-xai-list-title { color: #0A7A5B; }
 .rr-xai-list.is-negative .rr-xai-list-title { color: #B54708; }
@@ -1483,7 +1471,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .rr-xai-row-top {
   min-width: 0;
   display: grid;
-  grid-template-columns: 19px minmax(0, 1fr) auto;
+  grid-template-columns: 19px minmax(0, 1fr);
   align-items: center;
   gap: 6px;
 }
@@ -1516,55 +1504,89 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   line-height: 1.2;
   font-weight: 900;
 }
-.rr-xai-row-top em {
-  font-style: normal;
-  color: #475569;
-  font-size: 10px;
-  line-height: 1;
-  font-weight: 950;
-  font-variant-numeric: tabular-nums;
-}
-.rr-xai-row-meta {
-  margin-top: 6px;
+.rr-xai-row-values {
+  margin-top: 8px;
   min-width: 0;
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  color: #64748B;
-  font-size: 10px;
-  line-height: 1.25;
-  font-weight: 750;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
 }
-.rr-xai-row-meta span,
-.rr-xai-row-meta strong {
+.rr-xai-row-values div {
+  min-width: 0;
+  padding: 7px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .72);
+  border: 1px solid rgba(226, 232, 240, .9);
+}
+.rr-xai-row-values small {
+  display: block;
+  color: #94A3B8;
+  font-size: 8.5px;
+  line-height: 1.1;
+  font-weight: 850;
+}
+.rr-xai-row-values strong {
+  display: block;
+  margin-top: 3px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.rr-xai-row-meta strong {
-  flex-shrink: 0;
-  color: #334155;
+  color: #111827;
+  font-size: 10.5px;
+  line-height: 1.15;
   font-weight: 950;
   font-variant-numeric: tabular-nums;
 }
-.rr-xai-row-bar {
+.rr-xai-row-delta {
   margin-top: 7px;
-  height: 5px;
+  min-width: 0;
+  color: #64748B;
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-row-delta strong {
+  font-weight: 950;
+}
+.rr-xai-row-delta.is-favorable { color: #0A7A5B; }
+.rr-xai-row-delta.is-caution { color: #B54708; }
+.rr-xai-row-delta.is-neutral { color: #64748B; }
+.rr-xai-row-bar {
+  position: relative;
+  margin-top: 7px;
+  height: 7px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, .22);
+  background: linear-gradient(90deg, #E2E8F0 0%, #E2E8F0 49%, #94A3B8 49%, #94A3B8 51%, #E2E8F0 51%, #E2E8F0 100%);
   overflow: hidden;
 }
 .rr-xai-row-bar i {
+  position: absolute;
+  top: 0;
   display: block;
   height: 100%;
-  border-radius: inherit;
+  border-radius: 999px;
 }
-.rr-xai-list.is-positive .rr-xai-row-bar i {
-  background: #0F766E;
+.rr-xai-row-bar i.is-favorable {
+  background: linear-gradient(90deg, #0F766E, #16B981);
 }
-.rr-xai-list.is-negative .rr-xai-row-bar i {
-  background: #D9472B;
+.rr-xai-row-bar i.is-caution {
+  background: linear-gradient(90deg, #F97316, #D9472B);
+}
+.rr-xai-row-bar i.is-neutral {
+  background: #94A3B8;
+}
+.rr-xai-row-bar b {
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  display: block;
+  width: 2px;
+  height: 11px;
+  border-radius: 999px;
+  background: #475569;
+  transform: translateX(-50%);
 }
 
 /* FactorCard / donut styles moved to shared/factor-viz.css after the
