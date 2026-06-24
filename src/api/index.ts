@@ -27,6 +27,7 @@ import type {
   UserStats,
   Vacancy,
   VacancyHorizonScore,
+  VacancyScoreExplanation,
   VacancySearchQuery,
   VacancySearchResponse,
   VacancySearchSort,
@@ -47,7 +48,7 @@ export type {
   AnalysisRecommendation, AnalysisDetail, AnalysisEventResponse, AnalysisPollingResponse, AnalysisRecommendationsSection, AnalysisSectionKey, AnalysisSectionTodo,
   CreateAnalysisResponse, CreateAnalysisRequest, CreateAnalysisClientRequest, ListAnalysesQuery, ListAnalysesResponse,
   PatchAnalysisRequest, UserStats,
-  Vacancy, VacancyHorizonScore, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary, VacancyStructuredFilter, VacancyPromptParseResponse, VacancyPromptSearchResponse, VacancyMetricDistribution, VacancyMetricReference, VacancyHistory, VacancyShortlistPayload,
+  Vacancy, VacancyHorizonScore, VacancyScoreExplanation, VacancySearchQuery, VacancySearchResponse, VacancySearchSort, VacancySearchSummary, VacancyStructuredFilter, VacancyPromptParseResponse, VacancyPromptSearchResponse, VacancyMetricDistribution, VacancyMetricReference, VacancyHistory, VacancyShortlistPayload,
 } from './types';
 
 // ── Auth ────────────────────────────────────────────────────────────────────
