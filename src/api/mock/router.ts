@@ -12,6 +12,7 @@ import type {
   RefreshResponse,
   BusinessType,
   AreaSearchHit,
+  AnalysisRecommendation,
   AnalysisDetail,
   AnalysisPollingResponse,
   AnalysisSectionTodo,
@@ -23,6 +24,7 @@ import type {
   Vacancy,
   VacancySearchResponse,
   VacancySearchSort,
+  VacancyScoreExplanation,
 } from '../types';
 import type { SavedAnalysis, Top3Item } from '../../lib/savedAnalyses';
 import * as store from './store';
@@ -157,6 +159,70 @@ const HOURLY_BASE = [
 ];
 const makeHourly = (peak: number): number[] => HOURLY_BASE.map(r => Math.round(peak * r));
 
+function makeScoreExplanation(seed: number, score: number): VacancyScoreExplanation {
+  return {
+    source: 'mock_score_explanation',
+    positive: [
+      {
+        direction: 'positive',
+        rank: 1,
+        featureKey: 'evening_foot_traffic',
+        featureLabel: '저녁 유동인구',
+        featureDisplayValue: `${Math.round(29 + seed * 2.8)}%`,
+        impactValue: Number((0.13 + score / 1000).toFixed(3)),
+        impactPercent: 34,
+      },
+      {
+        direction: 'positive',
+        rank: 2,
+        featureKey: 'industry_growth_500m',
+        featureLabel: '업종 성장률',
+        featureDisplayValue: `${Math.round(7 + seed * 1.5)}%`,
+        impactValue: Number((0.09 + score / 1600).toFixed(3)),
+        impactPercent: 25,
+      },
+      {
+        direction: 'positive',
+        rank: 3,
+        featureKey: 'sales_per_store',
+        featureLabel: '점포당 평균매출',
+        featureDisplayValue: `${Math.round(1280 + seed * 190).toLocaleString('ko-KR')}만원`,
+        impactValue: Number((0.07 + score / 2200).toFixed(3)),
+        impactPercent: 18,
+      },
+    ],
+    negative: [
+      {
+        direction: 'negative',
+        rank: 1,
+        featureKey: 'monthly_rent',
+        featureLabel: '월세',
+        featureDisplayValue: `${Math.round(210 + seed * 36).toLocaleString('ko-KR')}만원`,
+        impactValue: Number((-0.12 - seed / 100).toFixed(3)),
+        impactPercent: 29,
+      },
+      {
+        direction: 'negative',
+        rank: 2,
+        featureKey: 'same_category_competition_500m',
+        featureLabel: '동종 경쟁점포',
+        featureDisplayValue: `${Math.round(10 + seed * 4)}곳`,
+        impactValue: Number((-0.08 - seed / 120).toFixed(3)),
+        impactPercent: 22,
+      },
+      {
+        direction: 'negative',
+        rank: 3,
+        featureKey: 'premium',
+        featureLabel: '권리금',
+        featureDisplayValue: seed === 1 ? '없음' : `${Math.round(seed * 1200).toLocaleString('ko-KR')}만원`,
+        impactValue: Number((-0.05 - seed / 160).toFixed(3)),
+        impactPercent: 13,
+      },
+    ],
+  };
+}
+
 const FAKE_PROPERTIES: Omit<Top3Item, 'footHourly' | 'nearby'>[] = [
   { addr: '서교동 367-12', floor: '1F', area: 33.5, rent: 280, deposit: 3000, mgmt: 15, score: 92, foot: 9200, comp: 3, rev: 1850, growth: 12 },
   { addr: '동교동 154-8',  floor: '1F', area: 28.0, rent: 245, deposit: 2500, mgmt: 12, score: 86, foot: 7800, comp: 5, rev: 1640, growth: 9  },
@@ -173,6 +239,7 @@ const MOCK_VACANCY_SEEDS: Vacancy[] = [
     latitude: 37.5531,
     longitude: 126.9187,
     survivalScore: 92.4,
+    scoreExplanation: makeScoreExplanation(1, 92.4),
     floatingPopulationAnnualTotal: 3358000,
     residentPopulationAnnualTotal: 52100,
     workerPopulationAnnualTotal: 88200,
@@ -220,6 +287,7 @@ const MOCK_VACANCY_SEEDS: Vacancy[] = [
     latitude: 37.5578,
     longitude: 126.925,
     survivalScore: 86.1,
+    scoreExplanation: makeScoreExplanation(2, 86.1),
     floatingPopulationAnnualTotal: 2847000,
     residentPopulationAnnualTotal: 48900,
     workerPopulationAnnualTotal: 76400,
@@ -267,6 +335,7 @@ const MOCK_VACANCY_SEEDS: Vacancy[] = [
     latitude: 37.5522,
     longitude: 126.9212,
     survivalScore: 79.5,
+    scoreExplanation: makeScoreExplanation(3, 79.5),
     floatingPopulationAnnualTotal: 2336000,
     residentPopulationAnnualTotal: 55200,
     workerPopulationAnnualTotal: 61200,
@@ -314,6 +383,7 @@ const MOCK_VACANCY_SEEDS: Vacancy[] = [
     latitude: 37.5009,
     longitude: 127.0367,
     survivalScore: 88.3,
+    scoreExplanation: makeScoreExplanation(4, 88.3),
     floatingPopulationAnnualTotal: 3922000,
     residentPopulationAnnualTotal: 60300,
     workerPopulationAnnualTotal: 224000,
@@ -399,6 +469,7 @@ function seededVacanciesFromTemplate(template: Vacancy, seeds: SeoulVacancyAreaS
         latitude: seed.lat + jitLat,
         longitude: seed.lng + jitLng,
         survivalScore: Number(score.toFixed(1)),
+        scoreExplanation: makeScoreExplanation(seedIdx + slot + 5, score),
         monthlyRent: rent,
         deposit: Math.round(rent * 9 + seedIdx * 120),
         maintenanceFee: Math.max(8, Math.round(10 + slot * 3 + (seedIdx % 5))),
@@ -478,12 +549,53 @@ const handleCreateAnalysis: Handler = (spec) => {
     estimatedSeconds: 1,
     analyzedVacancyCount: created.count,
     saved: created.saved,
+    recommendations: mockAnalysisRecommendations(center),
     links: {
       self: `/v1/analyses/${created.id}`,
       events: `/v1/analyses/${created.id}/events`,
     },
   });
 };
+
+function mockAnalysisRecommendations(center: { lat: number; lng: number }): AnalysisRecommendation[] {
+  return MOCK_VACANCIES
+    .slice(0, 3)
+    .map((vacancy, index) => ({
+      rank: index + 1,
+      vacancyId: vacancy.id,
+      recommended: index < 2,
+      score: vacancy.survivalScore ?? 0,
+      horizonScores: vacancy.horizonScores ?? null,
+      scoreExplanation: vacancy.scoreExplanation,
+      distanceM: Math.round(distanceMeters(center.lat, center.lng, vacancy.latitude ?? center.lat, vacancy.longitude ?? center.lng)),
+      areaId: vacancy.areaId,
+      latitude: vacancy.latitude ?? center.lat,
+      longitude: vacancy.longitude ?? center.lng,
+      monthlyRent: vacancy.monthlyRent,
+      deposit: vacancy.deposit,
+      maintenanceFee: vacancy.maintenanceFee,
+      premium: vacancy.premium,
+      salePrice: vacancy.salePrice,
+      transactionType: vacancy.transactionType,
+      facilityTotalSize: vacancy.facilityTotalSize,
+      locationArea: vacancy.locationArea,
+      category: vacancy.category,
+      roadAddress: vacancy.roadAddress,
+      lotAddress: vacancy.lotAddress,
+      businessMiddleCategoryName: vacancy.businessMiddleCategoryName,
+      businessSubCategoryName: vacancy.businessSubCategoryName,
+      floatingPopulationAnnualTotal: vacancy.floatingPopulationAnnualTotal,
+      restaurantCount500m: vacancy.restaurantCount500m,
+      cafeCount500m: vacancy.cafeCount500m,
+      industryGrowthRate500m: vacancy.industryGrowthRate500m,
+      averageSalesPerStore: vacancy.averageSalesPerStore == null ? null : vacancy.averageSalesPerStore * 10000,
+      busStopInfo: vacancy.busStopInfo,
+      subwayStationInfo: vacancy.subwayStationInfo,
+      parkingInfo: vacancy.parkingInfo,
+      hourlyFloatingPopulation: vacancy.hourlyFloatingPopulation,
+      history: null,
+    }));
+}
 
 const handlePollAnalysis: Handler = (_spec, params) => {
   const u = requireUser();
@@ -667,6 +779,21 @@ function numberQuery(value: unknown): number | undefined {
   if (value === undefined || value === null || value === '') return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const earthRadiusM = 6371000;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const startLat = toRad(lat1);
+  const endLat = toRad(lat2);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(startLat) * Math.cos(endLat) * Math.sin(dLng / 2) ** 2;
+  return 2 * earthRadiusM * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function toRad(value: number): number {
+  return value * Math.PI / 180;
 }
 
 function compareVacancies(a: Vacancy, b: Vacancy, sort: VacancySearchSort): number {
