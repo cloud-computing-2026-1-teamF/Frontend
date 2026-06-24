@@ -11,6 +11,7 @@ export type Top3Item = Property & {
   recommended?: boolean | null;
   score: number;
   horizonScores?: HorizonScore[];
+  scoreExplanation?: ScoreExplanation | null;
   rent: number;
   deposit: number;
   mgmt: number;
@@ -27,6 +28,24 @@ export type Top3Item = Property & {
   weekly?: number[];
   competitors?: { name: string; dist: number; rev: number }[];
   risk?: { level: string; reasons: string[] };
+};
+
+export type ScoreExplanation = {
+  features: ScoreFeatureReason[];
+  source?: string | null;
+};
+
+export type ScoreFeatureEffect = 'positive' | 'negative' | 'neutral' | 'unknown' | string;
+
+export type ScoreFeatureReason = {
+  rank: number;
+  featureKey: string;
+  featureLabel: string;
+  effect: ScoreFeatureEffect;
+  currentValue?: number | null;
+  averageValue?: number | null;
+  displayUnit?: string | null;
+  higherIsPositive?: boolean | null;
 };
 
 export type SavedAnalysis = {

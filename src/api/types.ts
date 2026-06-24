@@ -3,7 +3,7 @@
 // errors throw `ApiError` so callers can `try/catch` instead of branching on
 // a status field. Mock and real transports share these types.
 
-import type { SavedAnalysis, Top3Item } from '../lib/savedAnalyses';
+import type { SavedAnalysis, ScoreExplanation, Top3Item } from '../lib/savedAnalyses';
 import type { HorizonScore } from '../lib/horizonScores';
 
 export type ApiEnvelope<T> = { data: T };
@@ -150,6 +150,7 @@ export type AnalysisRecommendation = {
   recommended?: boolean | null;
   score: number;
   horizonScores?: VacancyHorizonScore[] | null;
+  scoreExplanation?: VacancyScoreExplanation | null;
   distanceM: number;
   areaId: string;
   latitude: number;
@@ -180,6 +181,7 @@ export type AnalysisRecommendation = {
 };
 
 export type VacancyHorizonScore = HorizonScore;
+export type VacancyScoreExplanation = ScoreExplanation;
 
 export type VacancyHistory = {
   scoreTrend: VacancyScoreTrendPoint[];
@@ -315,6 +317,7 @@ export type Vacancy = {
   longitude?: number | null;
   survivalScore?: number | null;
   horizonScores?: VacancyHorizonScore[] | null;
+  scoreExplanation?: VacancyScoreExplanation | null;
   listingId?: string | null;
   listingNumber?: string | null;
   roadAddress?: string | null;
