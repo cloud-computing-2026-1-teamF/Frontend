@@ -830,6 +830,52 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .rr-horizon-item.is-watch .rr-horizon-track i { background: #F4B431; }
 .rr-horizon-item.is-risk .rr-horizon-track i { background: #E85D1F; }
 
+.rr-xai-cue {
+  margin: 0 14px 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+}
+.rr-xai-cue span {
+  min-width: 0;
+  height: 34px;
+  padding: 0 9px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #E6ECF5;
+  background: #F8FAFC;
+}
+.rr-xai-cue span.is-positive {
+  border-color: #BFE8D8;
+  background: #F3FBF7;
+}
+.rr-xai-cue span.is-negative {
+  border-color: #F2D2C3;
+  background: #FFF7F2;
+}
+.rr-xai-cue em {
+  flex-shrink: 0;
+  font-size: 9px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 900;
+  color: #64748B;
+}
+.rr-xai-cue .is-positive em { color: #0A7A5B; }
+.rr-xai-cue .is-negative em { color: #B54708; }
+.rr-xai-cue b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 850;
+  color: #172033;
+}
+
 .rr-kpis {
   padding: 0 14px 14px;
   display: grid;
@@ -1321,6 +1367,205 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 }
 .rr-forecast-cell.is-watch .rr-forecast-bar i { background: #F4B431; }
 .rr-forecast-cell.is-risk .rr-forecast-bar i { background: #E85D1F; }
+
+.rr-xai-panel {
+  padding: 14px;
+  border-radius: 14px;
+  background: #FFFFFF;
+  border: 1px solid #DDE6F1;
+  box-shadow: 0 8px 22px rgba(16,24,40,.06);
+}
+.rr-xai-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.rr-xai-kicker {
+  font-size: 9.5px;
+  line-height: 1.2;
+  font-weight: 900;
+  color: #2453B5;
+}
+.rr-xai-head h4 {
+  margin: 3px 0 0;
+  font-size: 17px;
+  line-height: 1.22;
+  color: #0A0E1A;
+  font-weight: 950;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-source {
+  flex-shrink: 0;
+  min-width: 46px;
+  height: 24px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #E7F0FF;
+  color: #2453B5;
+  font-size: 9px;
+  font-weight: 950;
+}
+.rr-xai-source.is-mock {
+  background: #F1F5F9;
+  color: #475569;
+}
+.rr-xai-balance {
+  margin-top: 12px;
+  height: 10px;
+  display: flex;
+  gap: 3px;
+}
+.rr-xai-balance i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+.rr-xai-balance i.is-positive {
+  background: linear-gradient(90deg, #0F766E, #16B981);
+}
+.rr-xai-balance i.is-negative {
+  background: linear-gradient(90deg, #F97316, #D9472B);
+}
+.rr-xai-balance-labels {
+  margin-top: 7px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748B;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-columns {
+  margin-top: 13px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.rr-xai-list {
+  min-width: 0;
+  border-radius: 12px;
+  border: 1px solid #E7ECF4;
+  background: #F8FAFC;
+  padding: 10px;
+}
+.rr-xai-list.is-positive {
+  background: #F4FBF8;
+  border-color: #CDEBDF;
+}
+.rr-xai-list.is-negative {
+  background: #FFF8F4;
+  border-color: #F2D5C7;
+}
+.rr-xai-list-title {
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 950;
+  color: #334155;
+}
+.rr-xai-list.is-positive .rr-xai-list-title { color: #0A7A5B; }
+.rr-xai-list.is-negative .rr-xai-list-title { color: #B54708; }
+.rr-xai-row {
+  margin-top: 9px;
+  min-width: 0;
+  padding-top: 9px;
+  border-top: 1px solid rgba(148, 163, 184, .24);
+}
+.rr-xai-row-top {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 19px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+.rr-xai-row-top span {
+  width: 19px;
+  height: 19px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: #FFFFFF;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-list.is-positive .rr-xai-row-top span {
+  color: #0A7A5B;
+}
+.rr-xai-list.is-negative .rr-xai-row-top span {
+  color: #B54708;
+}
+.rr-xai-row-top b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #111827;
+  font-size: 11.5px;
+  line-height: 1.2;
+  font-weight: 900;
+}
+.rr-xai-row-top em {
+  font-style: normal;
+  color: #475569;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-row-meta {
+  margin-top: 6px;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #64748B;
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 750;
+}
+.rr-xai-row-meta span,
+.rr-xai-row-meta strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rr-xai-row-meta strong {
+  flex-shrink: 0;
+  color: #334155;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-row-bar {
+  margin-top: 7px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, .22);
+  overflow: hidden;
+}
+.rr-xai-row-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+.rr-xai-list.is-positive .rr-xai-row-bar i {
+  background: #0F766E;
+}
+.rr-xai-list.is-negative .rr-xai-row-bar i {
+  background: #D9472B;
+}
 
 /* FactorCard / donut styles moved to shared/factor-viz.css after the
    2026-04-26 indicator redesign — donuts dropped, .fv-* classes used. */
