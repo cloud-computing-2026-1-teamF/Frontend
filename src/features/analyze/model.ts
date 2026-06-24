@@ -272,7 +272,7 @@ export const buildPropertiesFromVacancies = (vacancies: Vacancy[]): AnalyzePrope
 
 function createMockScoreExplanation(seed: number, score: number): VacancyScoreExplanation {
   const dailyFoot = Math.round(7200 + seed * 760 + score * 20);
-  const rent = Math.round(205 + seed * 32);
+  const rent = Math.round(335 + seed * 18);
   const sales = Math.round(1280 + seed * 190 + score * 2);
   const competition = Math.round(8 + seed * 4);
   const premium = seed === 1 ? 0 : Math.round(seed * 1200);
