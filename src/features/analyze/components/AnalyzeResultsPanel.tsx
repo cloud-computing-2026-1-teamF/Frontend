@@ -691,13 +691,16 @@ function effectLabel(tone: ReturnType<typeof effectTone>): string {
 function comparisonText(item: ScoreFeatureReason): string {
   const current = finiteNumber(item.currentValue);
   const average = finiteNumber(item.averageValue);
-  if (current == null || average == null) return '평균 비교 준비 중';
+  if (current == null || average == null) return '상권 평균과 비교 준비 중';
 
   const delta = current - average;
   if (Math.abs(delta) < 0.000001) return '상권 평균과 거의 같아요';
 
-  const signed = delta > 0 ? '+' : '-';
-  return `평균보다 ${signed}${formatFeatureValue(Math.abs(delta), item.displayUnit)}`;
+  const direction = delta > 0 ? '높아' : '낮아';
+  const tone = effectTone(item.effect);
+  if (tone === 'positive') return `상권 평균보다 ${direction} 유리해요`;
+  if (tone === 'negative') return `상권 평균보다 ${direction} 부담이에요`;
+  return `상권 평균보다 ${direction} 보여요`;
 }
 
 function comparisonMarker(item: ScoreFeatureReason): number | null {
@@ -711,12 +714,6 @@ function comparisonMarker(item: ScoreFeatureReason): number | null {
 
 function finiteNumber(value: number | null | undefined): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
-}
-
-function formatFeatureValue(value: number, unit?: string | null): string {
-  const rounded = value >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
-  const formatted = rounded.toLocaleString('ko-KR');
-  return `${formatted}${unit || ''}`;
 }
 
 function PropertyDetail({
