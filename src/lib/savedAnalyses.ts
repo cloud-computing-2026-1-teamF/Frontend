@@ -31,19 +31,21 @@ export type Top3Item = Property & {
 };
 
 export type ScoreExplanation = {
-  positive: ScoreFeatureContribution[];
-  negative: ScoreFeatureContribution[];
+  features: ScoreFeatureReason[];
   source?: string | null;
 };
 
-export type ScoreFeatureContribution = {
-  direction: 'positive' | 'negative' | string;
+export type ScoreFeatureEffect = 'positive' | 'negative' | 'neutral' | 'unknown' | string;
+
+export type ScoreFeatureReason = {
   rank: number;
   featureKey: string;
   featureLabel: string;
-  featureDisplayValue?: string | null;
-  impactValue: number;
-  impactPercent: number;
+  effect: ScoreFeatureEffect;
+  currentValue?: number | null;
+  averageValue?: number | null;
+  displayUnit?: string | null;
+  higherIsPositive?: boolean | null;
 };
 
 export type SavedAnalysis = {
