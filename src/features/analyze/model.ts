@@ -339,10 +339,49 @@ export function ensureScoreExplanation(
   seed: number,
   score: number,
 ): VacancyScoreExplanation {
-  if (explanation && ((explanation.positive?.length ?? 0) > 0 || (explanation.negative?.length ?? 0) > 0)) {
+  if (explanation?.features?.length) {
     return explanation;
   }
+  const legacyFeatures = legacyScoreFeatures(explanation);
+  if (legacyFeatures.length) {
+    return {
+      source: explanation?.source ?? 'legacy_score_explanation',
+      features: legacyFeatures,
+    };
+  }
   return createMockScoreExplanation(seed, score);
+}
+
+type LegacyScoreExplanation = VacancyScoreExplanation & {
+  positive?: LegacyScoreFeature[];
+  negative?: LegacyScoreFeature[];
+};
+
+type LegacyScoreFeature = {
+  rank?: number;
+  featureKey?: string;
+  featureLabel?: string;
+  featureDisplayValue?: string | null;
+  direction?: string;
+};
+
+function legacyScoreFeatures(explanation: VacancyScoreExplanation | null | undefined): VacancyScoreExplanation['features'] {
+  const legacy = explanation as LegacyScoreExplanation | null | undefined;
+  const positive = legacy?.positive ?? [];
+  const negative = legacy?.negative ?? [];
+  return [...positive, ...negative]
+    .filter(item => item.featureKey && item.featureLabel)
+    .slice(0, 5)
+    .map((item, index) => ({
+      rank: index + 1,
+      featureKey: item.featureKey || `legacy_${index + 1}`,
+      featureLabel: item.featureLabel || '조건',
+      effect: item.direction === 'negative' ? 'negative' : 'positive',
+      currentValue: null,
+      averageValue: null,
+      displayUnit: null,
+      higherIsPositive: null,
+    }));
 }
 
 export const buildCompetitors = (center: { lat: number; lng: number }) =>
