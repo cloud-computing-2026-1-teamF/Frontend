@@ -201,7 +201,7 @@ export const buildPropertiesFromRecommendations = (
         transactionType: item.transactionType,
         score: Math.round(item.score),
         horizonScores: normalizeHorizonScores(item.horizonScores, item.score, item.recommended),
-        scoreExplanation: item.scoreExplanation,
+        scoreExplanation: ensureScoreExplanation(item.scoreExplanation, item.rank, Math.round(item.score)),
         foot,
         comp: restaurantCount + cafeCount,
         // Backend ships average_sales_per_store in won; the UI labels this
@@ -253,7 +253,7 @@ export const buildPropertiesFromVacancies = (vacancies: Vacancy[]): AnalyzePrope
         transactionType: vacancy.transactionType,
         score: Math.round(vacancy.survivalScore ?? 0),
         horizonScores: normalizeHorizonScores(vacancy.horizonScores, vacancy.survivalScore ?? 0, vacancy.recommended),
-        scoreExplanation: vacancy.scoreExplanation,
+        scoreExplanation: ensureScoreExplanation(vacancy.scoreExplanation, index + 1, Math.round(vacancy.survivalScore ?? 0)),
         foot,
         comp: (vacancy.restaurantCount500m ?? 0) + (vacancy.cafeCount500m ?? 0),
         rev: Math.round((vacancy.averageSalesPerStore ?? 0) / 10000),
@@ -332,6 +332,56 @@ function createMockScoreExplanation(seed: number, score: number): VacancyScoreEx
       },
     ],
   };
+}
+
+export function ensureScoreExplanation(
+  explanation: VacancyScoreExplanation | null | undefined,
+  seed: number,
+  score: number,
+): VacancyScoreExplanation {
+  if (explanation?.features?.length) {
+    return explanation;
+  }
+  const legacyFeatures = legacyScoreFeatures(explanation);
+  if (legacyFeatures.length) {
+    return {
+      source: explanation?.source ?? 'legacy_score_explanation',
+      features: legacyFeatures,
+    };
+  }
+  return createMockScoreExplanation(seed, score);
+}
+
+type LegacyScoreExplanation = VacancyScoreExplanation & {
+  positive?: LegacyScoreFeature[];
+  negative?: LegacyScoreFeature[];
+};
+
+type LegacyScoreFeature = {
+  rank?: number;
+  featureKey?: string;
+  featureLabel?: string;
+  featureDisplayValue?: string | null;
+  direction?: string;
+};
+
+function legacyScoreFeatures(explanation: VacancyScoreExplanation | null | undefined): VacancyScoreExplanation['features'] {
+  const legacy = explanation as LegacyScoreExplanation | null | undefined;
+  const positive = legacy?.positive ?? [];
+  const negative = legacy?.negative ?? [];
+  return [...positive, ...negative]
+    .filter(item => item.featureKey && item.featureLabel)
+    .slice(0, 5)
+    .map((item, index) => ({
+      rank: index + 1,
+      featureKey: item.featureKey || `legacy_${index + 1}`,
+      featureLabel: item.featureLabel || '조건',
+      effect: item.direction === 'negative' ? 'negative' : 'positive',
+      currentValue: null,
+      averageValue: null,
+      displayUnit: null,
+      higherIsPositive: null,
+    }));
 }
 
 export const buildCompetitors = (center: { lat: number; lng: number }) =>

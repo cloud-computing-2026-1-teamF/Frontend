@@ -830,6 +830,59 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .rr-horizon-item.is-watch .rr-horizon-track i { background: #F4B431; }
 .rr-horizon-item.is-risk .rr-horizon-track i { background: #E85D1F; }
 
+.rr-xai-cue {
+  margin: 0 14px 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+}
+.rr-xai-cue span {
+  min-width: 0;
+  height: 34px;
+  padding: 0 9px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #E6ECF5;
+  background: #F8FAFC;
+}
+.rr-xai-cue span.is-positive {
+  border-color: #BFE8D8;
+  background: #F3FBF7;
+}
+.rr-xai-cue span.is-negative {
+  border-color: #F2D2C3;
+  background: #FFF7F2;
+}
+.rr-xai-cue span.is-neutral,
+.rr-xai-cue span.is-unknown {
+  border-color: #D8E0EC;
+  background: #F7F9FC;
+}
+.rr-xai-cue em {
+  flex-shrink: 0;
+  font-size: 9px;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 900;
+  color: #64748B;
+}
+.rr-xai-cue .is-positive em { color: #0A7A5B; }
+.rr-xai-cue .is-negative em { color: #B54708; }
+.rr-xai-cue .is-neutral em,
+.rr-xai-cue .is-unknown em { color: #64748B; }
+.rr-xai-cue b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 850;
+  color: #172033;
+}
+
 .rr-kpis {
   padding: 0 14px 14px;
   display: grid;
@@ -1321,6 +1374,249 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 }
 .rr-forecast-cell.is-watch .rr-forecast-bar i { background: #F4B431; }
 .rr-forecast-cell.is-risk .rr-forecast-bar i { background: #E85D1F; }
+
+.rr-xai-panel {
+  padding: 15px;
+  border-radius: 14px;
+  background: #FFFFFF;
+  border: 1px solid #DDE6F1;
+  box-shadow: 0 8px 22px rgba(16,24,40,.06);
+}
+.rr-xai-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.rr-xai-kicker {
+  font-size: 9.5px;
+  line-height: 1.2;
+  font-weight: 900;
+  color: #2453B5;
+}
+.rr-xai-head h4 {
+  margin: 3px 0 0;
+  font-size: 16px;
+  line-height: 1.22;
+  color: #0A0E1A;
+  font-weight: 950;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-source {
+  flex-shrink: 0;
+  min-width: 46px;
+  height: 24px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #E7F0FF;
+  color: #2453B5;
+  font-size: 9px;
+  font-weight: 950;
+}
+.rr-xai-source.is-mock {
+  background: #F1F5F9;
+  color: #475569;
+}
+.rr-xai-summary {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.rr-xai-summary span {
+  height: 28px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  background: #F6F8FC;
+  border: 1px solid #E5EAF2;
+  color: #64748B;
+  font-size: 10.5px;
+  line-height: 1.2;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-summary b {
+  color: #111827;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 950;
+}
+.rr-xai-summary .is-positive {
+  background: #EEF8F3;
+  border-color: #CCE9DA;
+  color: #0A7A5B;
+}
+.rr-xai-summary .is-negative {
+  background: #FFF3EB;
+  border-color: #F3D4C1;
+  color: #B54708;
+}
+.rr-xai-feature-list {
+  margin-top: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.rr-xai-feature {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #E6ECF5;
+  background: #F8FAFC;
+}
+.rr-xai-feature.is-positive {
+  background: linear-gradient(180deg, #F7FCFA, #FFFFFF);
+  border-color: #CFE9DD;
+}
+.rr-xai-feature.is-negative {
+  background: linear-gradient(180deg, #FFF8F3, #FFFFFF);
+  border-color: #F0D3C4;
+}
+.rr-xai-feature.is-neutral,
+.rr-xai-feature.is-unknown {
+  background: #FFFFFF;
+}
+.rr-xai-feature-main {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.rr-xai-rank {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #E4EAF3;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-feature.is-positive .rr-xai-rank {
+  color: #0A7A5B;
+  border-color: #BEE3D1;
+}
+.rr-xai-feature.is-negative .rr-xai-rank {
+  color: #B54708;
+  border-color: #EFCBB8;
+}
+.rr-xai-feature-copy {
+  min-width: 0;
+  flex: 1;
+}
+.rr-xai-feature-top {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.rr-xai-feature-top b {
+  min-width: 0;
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 950;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rr-xai-feature-top em {
+  flex-shrink: 0;
+  min-width: 42px;
+  height: 22px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #EEF2F7;
+  color: #475569;
+  font-style: normal;
+  font-size: 10px;
+  line-height: 1.1;
+  font-weight: 900;
+}
+.rr-xai-feature.is-positive .rr-xai-feature-top em {
+  background: #E2F6ED;
+  color: #0A7A5B;
+}
+.rr-xai-feature.is-negative .rr-xai-feature-top em {
+  background: #FFF0E6;
+  color: #B54708;
+}
+.rr-xai-feature-copy p {
+  margin: 4px 0 0;
+  color: #64748B;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-rail {
+  margin-top: 11px;
+  display: grid;
+  grid-template-columns: auto minmax(92px, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  color: #94A3B8;
+  font-size: 9px;
+  font-weight: 900;
+}
+.rr-xai-rail-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: #E9EEF6;
+}
+.rr-xai-rail-track::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 50%;
+  width: 1px;
+  background: #94A3B8;
+}
+.rr-xai-rail-track i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: block;
+  border-radius: inherit;
+  background: #94A3B8;
+}
+.rr-xai-feature.is-positive .rr-xai-rail-track i {
+  background: #0F766E;
+}
+.rr-xai-feature.is-negative .rr-xai-rail-track i {
+  background: #D9472B;
+}
+.rr-xai-rail-track b {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #FFFFFF;
+  border: 4px solid #64748B;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 6px rgba(15,23,42,.16);
+}
+.rr-xai-feature.is-positive .rr-xai-rail-track b { border-color: #0F766E; }
+.rr-xai-feature.is-negative .rr-xai-rail-track b { border-color: #D9472B; }
 
 /* FactorCard / donut styles moved to shared/factor-viz.css after the
    2026-04-26 indicator redesign — donuts dropped, .fv-* classes used. */
