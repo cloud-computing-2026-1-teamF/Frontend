@@ -102,6 +102,9 @@ export function AnalyzeResultsPanel({
                     </div>
                   </div>
                   <HorizonForecastStrip horizons={horizons} />
+                  {property.scoreExplanation && (
+                    <ScoreExplanationCue explanation={property.scoreExplanation} />
+                  )}
                   <div className="rr-kpis">
                     <div className="rr-kpi">
                       <div className="rr-kpi-lab">{property.transactionType === '매매' ? '매매가' : '월세'}</div>
@@ -525,6 +528,32 @@ function HorizonForecastStrip({ horizons }: { horizons: ReturnType<typeof normal
   );
 }
 
+type ScoreExplanationData = NonNullable<AnalyzeProperty['scoreExplanation']>;
+type ScoreContribution = ScoreExplanationData['positive'][number];
+
+function ScoreExplanationCue({ explanation }: { explanation: ScoreExplanationData }) {
+  const positive = explanation.positive[0];
+  const negative = explanation.negative[0];
+  if (!positive && !negative) return null;
+
+  return (
+    <div className="rr-xai-cue" aria-label="점수 주요 영향 요인">
+      {positive && (
+        <span className="is-positive">
+          <em>상승</em>
+          <b>{positive.featureLabel}</b>
+        </span>
+      )}
+      {negative && (
+        <span className="is-negative">
+          <em>하락</em>
+          <b>{negative.featureLabel}</b>
+        </span>
+      )}
+    </div>
+  );
+}
+
 function SurvivalForecastCard({ property }: { property: AnalyzeProperty }) {
   const horizons = normalizeHorizonScores(property.horizonScores, property.score, property.recommended);
   const primary = horizons.find(item => item.horizonYears === PRIMARY_HORIZON_YEARS) ?? horizons[0];
@@ -561,6 +590,103 @@ function SurvivalForecastCard({ property }: { property: AnalyzeProperty }) {
   );
 }
 
+function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
+  const explanation = property.scoreExplanation;
+  if (!explanation || (!explanation.positive.length && !explanation.negative.length)) return null;
+
+  const positiveTotal = totalImpact(explanation.positive);
+  const negativeTotal = totalImpact(explanation.negative);
+  const total = Math.max(1, positiveTotal + negativeTotal);
+  const positiveWidth = Math.max(6, Math.round((positiveTotal / total) * 100));
+  const negativeWidth = Math.max(6, 100 - positiveWidth);
+  const sourceLabel = explanation.source?.startsWith('mock') ? 'MOCK' : 'DATA';
+
+  return (
+    <div className="rr-xai-panel">
+      <div className="rr-xai-head">
+        <div>
+          <div className="rr-xai-kicker">점수 산출 근거</div>
+          <h4>{Math.round(property.score)}%를 만든 피처 영향</h4>
+        </div>
+        <span className={`rr-xai-source ${sourceLabel === 'MOCK' ? 'is-mock' : ''}`}>{sourceLabel}</span>
+      </div>
+
+      <div className="rr-xai-balance" aria-label="상승 요인과 하락 요인 비중">
+        <i className="is-positive" style={{ width: `${positiveWidth}%` }} />
+        <i className="is-negative" style={{ width: `${negativeWidth}%` }} />
+      </div>
+      <div className="rr-xai-balance-labels">
+        <span>상승 요인 {positiveTotal}%</span>
+        <span>하락 요인 {negativeTotal}%</span>
+      </div>
+
+      <div className="rr-xai-columns">
+        <ScoreContributionList
+          title="점수를 높인 요인"
+          tone="positive"
+          items={explanation.positive}
+        />
+        <ScoreContributionList
+          title="점수를 낮춘 요인"
+          tone="negative"
+          items={explanation.negative}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ScoreContributionList({
+  title,
+  tone,
+  items,
+}: {
+  title: string;
+  tone: 'positive' | 'negative';
+  items: ScoreContribution[];
+}) {
+  return (
+    <div className={`rr-xai-list is-${tone}`}>
+      <div className="rr-xai-list-title">{title}</div>
+      {items.map(item => (
+        <div key={`${item.direction}-${item.rank}-${item.featureKey}`} className="rr-xai-row">
+          <div className="rr-xai-row-top">
+            <span>{item.rank}</span>
+            <b>{item.featureLabel}</b>
+            <em>{formatImpactPercent(item.impactPercent)}</em>
+          </div>
+          <div className="rr-xai-row-meta">
+            <span>{item.featureDisplayValue || '값 준비 중'}</span>
+            <strong>{formatImpactValue(item.impactValue)}</strong>
+          </div>
+          <div className="rr-xai-row-bar">
+            <i style={{ width: `${impactWidth(item.impactPercent)}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function totalImpact(items: ScoreContribution[]): number {
+  return Math.round(items.reduce((sum, item) => sum + Math.abs(item.impactPercent || 0), 0));
+}
+
+function impactWidth(value: number): number {
+  return Math.min(100, Math.max(10, Math.round(Math.abs(value))));
+}
+
+function formatImpactPercent(value: number): string {
+  return `${Math.round(Math.abs(value))}%`;
+}
+
+function formatImpactValue(value: number): string {
+  const rounded = Math.round(value * 1000) / 1000;
+  if (rounded > 0) return `+${rounded.toFixed(3)}`;
+  if (rounded < 0) return rounded.toFixed(3);
+  return '0.000';
+}
+
 function PropertyDetail({
   property,
   metricReference,
@@ -586,6 +712,7 @@ function PropertyDetail({
       </div>
       <div className="rr-detail-body">
         <SurvivalForecastCard property={property} />
+        <ScoreExplanationPanel property={property} />
         {factors.map(factor => (
           <FactorCard key={factor.key} {...factor} />
         ))}
