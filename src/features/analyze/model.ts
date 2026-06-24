@@ -410,8 +410,8 @@ function summarizePlaces(value: string | null | undefined, fallback: string): st
 }
 
 function createMockVacancyHistory(score: number, rent: number, deposit: number, rank: number): VacancyHistory {
-  const offsets = [-8.2, -7.1, -5.6, -3.2, -1.4, 0.9, 2.0, 0];
-  const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
+  const offsets = [-3.2, -1.4, 0.9, 2.0, 0];
+  const years = [2022, 2023, 2024, 2025, 2026];
   const scoreTrend = years.map((year, index) => {
     const current = clampScore(score + offsets[index] - rank * 0.4);
     const previous = index > 0 ? clampScore(score + offsets[index - 1] - rank * 0.4) : null;
@@ -420,35 +420,22 @@ function createMockVacancyHistory(score: number, rent: number, deposit: number, 
       score: current,
       delta: previous == null ? null : roundOne(current - previous),
       confidenceLabel: scoreLabel(current),
-      basis: year >= 2020 && year <= 2021 ? '코로나 충격 보정 포함' : '공공데이터 기반 모의 추세',
+      basis: '연도별 점수 모의 추세',
       source: 'mock_preview',
     };
   });
   const occupancyTimeline = [
     {
-      id: `mock-${rank}-2018`,
-      startedOn: '2018-03-01',
-      endedOn: '2020-12-31',
+      id: `mock-${rank}-2022`,
+      startedOn: '2022-01-01',
+      endedOn: '2023-08-31',
       tenantLabel: '이전 음식점 운영',
       businessCategory: '일반음식점',
       status: 'closed',
       monthlyRent: Math.round(rent * 0.78),
       deposit: Math.round(deposit * 0.8),
       exitReasonCode: 'demand_shift',
-      exitReasonSummary: '코로나 이후 저녁·심야 수요 약화 추정',
-      source: 'mock_preview',
-    },
-    {
-      id: `mock-${rank}-2021`,
-      startedOn: '2021-04-01',
-      endedOn: '2023-08-31',
-      tenantLabel: '근린생활 업종 재입점',
-      businessCategory: '근린생활',
-      status: 'closed',
-      monthlyRent: Math.round(rent * 0.88),
-      deposit: Math.round(deposit * 0.9),
-      exitReasonCode: 'competition_pressure',
-      exitReasonSummary: '동종 경쟁과 임대료 부담이 겹친 이탈 가능성',
+      exitReasonSummary: '저녁·심야 수요 약화 추정',
       source: 'mock_preview',
     },
     {
