@@ -215,7 +215,7 @@ function makeScoreExplanation(seed: number, score: number): VacancyScoreExplanat
         rank: 3,
         featureKey: 'premium',
         featureLabel: '권리금',
-        featureDisplayValue: seed === 1 ? '없음' : `${Math.round(seed * 1200).toLocaleString('ko-KR')}만원`,
+        featureDisplayValue: `${Math.round(800 + seed * 700).toLocaleString('ko-KR')}만원`,
         impactValue: Number((-0.05 - seed / 160).toFixed(3)),
         impactPercent: 13,
       },
