@@ -18,6 +18,7 @@ import type {
   AnalysisSectionTodo,
   AnalysisListItem,
   ListAnalysesResponse,
+  MenuPriceEstimate,
   CreateAnalysisClientRequest,
   PatchAnalysisRequest,
   UserStats,
@@ -776,6 +777,33 @@ const handlePutVacancyShortlist: Handler = (spec) => {
   return ok({ vacancyIds: store.getVacancyShortlist() });
 };
 
+const handleEstimateMenuPrice: Handler = (spec, params) => {
+  const body = (spec.body || {}) as { menuName?: string };
+  const menuName = String(body.menuName ?? '').trim();
+  if (!menuName) return fail(422, 'validation_failed', '메뉴 이름을 입력해 주세요');
+
+  const vacancy = MOCK_VACANCY_SEEDS.find(item => item.id === params.id)
+    ?? MOCK_VACANCY_SEEDS[Math.abs(stableHash(params.id)) % MOCK_VACANCY_SEEDS.length];
+  const hash = stableHash(`${params.id}|${menuName}`);
+  const base = baseMenuPrice(menuName);
+  const multiplier = priceMultiplier(vacancy, hash);
+  const recommendedPrice = roundPrice(base * multiplier);
+  const response: MenuPriceEstimate = {
+    vacancyId: params.id,
+    menuName,
+    recommendedPrice,
+    minPrice: Math.min(recommendedPrice, roundPrice(recommendedPrice * 0.9)),
+    maxPrice: Math.max(recommendedPrice, roundPrice(recommendedPrice * 1.12)),
+    currency: 'KRW',
+    confidence: '보통',
+    positioning: multiplier >= 1.12 ? '프리미엄 가격 가능' : multiplier >= 0.96 ? '상권 평균권' : '접근성 가격 권장',
+    signals: priceSignals(vacancy, multiplier),
+    estimatedLatencyMs: 1800 + (hash % 900),
+    source: 'mock_menu_price_model',
+  };
+  return ok(response);
+};
+
 function numberQuery(value: unknown): number | undefined {
   if (value === undefined || value === null || value === '') return undefined;
   const parsed = Number(value);
@@ -836,6 +864,53 @@ function min(values: Array<number | null | undefined>): number | null {
 function max(values: Array<number | null | undefined>): number | null {
   const numbers = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
   return numbers.length ? Math.max(...numbers) : null;
+}
+
+function baseMenuPrice(menuName: string): number {
+  const normalized = menuName.toLowerCase();
+  if (normalized.includes('아메리카노') || normalized.includes('커피') || normalized.includes('coffee')) return 4800;
+  if (normalized.includes('라떼') || normalized.includes('latte')) return 5800;
+  if (normalized.includes('디저트') || normalized.includes('케이크') || normalized.includes('cake')) return 7200;
+  if (normalized.includes('샐러드') || normalized.includes('salad')) return 11500;
+  if (normalized.includes('파스타') || normalized.includes('pasta')) return 17000;
+  if (normalized.includes('피자') || normalized.includes('pizza')) return 19500;
+  if (normalized.includes('버거') || normalized.includes('burger')) return 10500;
+  if (normalized.includes('치킨') || normalized.includes('chicken')) return 22000;
+  if (normalized.includes('떡볶')) return 7500;
+  if (normalized.includes('김밥')) return 5000;
+  if (normalized.includes('국밥') || normalized.includes('찌개') || normalized.includes('덮밥')) return 9500;
+  if (normalized.includes('라멘') || normalized.includes('쌀국수') || normalized.includes('면')) return 11000;
+  if (normalized.includes('맥주') || normalized.includes('beer')) return 6500;
+  if (normalized.includes('칵테일') || normalized.includes('와인')) return 12000;
+  return 12000;
+}
+
+function priceMultiplier(vacancy: Vacancy, hash: number): number {
+  const scoreFactor = Math.max(-0.12, Math.min(0.18, ((vacancy.survivalScore ?? 70) - 70) / 100));
+  const salesFactor = vacancy.averageSalesPerStore == null
+    ? 0
+    : Math.max(-0.1, Math.min(0.16, ((vacancy.averageSalesPerStore / 3500) - 1) * 0.14));
+  const dailyFoot = vacancy.floatingPopulationAnnualTotal == null ? null : vacancy.floatingPopulationAnnualTotal / 365;
+  const footFactor = dailyFoot == null ? 0 : Math.max(-0.08, Math.min(0.12, ((dailyFoot / 70000) - 1) * 0.08));
+  const rentFactor = vacancy.monthlyRent == null ? 0 : Math.max(-0.06, Math.min(0.1, ((vacancy.monthlyRent / 280) - 1) * 0.06));
+  const jitter = ((hash % 15) - 7) / 100;
+  return Math.max(0.74, Math.min(1.48, 1 + scoreFactor + salesFactor + footFactor + rentFactor + jitter));
+}
+
+function priceSignals(vacancy: Vacancy, multiplier: number): string[] {
+  const signals: string[] = [];
+  signals.push((vacancy.survivalScore ?? 0) >= 78 ? '상권 점수가 높아 가격 수용력이 좋아 보여요' : '상권 점수를 감안해 보수적으로 잡았어요');
+  signals.push((vacancy.averageSalesPerStore ?? 0) >= 3500 ? '주변 매출 기준이 높게 형성돼 있어요' : '주변 매출 기준은 무리한 가격을 피하는 쪽이에요');
+  signals.push(multiplier >= 1.04 ? '이 입지는 평균보다 높은 가격 실험이 가능해 보여요' : '이 입지는 빠른 회전을 우선한 가격이 어울려요');
+  return signals.slice(0, 3);
+}
+
+function roundPrice(value: number): number {
+  return Math.max(1000, Math.round(value / 500) * 500);
+}
+
+function stableHash(value: string): number {
+  return value.split('').reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 0);
 }
 
 // ── User stats ────────────────────────────────────────────────────────────
@@ -903,6 +978,7 @@ const ROUTES: Route[] = [
   route('GET /vacancies/search',      handleSearchVacancies),
   route('GET /vacancies/shortlist',   handleGetVacancyShortlist),
   route('PUT /vacancies/shortlist',   handlePutVacancyShortlist),
+  route('POST /vacancies/:id/menu-price-estimate', handleEstimateMenuPrice),
   route('GET /vacancies',             handleListVacancies),
   route('GET /vacancies/:id',         handleGetVacancy),
 
