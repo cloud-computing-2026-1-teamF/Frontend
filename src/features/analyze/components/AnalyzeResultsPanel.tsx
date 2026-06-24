@@ -192,13 +192,13 @@ function VacancyHistoryCue({
   history: VacancyHistoryData;
 }) {
   const delta = history.summary.scoreDelta ?? scoreDelta(history.scoreTrend);
-  const exitCount = history.occupancyTimeline.filter(event => event.status !== 'vacant').length;
+  const transitionCount = closedHistoryEvents(history.occupancyTimeline).length;
 
   return (
     <div className="rr-history-cue">
       <span>기억 데이터</span>
       <b>{formatSigned(delta)}p</b>
-      <em>{exitCount}회 점유 이탈</em>
+      <em>{transitionCount}회 업종 변동</em>
     </div>
   );
 }
@@ -218,10 +218,10 @@ function VacancyHistoryInsight({
   const delta = history.summary.scoreDelta ?? scoreDelta(trend);
   const direction = directionFromDelta(delta);
   const events = buildEventInsights(history, trend);
-  const closedEvents = history.occupancyTimeline.filter(event => event.status !== 'vacant');
+  const closedEvents = closedHistoryEvents(history.occupancyTimeline);
   const currentOccupancy = [...history.occupancyTimeline].reverse().find(event => event.status === 'vacant')
     ?? history.occupancyTimeline[history.occupancyTimeline.length - 1];
-  const latestExit = [...closedEvents].reverse().find(event => event.exitReasonSummary)
+  const latestExit = [...closedEvents].reverse().find(event => event.endedOn || event.exitReasonSummary)
     ?? closedEvents[closedEvents.length - 1];
   const latestExitYear = yearFromDate(latestExit?.endedOn);
 
@@ -247,16 +247,16 @@ function VacancyHistoryInsight({
           <em>{first.year} - {latest.year}</em>
         </div>
         <div className="rr-hi-metric">
-          <span>점유 이탈</span>
+          <span>업종 변동</span>
           <b>{closedEvents.length}회</b>
-          <em>{latestExitYear ? `${latestExitYear} 최근` : '기록 없음'}</em>
+          <em>{latestExitYear ? `${latestExitYear} 최근` : '현재 공실'}</em>
         </div>
       </div>
 
       <HistoryTimeline trend={trend} events={history.occupancyTimeline} currentScore={currentScore} />
 
       <div className="rr-hi-facts">
-        <span><em>최근 이탈</em><b>{compactExitReason(latestExit?.exitReasonSummary ?? history.summary.lastExitReason)}</b></span>
+        <span><em>최근 전환</em><b>{compactExitReason(latestExit?.exitReasonSummary ?? history.summary.lastExitReason)}</b></span>
         <span><em>현재</em><b>{currentOccupancy?.status === 'vacant' ? '공실' : '운영'}</b></span>
         <span><em>조건</em><b>{formatRentTerm(currentOccupancy)}</b></span>
       </div>
@@ -269,7 +269,7 @@ function VacancyHistoryInsight({
             </div>
             <div className="rr-hi-row-main">
               <strong>{item.event.tenantLabel}</strong>
-              <em>{item.event.businessCategory ?? (item.event.status === 'vacant' ? '공실' : '업종 미상')} · {formatOccupancyTerms(item.event)}</em>
+              <em>{formatOccupancySubline(item.event)}</em>
             </div>
             <b className={`rr-hi-row-score is-${directionFromDelta(item.rawScoreMove)}`}>{item.scoreMove}</b>
           </div>
@@ -428,6 +428,10 @@ function buildEventInsights(history: VacancyHistoryData, trend: VacancyScorePoin
   });
 }
 
+function closedHistoryEvents(events: VacancyHistoryEvent[]): VacancyHistoryEvent[] {
+  return events.filter(event => event.status === 'closed' || Boolean(event.endedOn));
+}
+
 function scoreAtYear(trend: VacancyScorePoint[], year?: number | null): number | null {
   if (!trend.length || year == null) return null;
   const exact = trend.find(point => point.year === year);
@@ -484,22 +488,30 @@ function compactCategory(event: VacancyHistoryEvent): string {
   return event.businessCategory.replace('일반음식점', '음식점').replace('근린생활', '근린');
 }
 
-function formatOccupancyTerms(event?: VacancyHistoryEvent | null): string {
-  if (!event) return '기록 없음';
+function formatOccupancySubline(event: VacancyHistoryEvent): string {
+  const category = event.businessCategory ?? (event.status === 'vacant' ? '공실' : '업종 미상');
+  const terms = formatOccupancyTerms(event);
+  return terms ? `${category} · ${terms}` : category;
+}
+
+function formatOccupancyTerms(event?: VacancyHistoryEvent | null): string | null {
+  if (!event) return null;
   const terms = [
     event.monthlyRent != null ? `월 ${formatMan(event.monthlyRent)}` : null,
     event.deposit != null ? `보증 ${formatMan(event.deposit)}` : null,
   ].filter(Boolean);
-  return terms.length > 0 ? terms.join(' · ') : '조건 미상';
+  return terms.length > 0 ? terms.join(' · ') : null;
 }
 
 function formatRentTerm(event?: VacancyHistoryEvent | null): string {
-  if (!event?.monthlyRent) return '월세 미상';
-  return `월 ${formatMan(event.monthlyRent)}`;
+  const terms = formatOccupancyTerms(event);
+  return terms ?? '조건 확인 필요';
 }
 
 function compactExitReason(reason?: string | null): string {
-  if (!reason) return '기록 없음';
+  if (!reason) return '전환 기록 없음';
+  if (reason.includes('공실 등록') || reason.includes('영업중') || reason.includes('지번 단위')) return '공실 전환';
+  if (reason.includes('폐업')) return '폐업 기록';
   if (reason.includes('고정비')) return '고정비 부담';
   if (reason.includes('경쟁')) return '경쟁 부담';
   if (reason.includes('수요')) return '수요 약화';
