@@ -706,7 +706,6 @@ function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
       <div className="rr-xai-summary" aria-label="평균 대비 조건 요약">
         <span className="is-positive"><b>{positiveCount}</b> 유리</span>
         <span className="is-negative"><b>{cautionCount}</b> 주의</span>
-        <span><b>{features.length}</b>개 조건</span>
       </div>
 
       <div className="rr-xai-feature-list">
@@ -794,8 +793,14 @@ function comparisonMarker(item: ScoreFeatureReason): number | null {
   const average = finiteNumber(item.averageValue);
   if (current == null || average == null) return null;
   const base = Math.max(Math.abs(average), 1);
-  const deltaRatio = Math.max(-1, Math.min(1, (current - average) / base));
-  return Math.round((50 + deltaRatio * 38) * 10) / 10;
+  const delta = current - average;
+  if (Math.abs(delta) < 0.000001) return 50;
+
+  // Nonlinear display scale keeps close-to-average values visibly legible without changing the data.
+  const deltaRatio = Math.min(1, Math.abs(delta) / base);
+  const amplifiedRatio = Math.min(1, 0.28 + Math.sqrt(deltaRatio) * 0.72);
+  const marker = 50 + Math.sign(delta) * amplifiedRatio * 43;
+  return Math.round(Math.max(7, Math.min(93, marker)) * 10) / 10;
 }
 
 function finiteNumber(value: number | null | undefined): number | null {
