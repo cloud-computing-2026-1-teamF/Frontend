@@ -59,6 +59,38 @@ export type AnalyzeProperty = {
   history?: VacancyHistory | null;
 };
 
+export type ScoreFeatureBenchmark = {
+  average: number;
+  unit: string;
+  deltaUnit?: string;
+  lowerIsBetter: boolean;
+  maxAbsDelta: number;
+};
+
+export const SCORE_FEATURE_GLOBAL_AVERAGES: Record<string, ScoreFeatureBenchmark> = {
+  evening_foot_traffic: { average: 28, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 16 },
+  floating_population_annual_total: { average: 2600000, unit: '명', lowerIsBetter: false, maxAbsDelta: 1600000 },
+  daily_floating_population: { average: 7200, unit: '명/일', lowerIsBetter: false, maxAbsDelta: 5200 },
+  industry_growth_500m: { average: 7.5, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 8 },
+  industry_growth_rate_500m: { average: 7.5, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 8 },
+  sales_per_store: { average: 1300, unit: '만원', lowerIsBetter: false, maxAbsDelta: 900 },
+  average_sales_per_store: { average: 1300, unit: '만원', lowerIsBetter: false, maxAbsDelta: 900 },
+  monthly_rent: { average: 220, unit: '만원', lowerIsBetter: true, maxAbsDelta: 220 },
+  deposit: { average: 3000, unit: '만원', lowerIsBetter: true, maxAbsDelta: 3000 },
+  maintenance_fee: { average: 16, unit: '만원', lowerIsBetter: true, maxAbsDelta: 22 },
+  premium: { average: 900, unit: '만원', lowerIsBetter: true, maxAbsDelta: 3600 },
+  same_category_competition_500m: { average: 12, unit: '곳', lowerIsBetter: true, maxAbsDelta: 18 },
+  competition_500m: { average: 12, unit: '곳', lowerIsBetter: true, maxAbsDelta: 18 },
+  restaurant_count_500m: { average: 28, unit: '곳', lowerIsBetter: true, maxAbsDelta: 34 },
+  cafe_count_500m: { average: 18, unit: '곳', lowerIsBetter: true, maxAbsDelta: 24 },
+  closure_rate: { average: 7.6, unit: '%', deltaUnit: '%p', lowerIsBetter: true, maxAbsDelta: 6 },
+  opening_rate: { average: 8.2, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 6 },
+  weekend_population_ratio: { average: 30, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 16 },
+  age2030_population_ratio: { average: 41, unit: '%', deltaUnit: '%p', lowerIsBetter: false, maxAbsDelta: 22 },
+  resident_to_floating_ratio: { average: 0.22, unit: '', lowerIsBetter: false, maxAbsDelta: 0.2 },
+  worker_to_floating_ratio: { average: 0.24, unit: '', lowerIsBetter: false, maxAbsDelta: 0.2 },
+};
+
 export const FALLBACK_BIZ_TYPES: BizType[] = [
   { key: '1', label: '한식', emoji: '🍚' },
   { key: '2', label: '중식', emoji: '🥟' },
@@ -326,7 +358,7 @@ function createMockScoreExplanation(seed: number, score: number): VacancyScoreEx
         rank: 3,
         featureKey: 'premium',
         featureLabel: '권리금',
-        featureDisplayValue: seed === 1 ? '없음' : `${Math.round(seed * 1200).toLocaleString('ko-KR')}만원`,
+        featureDisplayValue: `${Math.round(800 + seed * 700).toLocaleString('ko-KR')}만원`,
         impactValue: Number((-0.05 - seed / 160).toFixed(3)),
         impactPercent: 13,
       },
@@ -343,6 +375,10 @@ export function ensureScoreExplanation(
     return explanation;
   }
   return createMockScoreExplanation(seed, score);
+}
+
+export function getScoreFeatureBenchmark(featureKey: string): ScoreFeatureBenchmark | undefined {
+  return SCORE_FEATURE_GLOBAL_AVERAGES[featureKey];
 }
 
 export const buildCompetitors = (center: { lat: number; lng: number }) =>
