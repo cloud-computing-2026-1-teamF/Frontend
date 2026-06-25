@@ -35,6 +35,9 @@ export function Icon({ name, size = 20, stroke = 1.75, ...rest }: IconProps) {
     case 'zap': return <svg {...s}><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>;
     case 'database': return <svg {...s}><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>;
     case 'building': return <svg {...s}><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/><path d="M10 21v-4h4v4"/></svg>;
+    case 'subway': return <svg {...s}><rect x="6" y="3" width="12" height="14" rx="3"/><path d="M9 6h6M8 10h8"/><path d="M9 14h.01M15 14h.01"/><path d="m9 17-2 4M15 17l2 4M8 21h8"/></svg>;
+    case 'bus': return <svg {...s}><rect x="4" y="5" width="16" height="12" rx="3"/><path d="M7 9h10M8 17v2M16 17v2"/><circle cx="8" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/></svg>;
+    case 'parking': return <svg {...s}><rect x="5" y="4" width="14" height="16" rx="3"/><path d="M10 16V8h4a2.5 2.5 0 0 1 0 5h-4"/></svg>;
     case 'coffee': return <svg {...s}><path d="M4 8h14v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M18 10h2a2 2 0 0 1 0 4h-2"/><path d="M8 3v2M12 3v2M16 3v2"/></svg>;
     case 'users': return <svg {...s}><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M21 19c0-2.5-2-4.5-4.5-4.5"/></svg>;
     case 'arrow-right': return <svg {...s}><path d="M5 12h14m-6-6 6 6-6 6"/></svg>;

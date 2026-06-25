@@ -77,7 +77,7 @@ export function AccessibilityCard({
       <div className="fv-access-list">
         <div className="fv-access-row">
           <div className="fv-access-ico" style={{ background: 'rgba(59,111,232,.12)', color: '#3B6FE8' }}>
-            <Icon name="activity" size={14} />
+            <Icon name="subway" size={14} />
           </div>
           <div className="fv-access-info">
             <div className="fv-access-lab">지하철</div>
@@ -86,7 +86,7 @@ export function AccessibilityCard({
         </div>
         <div className="fv-access-row">
           <div className="fv-access-ico" style={{ background: 'rgba(22,185,129,.12)', color: '#16B981' }}>
-            <Icon name="users" size={14} />
+            <Icon name="bus" size={14} />
           </div>
           <div className="fv-access-info">
             <div className="fv-access-lab">버스</div>
@@ -95,7 +95,7 @@ export function AccessibilityCard({
         </div>
         <div className="fv-access-row">
           <div className="fv-access-ico" style={{ background: 'rgba(124,92,230,.12)', color: '#7C5CE6' }}>
-            <Icon name="building" size={14} />
+            <Icon name="parking" size={14} />
           </div>
           <div className="fv-access-info">
             <div className="fv-access-lab">주차</div>
@@ -179,7 +179,7 @@ export function buildFactorViz(
       unit: '명/일',
       badge: footComparison.badge,
       viz: <DistributionBar metric={foot} unit="명" />,
-      desc: metricDescription(foot, '유동인구', footComparison.kind, 'higher-better'),
+      desc: metricDescription(foot, '유동인구', footComparison.kind, 'higher-better', peerLabel),
     },
     {
       key: 'comp',
@@ -189,7 +189,7 @@ export function buildFactorViz(
       unit: '곳',
       badge: compComparison.badge,
       viz: <DistributionBar metric={comp} unit="곳" />,
-      desc: metricDescription(comp, '경쟁 밀집도', compComparison.kind, 'lower-better'),
+      desc: metricDescription(comp, '경쟁점포 수', compComparison.kind, 'lower-better', peerLabel),
     },
     {
       key: 'rev',
@@ -199,7 +199,7 @@ export function buildFactorViz(
       unit: '만원',
       badge: revComparison.badge,
       viz: <DistributionBar metric={rev} unit="만" />,
-      desc: metricDescription(rev, '추정 매출', revComparison.kind, 'higher-better'),
+      desc: metricDescription(rev, '동네 평균 추정 매출', revComparison.kind, 'higher-better', peerLabel),
     },
   ];
 }
@@ -267,19 +267,19 @@ function metricDescription(
   label: string,
   relation: 'above' | 'below' | 'near' | 'unknown',
   kind: MetricKind,
+  basisLabel: string,
 ): string {
-  const percentile = metric.percentile == null ? null : Math.round(metric.percentile);
-  const percentileContext = percentile == null
-    ? ''
-    : percentileLabel(percentile, kind);
-  const topic = topicLabel(label);
+  const percentileContext = percentileSentence(metric.percentile);
+  const subject = `현재 ${topicLabel(label)}`;
+  const basisContext = `기준: ${basisLabel}.`;
   if (relation === 'unknown' || metric.average == null) {
-    return `${topic} 비교 기준을 불러오면 평균선과 현재 위치가 함께 표시됩니다.`;
+    return `${subject} 비교 기준을 불러오는 중입니다. ${basisContext}`;
   }
   if (relation === 'near') {
-    return `${topic} 평균선 근처에 있습니다${percentileContext}.`;
+    return `${subject} 전체 동일 업종 평균과 비슷합니다.${percentileContext ? ` ${percentileContext}` : ''} ${basisContext}`;
   }
-  return `${topic} 평균선 ${relation === 'above' ? '오른쪽' : '왼쪽'}에 있습니다${percentileContext}.`;
+  const comparison = averageComparisonSentence(relation, kind);
+  return `${subject} 전체 동일 업종 평균보다 ${comparison}.${percentileContext ? ` ${percentileContext}` : ''} ${basisContext}`;
 }
 
 function valueToPct(value: number, min: number, max: number): number {
@@ -300,15 +300,23 @@ function edgeClass(percent: number): string {
   return '';
 }
 
-function percentileLabel(percentile: number, kind: MetricKind): string {
+function averageComparisonSentence(
+  relation: 'above' | 'below',
+  kind: MetricKind,
+): string {
   if (kind === 'lower-better') {
-    return percentile >= 50
-      ? ' · 경쟁이 많은 쪽'
-      : ' · 경쟁이 적은 쪽';
+    return relation === 'above' ? '많습니다' : '적습니다';
   }
-  return percentile >= 50
-    ? ` · 상위 ${Math.max(1, 100 - percentile)}%권`
-    : ` · 하위 ${Math.max(1, percentile)}%권`;
+  return relation === 'above' ? '높습니다' : '낮습니다';
+}
+
+function percentileSentence(percentileValue: number | null): string {
+  if (percentileValue == null) return '';
+  const percentile = Math.round(percentileValue);
+  if (percentile >= 50) {
+    return `상위 ${Math.max(1, 100 - percentile)}% 수준입니다.`;
+  }
+  return `하위 ${Math.max(1, percentile)}% 수준입니다.`;
 }
 
 function topicLabel(label: string): string {
