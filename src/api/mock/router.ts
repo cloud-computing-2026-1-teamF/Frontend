@@ -522,13 +522,15 @@ const handleCreateAnalysis: Handler = (spec) => {
     nearby: { subway: '연동 시 표시', bus: '연동 시 표시', parking: '연동 시 표시' },
   }));
   const center = body.center ?? { lat: 37.5530, lng: 126.9186 };
+  const radiusM = body.radiusM ?? 500;
+  const recommendations = mockAnalysisRecommendations(center, radiusM);
 
   const created: SavedAnalysis = {
     id: Date.now(),
     date, time,
     region: body.region || body.displayName || '지정되지 않은 지역',
     regionDetail: body.roadAddress,
-    radius: body.radiusM ?? 500,
+    radius: radiusM,
     centerLat: center.lat,
     centerLng: center.lng,
     displayName: body.displayName,
@@ -538,7 +540,7 @@ const handleCreateAnalysis: Handler = (spec) => {
       ? `보증금 ${body.budget.depositMax ?? '-'} / 월세 ${body.budget.rentMax ?? '-'} / 관리비 ${body.budget.maintenanceFeeMax ?? '-'}`
       : '예산 조건 없음',
     topScore: top3[0].score,
-    count: top3.length * 40 + 28,
+    count: recommendations.length * 40 + 28,
     saved: false,
     top3,
   };
@@ -551,7 +553,7 @@ const handleCreateAnalysis: Handler = (spec) => {
     estimatedSeconds: 1,
     analyzedVacancyCount: created.count,
     saved: created.saved,
-    recommendations: mockAnalysisRecommendations(center),
+    recommendations,
     links: {
       self: `/v1/analyses/${created.id}`,
       events: `/v1/analyses/${created.id}/events`,
@@ -559,20 +561,46 @@ const handleCreateAnalysis: Handler = (spec) => {
   });
 };
 
-function mockAnalysisRecommendations(center: { lat: number; lng: number }): AnalysisRecommendation[] {
-  return MOCK_VACANCIES
-    .slice(0, 3)
-    .map((vacancy, index) => ({
+type MockRecommendationSource = {
+  vacancy: Vacancy;
+  latitude: number;
+  longitude: number;
+  distanceM: number;
+};
+
+const MOCK_RECOMMENDATION_OFFSETS_M: ReadonlyArray<{ north: number; east: number }> = [
+  { north: -65, east: -55 },
+  { north: 70, east: 35 },
+  { north: -35, east: 95 },
+];
+
+function mockAnalysisRecommendations(center: { lat: number; lng: number }, radiusM: number): AnalysisRecommendation[] {
+  const radius = Math.max(1, radiusM);
+  const nearby = MOCK_VACANCIES
+    .map(vacancy => toMockRecommendationSource(vacancy, center))
+    .filter(source => source.distanceM <= radius)
+    .sort((a, b) =>
+      compareVacancies(a.vacancy, b.vacancy, 'score_desc')
+      || a.distanceM - b.distanceM
+    )
+    .slice(0, 3);
+  const sources = nearby.length >= 3
+    ? nearby
+    : centeredMockRecommendationSources(center, radius);
+
+  return sources.map((source, index) => {
+    const vacancy = source.vacancy;
+    return {
       rank: index + 1,
       vacancyId: vacancy.id,
       recommended: index < 2,
       score: vacancy.survivalScore ?? 0,
       horizonScores: vacancy.horizonScores ?? null,
       scoreExplanation: vacancy.scoreExplanation,
-      distanceM: Math.round(distanceMeters(center.lat, center.lng, vacancy.latitude ?? center.lat, vacancy.longitude ?? center.lng)),
+      distanceM: source.distanceM,
       areaId: vacancy.areaId,
-      latitude: vacancy.latitude ?? center.lat,
-      longitude: vacancy.longitude ?? center.lng,
+      latitude: source.latitude,
+      longitude: source.longitude,
       monthlyRent: vacancy.monthlyRent,
       deposit: vacancy.deposit,
       maintenanceFee: vacancy.maintenanceFee,
@@ -581,7 +609,7 @@ function mockAnalysisRecommendations(center: { lat: number; lng: number }): Anal
       transactionType: vacancy.transactionType,
       facilityTotalSize: vacancy.facilityTotalSize,
       locationArea: vacancy.locationArea,
-      category: vacancy.category,
+      category: null,
       roadAddress: vacancy.roadAddress,
       lotAddress: vacancy.lotAddress,
       businessMiddleCategoryName: vacancy.businessMiddleCategoryName,
@@ -596,7 +624,54 @@ function mockAnalysisRecommendations(center: { lat: number; lng: number }): Anal
       parkingInfo: vacancy.parkingInfo,
       hourlyFloatingPopulation: vacancy.hourlyFloatingPopulation,
       history: null,
-    }));
+    };
+  });
+}
+
+function toMockRecommendationSource(
+  vacancy: Vacancy,
+  center: { lat: number; lng: number },
+): MockRecommendationSource {
+  const latitude = vacancy.latitude ?? center.lat;
+  const longitude = vacancy.longitude ?? center.lng;
+  return {
+    vacancy,
+    latitude,
+    longitude,
+    distanceM: Math.round(distanceMeters(center.lat, center.lng, latitude, longitude)),
+  };
+}
+
+function centeredMockRecommendationSources(
+  center: { lat: number; lng: number },
+  radiusM: number,
+): MockRecommendationSource[] {
+  return MOCK_VACANCIES.slice(0, 3).map((vacancy, index) => {
+    const offset = MOCK_RECOMMENDATION_OFFSETS_M[index] ?? { north: 0, east: 0 };
+    const point = offsetWithinRadius(center, offset.north, offset.east, radiusM);
+    return {
+      vacancy,
+      latitude: point.lat,
+      longitude: point.lng,
+      distanceM: Math.round(distanceMeters(center.lat, center.lng, point.lat, point.lng)),
+    };
+  });
+}
+
+function offsetWithinRadius(
+  center: { lat: number; lng: number },
+  northM: number,
+  eastM: number,
+  radiusM: number,
+): { lat: number; lng: number } {
+  const requestedDistance = Math.sqrt(northM ** 2 + eastM ** 2);
+  const maxDistance = Math.max(0, radiusM * 0.45);
+  const scale = requestedDistance > 0 ? Math.min(1, maxDistance / requestedDistance) : 0;
+  const north = northM * scale;
+  const east = eastM * scale;
+  const lat = center.lat + north / 111_000;
+  const lng = center.lng + east / (111_000 * Math.max(0.1, Math.cos(toRad(center.lat))));
+  return { lat, lng };
 }
 
 const handlePollAnalysis: Handler = (_spec, params) => {
@@ -710,6 +785,9 @@ const handleSearchVacancies: Handler = (spec) => {
   const scoreMin = numberQuery(spec.query?.scoreMin);
   const areaMin = numberQuery(spec.query?.areaMin);
   const areaMax = numberQuery(spec.query?.areaMax);
+  const latitude = numberQuery(spec.query?.latitude);
+  const longitude = numberQuery(spec.query?.longitude);
+  const radiusM = numberQuery(spec.query?.radiusM);
   const sort = (spec.query?.sort as VacancySearchSort | undefined) ?? 'score_desc';
   const page = Math.max(0, Math.floor(numberQuery(spec.query?.page) ?? 0));
   const size = Math.min(600, Math.max(1, Math.floor(numberQuery(spec.query?.size) ?? 20)));
@@ -730,7 +808,8 @@ const handleSearchVacancies: Handler = (spec) => {
       (maintenanceFeeMax === undefined || Number(vacancy.maintenanceFee ?? Infinity) <= maintenanceFeeMax) &&
       (scoreMin === undefined || Number(vacancy.survivalScore ?? -Infinity) >= scoreMin) &&
       (areaMin === undefined || Number(vacancy.locationArea ?? -Infinity) >= areaMin) &&
-      (areaMax === undefined || Number(vacancy.locationArea ?? Infinity) <= areaMax);
+      (areaMax === undefined || Number(vacancy.locationArea ?? Infinity) <= areaMax) &&
+      withinSearchRadius(vacancy, latitude, longitude, radiusM);
   });
 
   const sorted = [...filtered].sort((a, b) => compareVacancies(a, b, sort));
@@ -808,6 +887,17 @@ function numberQuery(value: unknown): number | undefined {
   if (value === undefined || value === null || value === '') return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function withinSearchRadius(
+  vacancy: Vacancy,
+  latitude?: number,
+  longitude?: number,
+  radiusM?: number,
+): boolean {
+  if (latitude === undefined || longitude === undefined || radiusM === undefined) return true;
+  if (vacancy.latitude === undefined || vacancy.longitude === undefined) return false;
+  return distanceMeters(latitude, longitude, vacancy.latitude, vacancy.longitude) <= radiusM;
 }
 
 function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
