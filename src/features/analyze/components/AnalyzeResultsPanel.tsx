@@ -95,7 +95,7 @@ export function AnalyzeResultsPanel({
                         {recommended ? '추천' : '비추천'}
                       </div>
                       <div className="rr-addr">{property.addr}</div>
-                      <div className="rr-sub">{property.floor} · {property.area}㎡ · 상가</div>
+                      <div className="rr-sub">{formatPropertySubline(property)}</div>
                     </div>
                     <div className="rr-score-box">
                       <div className="rr-score">{formatLocationScore(property.score)}</div>
@@ -528,6 +528,31 @@ function formatWon(value: number): string {
 
 function formatLocationScore(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function formatPropertySubline(property: AnalyzeProperty): string {
+  const parts: string[] = [];
+  const floor = cleanPropertyMeta(property.floor);
+  if (floor && floor !== '상가') parts.push(floor);
+  if (Number.isFinite(property.area) && property.area > 0) {
+    parts.push(`${property.area.toLocaleString('ko-KR')}㎡`);
+  }
+  parts.push('상가');
+  const distance = formatDistance(property.distanceM);
+  if (distance) parts.push(`${distance} 거리`);
+  return parts.join(' · ');
+}
+
+function cleanPropertyMeta(value?: string | null): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed.includes('_')) return null;
+  return trimmed;
+}
+
+function formatDistance(value?: number): string | null {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}km`;
+  return `${Math.round(value).toLocaleString('ko-KR')}m`;
 }
 
 function HorizonForecastStrip({ horizons }: { horizons: ReturnType<typeof normalizeHorizonScores> }) {
