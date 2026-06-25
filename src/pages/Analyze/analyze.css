@@ -1491,19 +1491,6 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   border-color: #F4B431;
   box-shadow: inset 0 0 0 1px rgba(244,180,49,.42), 0 8px 18px rgba(244,180,49,.24);
 }
-.rr-forecast-cell.is-primary::after {
-  content: '핵심';
-  position: absolute;
-  top: 9px;
-  right: 9px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: #F4B431;
-  color: #5A2D00;
-  font-size: 8px;
-  font-weight: 950;
-  line-height: 1;
-}
 .rr-forecast-cell span {
   display: block;
   font-size: 10px;
