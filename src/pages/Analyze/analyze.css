@@ -756,10 +756,6 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
-.rr-score-suf {
-  font-size: 12px; color: #6B7490; font-weight: 600;
-  margin-left: 1px;
-}
 .rr-score-lab {
   font-size: 9px; color: #9AA3BD;
   margin-top: 2px;
@@ -1503,14 +1499,8 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   color: #101828;
   font-variant-numeric: tabular-nums;
 }
-.rr-forecast-cell b em {
-  font-style: normal;
-  font-size: 12px;
-  color: #667085;
-}
 .rr-forecast-cell.is-primary span,
-.rr-forecast-cell.is-primary b,
-.rr-forecast-cell.is-primary b em {
+.rr-forecast-cell.is-primary b {
   color: #fff;
 }
 .rr-forecast-bar {
