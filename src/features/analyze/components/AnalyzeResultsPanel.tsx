@@ -123,7 +123,11 @@ export function AnalyzeResultsPanel({
                     <VacancyHistoryCue history={property.history} />
                   )}
                   {isSelected && property.history && (
-                    <VacancyHistoryInsight history={property.history} currentScore={property.score} />
+                    <VacancyHistoryInsight
+                      history={property.history}
+                      currentScore={property.score}
+                      scoreExplanation={scoreExplanation}
+                    />
                   )}
                   {isSelected && (
                     <div className="rr-card-footer">
@@ -206,9 +210,11 @@ function VacancyHistoryCue({
 function VacancyHistoryInsight({
   history,
   currentScore,
+  scoreExplanation,
 }: {
   history: VacancyHistoryData;
   currentScore: number;
+  scoreExplanation: ScoreExplanationData;
 }) {
   const trend = history.scoreTrend.length > 0
     ? history.scoreTrend
@@ -222,6 +228,8 @@ function VacancyHistoryInsight({
   const latestExit = [...closedEvents].reverse().find(event => event.endedOn || event.exitReasonSummary)
     ?? closedEvents[closedEvents.length - 1];
   const latestExitYear = yearFromDate(latestExit?.endedOn);
+  const turnoverSignal = topScoreFeatures(scoreExplanation)
+    .find(item => effectTone(item.effect) === 'negative');
 
   return (
     <div className="rr-history-intel">
@@ -255,6 +263,9 @@ function VacancyHistoryInsight({
 
       <div className="rr-hi-facts">
         <span><em>최근 공실 전환</em><b>{compactExitReason(latestExit?.exitReasonSummary ?? history.summary.lastExitReason)}</b></span>
+        {turnoverSignal && (
+          <span><em>전환 의심 조건</em><b>{turnoverSignalText(turnoverSignal)}</b></span>
+        )}
       </div>
 
       <div className="rr-hi-ledger">
@@ -739,7 +750,7 @@ function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
 
   const positiveCount = features.filter(item => effectTone(item.effect) === 'positive').length;
   const cautionCount = features.filter(item => effectTone(item.effect) === 'negative').length;
-  const sourceLabel = explanation.source?.startsWith('mock') ? '예시' : '데이터';
+  const sourceLabel = scoreSourceLabel(explanation.source);
 
   return (
     <div className="rr-xai-panel">
@@ -785,6 +796,7 @@ function ScoreFeatureReasonRow({ item }: { item: ScoreFeatureReason }) {
             <em>{effectLabel(tone)}</em>
           </div>
           <p>{comparisonText(item)}</p>
+          <FeatureValuePair item={item} />
         </div>
       </div>
       <div className="rr-xai-rail" aria-hidden="true">
@@ -795,6 +807,19 @@ function ScoreFeatureReasonRow({ item }: { item: ScoreFeatureReason }) {
         </div>
         <span>이 매물</span>
       </div>
+    </div>
+  );
+}
+
+function FeatureValuePair({ item }: { item: ScoreFeatureReason }) {
+  const current = finiteNumber(item.currentValue);
+  const average = finiteNumber(item.averageValue);
+  if (current == null || average == null) return null;
+
+  return (
+    <div className="rr-xai-values">
+      <span>평균 <b>{formatFeatureValue(average, item.displayUnit)}</b></span>
+      <span>이 매물 <b>{formatFeatureValue(current, item.displayUnit)}</b></span>
     </div>
   );
 }
@@ -821,6 +846,12 @@ function effectLabel(tone: ReturnType<typeof effectTone>): string {
   return '확인중';
 }
 
+function scoreSourceLabel(source: string | null | undefined): string {
+  if (!source || source.startsWith('mock')) return '예시';
+  if (source.includes('top_features')) return 'AI 근거';
+  return '데이터';
+}
+
 function comparisonText(item: ScoreFeatureReason): string {
   const current = finiteNumber(item.currentValue);
   const average = finiteNumber(item.averageValue);
@@ -831,9 +862,33 @@ function comparisonText(item: ScoreFeatureReason): string {
 
   const direction = delta > 0 ? '높아' : '낮아';
   const tone = effectTone(item.effect);
-  if (tone === 'positive') return `상권 평균보다 ${direction} 유리해요`;
-  if (tone === 'negative') return `상권 평균보다 ${direction} 부담이에요`;
+  if (tone === 'positive') return `상권 평균보다 ${direction} 재입점 조건이 좋아요`;
+  if (tone === 'negative') return `상권 평균보다 ${direction} 공실 전환 부담으로 보여요`;
   return `상권 평균보다 ${direction} 보여요`;
+}
+
+function turnoverSignalText(item: ScoreFeatureReason): string {
+  const direction = featureDirection(item);
+  return direction ? `${item.featureLabel} ${direction}` : item.featureLabel;
+}
+
+function featureDirection(item: ScoreFeatureReason): string | null {
+  const current = finiteNumber(item.currentValue);
+  const average = finiteNumber(item.averageValue);
+  if (current == null || average == null) return null;
+  const delta = current - average;
+  if (Math.abs(delta) < 0.000001) return '평균 수준';
+  return delta > 0 ? '높음' : '낮음';
+}
+
+function formatFeatureValue(value: number, unit: string | null | undefined): string {
+  const abs = Math.abs(value);
+  const digits = abs >= 100 ? 0 : abs >= 10 ? 1 : 2;
+  const formatted = new Intl.NumberFormat('ko-KR', {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: 0,
+  }).format(value);
+  return unit ? `${formatted}${unit}` : formatted;
 }
 
 function comparisonMarker(item: ScoreFeatureReason): number | null {
