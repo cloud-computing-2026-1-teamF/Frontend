@@ -196,7 +196,7 @@ function VacancyHistoryCue({
 
   return (
     <div className="rr-history-cue">
-      <span>기억 데이터</span>
+      <span>상권 변화 이력</span>
       <b>{formatSigned(delta)}p</b>
       <em>{transitionCount}회 업종 변동</em>
     </div>
@@ -229,7 +229,7 @@ function VacancyHistoryInsight({
     <div className="rr-history-intel">
       <div className="rr-hi-head">
         <div>
-          <div className="rr-hi-kicker">매물 기억 데이터</div>
+          <div className="rr-hi-kicker">매물·상권 변화 이력</div>
           <h4>{first.year} - {latest.year}</h4>
         </div>
         <span className="rr-hi-source">{history.summary.source.startsWith('mock') ? 'MOCK' : 'DATA'}</span>
