@@ -1272,31 +1272,54 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .rr-hi-facts span {
   min-width: 0;
   max-width: 100%;
-  height: 26px;
+  min-height: 34px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: #F8FAFC;
-  border: 1px solid #E7ECF4;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #FFF4ED, #FFFFFF);
+  border: 1px solid #F1C8B4;
+  box-shadow: 0 8px 18px rgba(217, 71, 43, .10);
 }
 .rr-hi-facts em {
-  font-size: 9px;
-  color: #6B7490;
+  height: 20px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #FFE5D6;
+  color: #B54708;
   font-style: normal;
+  font-size: 9px;
+  line-height: 1;
   font-weight: 850;
   white-space: nowrap;
 }
 .rr-hi-facts b {
   min-width: 0;
-  font-size: 10px;
-  line-height: 1;
-  color: #273142;
+  font-size: 12px;
+  line-height: 1.15;
+  color: #9A3412;
   font-weight: 900;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.rr-hi-facts.is-positive span,
+.rr-hi-facts.is-fallback span {
+  background: linear-gradient(135deg, #ECFDF7, #FFFFFF);
+  border-color: #B8E4D0;
+  box-shadow: 0 8px 18px rgba(15, 118, 110, .10);
+}
+.rr-hi-facts.is-positive em,
+.rr-hi-facts.is-fallback em {
+  background: #DDF7EB;
+  color: #0A7A5B;
+}
+.rr-hi-facts.is-positive b,
+.rr-hi-facts.is-fallback b {
+  color: #065F46;
 }
 .rr-hi-ledger {
   margin-top: 10px;
@@ -1722,45 +1745,16 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   font-weight: 850;
   font-variant-numeric: tabular-nums;
 }
-.rr-xai-values {
-  margin-top: 7px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.rr-xai-values span {
-  min-width: 0;
-  height: 22px;
-  padding: 0 7px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border-radius: 999px;
-  background: #F1F5F9;
-  color: #64748B;
-  font-size: 9px;
-  line-height: 1;
-  font-weight: 850;
-  font-variant-numeric: tabular-nums;
-}
-.rr-xai-values b {
-  min-width: 0;
-  color: #273142;
-  font-size: 9.5px;
-  font-weight: 950;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .rr-xai-rail {
-  margin-top: 11px;
-  display: grid;
-  grid-template-columns: auto minmax(92px, 1fr) auto;
-  align-items: center;
-  gap: 8px;
+  margin-top: 9px;
   color: #94A3B8;
   font-size: 9px;
   font-weight: 900;
+}
+.rr-xai-rail-graph {
+  position: relative;
+  min-width: 0;
+  padding: 22px 0 18px;
 }
 .rr-xai-rail-track {
   position: relative;
@@ -1804,6 +1798,55 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 }
 .rr-xai-feature.is-positive .rr-xai-rail-track b { border-color: #0F766E; }
 .rr-xai-feature.is-negative .rr-xai-rail-track b { border-color: #D9472B; }
+.rr-xai-rail-value {
+  position: absolute;
+  z-index: 2;
+  max-width: 46%;
+  height: 20px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  background: #FFFFFF;
+  border: 1px solid #DDE6F1;
+  box-shadow: 0 5px 12px rgba(15,23,42,.09);
+  color: #64748B;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: translateX(-50%);
+}
+.rr-xai-rail-value b {
+  min-width: 0;
+  color: #273142;
+  font-size: 9.5px;
+  font-weight: 950;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rr-xai-rail-value.is-current {
+  top: 0;
+  border-color: rgba(15, 118, 110, .24);
+}
+.rr-xai-feature.is-positive .rr-xai-rail-value.is-current {
+  color: #0A7A5B;
+}
+.rr-xai-feature.is-negative .rr-xai-rail-value.is-current {
+  color: #B54708;
+  border-color: rgba(217, 71, 43, .25);
+}
+.rr-xai-rail-value.is-average {
+  bottom: 0;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: #7B879A;
+}
 
 /* FactorCard / donut styles moved to shared/factor-viz.css after the
    2026-04-26 indicator redesign — donuts dropped, .fv-* classes used. */
