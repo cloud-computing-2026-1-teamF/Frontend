@@ -1083,6 +1083,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   font-size: 9px;
   font-weight: 850;
   color: #0F766E;
+  white-space: nowrap;
 }
 .rr-history-cue b {
   font-size: 12px;
