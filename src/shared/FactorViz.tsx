@@ -162,7 +162,7 @@ export function buildFactorViz(
   reference?: VacancyMetricReference | null,
 ): (FactorCardProps & { key: string })[] {
   const peerCount = reference?.peerCount ?? 0;
-  const peerLabel = peerCount > 0 ? `동일 업종 공실 ${peerCount.toLocaleString()}개 기준` : '선택 공실 기준';
+  const peerLabel = peerCount > 0 ? `전체 동일 업종 ${peerCount.toLocaleString()}개 비교군` : '선택 공실 기준';
   const foot = metricModel(reference?.footTrafficDaily, sel.foot, peerCount);
   const comp = metricModel(reference?.competition500m, sel.comp, peerCount);
   const rev = metricModel(reference?.averageSalesMonthly, sel.rev, peerCount);
