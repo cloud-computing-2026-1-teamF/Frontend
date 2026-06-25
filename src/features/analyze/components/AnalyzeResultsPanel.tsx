@@ -107,15 +107,15 @@ export function AnalyzeResultsPanel({
                   <div className="rr-kpis">
                     <div className="rr-kpi">
                       <div className="rr-kpi-lab">{property.transactionType === '매매' ? '매매가' : '월세'}</div>
-                      <div className="rr-kpi-val">{property.transactionType === '매매' ? property.salePrice ?? 0 : property.rent}<span className="unit">만</span></div>
+                      <div className="rr-kpi-val">{formatManCurrency(property.transactionType === '매매' ? property.salePrice : property.rent)}</div>
                     </div>
                     <div className="rr-kpi">
                       <div className="rr-kpi-lab">보증금</div>
-                      <div className="rr-kpi-val">{(property.deposit / 1000).toFixed(1)}<span className="unit">천만</span></div>
+                      <div className="rr-kpi-val">{formatManCurrency(property.deposit)}</div>
                     </div>
                     <div className="rr-kpi">
                       <div className="rr-kpi-lab">관리비</div>
-                      <div className="rr-kpi-val">{property.mgmt}<span className="unit">만</span></div>
+                      <div className="rr-kpi-val">{formatManCurrency(property.mgmt)}</div>
                     </div>
                   </div>
                   <MenuPriceEstimator property={property} selectedBiz={selectedBiz} />
@@ -415,7 +415,7 @@ function buildEventInsights(history: VacancyHistoryData, trend: VacancyScorePoin
     const endScore = scoreAtYear(trend, endYear);
     const move = startScore != null && endScore != null
       ? formatSigned(Math.round((endScore - startScore) * 10) / 10)
-      : '±0.0';
+      : '±0';
     const rawScoreMove = startScore != null && endScore != null
       ? Math.round((endScore - startScore) * 10) / 10
       : null;
@@ -469,11 +469,11 @@ function directionFromDelta(delta: number | null): string {
 }
 
 function formatSigned(value?: number | null): string {
-  if (value == null) return '±0.0';
-  const rounded = Math.round(value * 10) / 10;
-  if (rounded > 0) return `+${rounded.toFixed(1)}`;
-  if (rounded < 0) return rounded.toFixed(1);
-  return '±0.0';
+  if (value == null) return '±0';
+  const rounded = Math.round(value);
+  if (rounded > 0) return `+${rounded}`;
+  if (rounded < 0) return `${rounded}`;
+  return '±0';
 }
 
 function formatShortPeriod(start?: string | null, end?: string | null): string {
@@ -522,6 +522,18 @@ function formatMan(value: number): string {
   return `${Math.round(value).toLocaleString('ko-KR')}만`;
 }
 
+function formatManCurrency(value?: number | null): string {
+  const amountMan = Math.max(0, Math.round(value ?? 0));
+  if (amountMan >= 10_000) {
+    const eok = Math.floor(amountMan / 10_000);
+    const man = amountMan % 10_000;
+    return man > 0
+      ? `${eok.toLocaleString('ko-KR')}억 ${man.toLocaleString('ko-KR')}만`
+      : `${eok.toLocaleString('ko-KR')}억`;
+  }
+  return `${amountMan.toLocaleString('ko-KR')}만`;
+}
+
 function formatWon(value: number): string {
   return `${Math.round(value).toLocaleString('ko-KR')}원`;
 }
@@ -535,7 +547,7 @@ function formatPropertySubline(property: AnalyzeProperty): string {
   const floor = cleanPropertyMeta(property.floor);
   if (floor && floor !== '상가') parts.push(floor);
   if (Number.isFinite(property.area) && property.area > 0) {
-    parts.push(`${property.area.toLocaleString('ko-KR')}㎡`);
+    parts.push(`${Math.round(property.area).toLocaleString('ko-KR')}㎡`);
   }
   parts.push('상가');
   const distance = formatDistance(property.distanceM);
@@ -551,7 +563,6 @@ function cleanPropertyMeta(value?: string | null): string | null {
 
 function formatDistance(value?: number): string | null {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
-  if (value >= 1000) return `${(value / 1000).toFixed(1)}km`;
   return `${Math.round(value).toLocaleString('ko-KR')}m`;
 }
 
@@ -696,7 +707,8 @@ function LocationScoreForecastCard({ property }: { property: AnalyzeProperty }) 
   const horizons = normalizeHorizonScores(property.horizonScores, property.score, property.recommended);
   const primary = horizons.find(item => item.horizonYears === PRIMARY_HORIZON_YEARS) ?? horizons[0];
   const delta = horizonDelta(horizons, property.score);
-  const deltaLabel = delta > 0 ? `+${delta.toFixed(1)}p` : `${delta.toFixed(1)}p`;
+  const roundedDelta = Math.round(delta);
+  const deltaLabel = roundedDelta > 0 ? `+${roundedDelta}p` : `${roundedDelta}p`;
   const outlook = delta >= 2 ? '상승 흐름' : delta <= -2 ? '보수 점검' : '안정 흐름';
   const primaryScore = formatLocationScore(primary?.survivalScore ?? property.score);
 
