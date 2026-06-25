@@ -219,8 +219,6 @@ function VacancyHistoryInsight({
   const direction = directionFromDelta(delta);
   const events = buildEventInsights(history, trend);
   const closedEvents = closedHistoryEvents(history.occupancyTimeline);
-  const currentOccupancy = [...history.occupancyTimeline].reverse().find(event => event.status === 'vacant')
-    ?? history.occupancyTimeline[history.occupancyTimeline.length - 1];
   const latestExit = [...closedEvents].reverse().find(event => event.endedOn || event.exitReasonSummary)
     ?? closedEvents[closedEvents.length - 1];
   const latestExitYear = yearFromDate(latestExit?.endedOn);
@@ -256,9 +254,7 @@ function VacancyHistoryInsight({
       <HistoryTimeline trend={trend} events={history.occupancyTimeline} currentScore={currentScore} />
 
       <div className="rr-hi-facts">
-        <span><em>최근 전환</em><b>{compactExitReason(latestExit?.exitReasonSummary ?? history.summary.lastExitReason)}</b></span>
-        <span><em>현재</em><b>{currentOccupancy?.status === 'vacant' ? '공실' : '운영'}</b></span>
-        <span><em>조건</em><b>{formatRentTerm(currentOccupancy)}</b></span>
+        <span><em>최근 공실 전환</em><b>{compactExitReason(latestExit?.exitReasonSummary ?? history.summary.lastExitReason)}</b></span>
       </div>
 
       <div className="rr-hi-ledger">
@@ -501,11 +497,6 @@ function formatOccupancyTerms(event?: VacancyHistoryEvent | null): string | null
     event.deposit != null ? `보증 ${formatMan(event.deposit)}` : null,
   ].filter(Boolean);
   return terms.length > 0 ? terms.join(' · ') : null;
-}
-
-function formatRentTerm(event?: VacancyHistoryEvent | null): string {
-  const terms = formatOccupancyTerms(event);
-  return terms ?? '조건 확인 필요';
 }
 
 function compactExitReason(reason?: string | null): string {
