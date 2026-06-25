@@ -191,7 +191,7 @@ export const buildPropertiesFromRecommendations = (
         rank: item.rank,
         recommended: item.recommended,
         addr,
-        floor: readableLabel(item.category) || '상가',
+        floor: '상가',
         area: roundOne(area),
         rent: item.monthlyRent ?? 0,
         deposit: item.deposit ?? 0,
