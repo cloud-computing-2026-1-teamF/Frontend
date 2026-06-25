@@ -225,9 +225,6 @@ function VacancyHistoryInsight({
   const direction = directionFromDelta(delta);
   const events = buildEventInsights(history, trend);
   const closedEvents = closedHistoryEvents(history.occupancyTimeline);
-  const latestExit = [...closedEvents].reverse().find(event => event.endedOn || event.exitReasonSummary)
-    ?? closedEvents[closedEvents.length - 1];
-  const latestExitYear = yearFromDate(latestExit?.endedOn);
   const turnoverSignal = evacuationSignalCandidate(scoreExplanation);
 
   return (
@@ -254,7 +251,7 @@ function VacancyHistoryInsight({
         <div className="rr-hi-metric">
           <span>업종 변동</span>
           <b>{closedEvents.length}회</b>
-          <em>{latestExitYear ? `${latestExitYear} 최근` : '현재 공실'}</em>
+          <em>{closedEvents.length > 0 ? '전환 이력' : '현재 공실'}</em>
         </div>
       </div>
 
@@ -873,7 +870,7 @@ function comparisonText(item: ScoreFeatureReason): string {
   const delta = current - average;
   if (Math.abs(delta) < 0.000001) return '상권 평균과 거의 같아요';
 
-  const direction = delta > 0 ? '높아' : '낮아';
+  const direction = featureDirection(item, 'clause');
   const tone = effectTone(item.effect);
   if (tone === 'positive') return `상권 평균보다 ${direction} 재입점 조건이 좋아요`;
   if (tone === 'negative') return `상권 평균보다 ${direction} 공실 전환 부담으로 보여요`;
@@ -896,13 +893,110 @@ function positiveMargin(item: ScoreFeatureReason): number {
   return favorableDelta / base;
 }
 
-function featureDirection(item: ScoreFeatureReason): string | null {
+type FeatureDirectionMode = 'label' | 'clause';
+
+type FeatureDirectionWords = {
+  highLabel: string;
+  lowLabel: string;
+  highClause: string;
+  lowClause: string;
+};
+
+const SIZE_DIRECTION: FeatureDirectionWords = {
+  highLabel: '큼',
+  lowLabel: '작음',
+  highClause: '커',
+  lowClause: '작아',
+};
+
+const COUNT_DIRECTION: FeatureDirectionWords = {
+  highLabel: '많음',
+  lowLabel: '적음',
+  highClause: '많아',
+  lowClause: '적어',
+};
+
+const LEVEL_DIRECTION: FeatureDirectionWords = {
+  highLabel: '높음',
+  lowLabel: '낮음',
+  highClause: '높아',
+  lowClause: '낮아',
+};
+
+const DISTANCE_DIRECTION: FeatureDirectionWords = {
+  highLabel: '멂',
+  lowLabel: '가까움',
+  highClause: '멀어',
+  lowClause: '가까워',
+};
+
+const DURATION_DIRECTION: FeatureDirectionWords = {
+  highLabel: '긺',
+  lowLabel: '짧음',
+  highClause: '길어',
+  lowClause: '짧아',
+};
+
+const PRICE_DIRECTION: FeatureDirectionWords = {
+  highLabel: '비쌈',
+  lowLabel: '저렴함',
+  highClause: '비싸',
+  lowClause: '저렴해',
+};
+
+const SIGNAL_DIRECTION: FeatureDirectionWords = {
+  highLabel: '강함',
+  lowLabel: '약함',
+  highClause: '강해',
+  lowClause: '약해',
+};
+
+const FEATURE_DIRECTION_WORDS: Record<string, FeatureDirectionWords> = {
+  facility_total_size: SIZE_DIRECTION,
+  store_site_area: SIZE_DIRECTION,
+  exclusive_area: SIZE_DIRECTION,
+  supply_area: SIZE_DIRECTION,
+  location_area: SIZE_DIRECTION,
+  floor_area_per_floor: SIZE_DIRECTION,
+  gross_floor_area: SIZE_DIRECTION,
+  cafe_count_1000m: COUNT_DIRECTION,
+  neighborhood_store_count: COUNT_DIRECTION,
+  seat_closed_count: COUNT_DIRECTION,
+  same_category_count_1000m: COUNT_DIRECTION,
+  same_category_count_500m: COUNT_DIRECTION,
+  same_category_competition_500m: COUNT_DIRECTION,
+  restaurant_count_500m: COUNT_DIRECTION,
+  cafe_count_500m: COUNT_DIRECTION,
+  seat_open_count: COUNT_DIRECTION,
+  ground_floors: COUNT_DIRECTION,
+  resident_population_density_annual: COUNT_DIRECTION,
+  evening_population_density: COUNT_DIRECTION,
+  weekend_population_density: COUNT_DIRECTION,
+  daily_floating_population: COUNT_DIRECTION,
+  cafe_2030_fit: COUNT_DIRECTION,
+  cityhall_distance_km: DISTANCE_DIRECTION,
+  gangnam_distance_km: DISTANCE_DIRECTION,
+  seat_avg_lifetime_months: DURATION_DIRECTION,
+  seat_median_lifetime_months: DURATION_DIRECTION,
+  monthly_rent: PRICE_DIRECTION,
+  deposit: PRICE_DIRECTION,
+  maintenance_fee: PRICE_DIRECTION,
+  premium: PRICE_DIRECTION,
+  sale_price: PRICE_DIRECTION,
+  official_land_price: PRICE_DIRECTION,
+  commercial_turnover_type: SIGNAL_DIRECTION,
+};
+
+function featureDirection(item: ScoreFeatureReason, mode: FeatureDirectionMode = 'label'): string | null {
   const current = finiteNumber(item.currentValue);
   const average = finiteNumber(item.averageValue);
   if (current == null || average == null) return null;
   const delta = current - average;
   if (Math.abs(delta) < 0.000001) return '평균 수준';
-  return delta > 0 ? '높음' : '낮음';
+  const words = FEATURE_DIRECTION_WORDS[item.featureKey] ?? LEVEL_DIRECTION;
+  const high = delta > 0;
+  if (mode === 'clause') return high ? words.highClause : words.lowClause;
+  return high ? words.highLabel : words.lowLabel;
 }
 
 function formatFeatureValue(value: number, unit: string | null | undefined): string {
@@ -912,7 +1006,16 @@ function formatFeatureValue(value: number, unit: string | null | undefined): str
     maximumFractionDigits: digits,
     minimumFractionDigits: 0,
   }).format(value);
-  return unit ? `${formatted}${unit}` : formatted;
+  const normalizedUnit = normalizeFeatureUnit(unit);
+  return normalizedUnit ? `${formatted}${normalizedUnit}` : formatted;
+}
+
+function normalizeFeatureUnit(unit: string | null | undefined): string {
+  if (!unit) return '';
+  return unit
+    .trim()
+    .replace(/km(?:\^?2|²)/gi, '㎢')
+    .replace(/m(?:\^?2|²)/gi, '㎡');
 }
 
 function comparisonMarker(item: ScoreFeatureReason): number | null {
