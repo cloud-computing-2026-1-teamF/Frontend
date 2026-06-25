@@ -98,8 +98,8 @@ export function AnalyzeResultsPanel({
                       <div className="rr-sub">{property.floor} · {property.area}㎡ · 상가</div>
                     </div>
                     <div className="rr-score-box">
-                      <div className="rr-score">{property.score}<span className="rr-score-suf">%</span></div>
-                      <div className="rr-score-lab">3년 생존율</div>
+                      <div className="rr-score">{formatLocationScore(property.score)}</div>
+                      <div className="rr-score-lab">입지 점수</div>
                     </div>
                   </div>
                   <HorizonForecastStrip horizons={horizons} />
@@ -526,9 +526,13 @@ function formatWon(value: number): string {
   return `${Math.round(value).toLocaleString('ko-KR')}원`;
 }
 
+function formatLocationScore(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
 function HorizonForecastStrip({ horizons }: { horizons: ReturnType<typeof normalizeHorizonScores> }) {
   return (
-    <div className="rr-horizon-strip" aria-label="기간별 생존율">
+    <div className="rr-horizon-strip" aria-label="기간별 입지 점수">
       {horizons.map(item => (
         <div
           key={item.horizonYears}
@@ -536,10 +540,10 @@ function HorizonForecastStrip({ horizons }: { horizons: ReturnType<typeof normal
         >
           <div className="rr-horizon-top">
             <span>{item.horizonYears}년</span>
-            <b>{item.survivalScore}%</b>
+            <b>{formatLocationScore(item.survivalScore)}</b>
           </div>
           <div className="rr-horizon-track">
-            <i style={{ width: `${item.survivalScore}%` }} />
+            <i style={{ width: `${formatLocationScore(item.survivalScore)}%` }} />
           </div>
         </div>
       ))}
@@ -663,19 +667,20 @@ function cueLabel(tone: ReturnType<typeof effectTone>): string {
   return '조건';
 }
 
-function SurvivalForecastCard({ property }: { property: AnalyzeProperty }) {
+function LocationScoreForecastCard({ property }: { property: AnalyzeProperty }) {
   const horizons = normalizeHorizonScores(property.horizonScores, property.score, property.recommended);
   const primary = horizons.find(item => item.horizonYears === PRIMARY_HORIZON_YEARS) ?? horizons[0];
   const delta = horizonDelta(horizons, property.score);
   const deltaLabel = delta > 0 ? `+${delta.toFixed(1)}p` : `${delta.toFixed(1)}p`;
-  const outlook = delta >= 2 ? '장기 상승' : delta <= -2 ? '장기 보수' : '장기 안정';
+  const outlook = delta >= 2 ? '상승 흐름' : delta <= -2 ? '보수 점검' : '안정 흐름';
+  const primaryScore = formatLocationScore(primary?.survivalScore ?? property.score);
 
   return (
     <div className="rr-forecast-card">
       <div className="rr-forecast-head">
         <div>
-          <div className="rr-forecast-kicker">생존율 전망</div>
-          <h4>{PRIMARY_HORIZON_YEARS}년 기준 {primary?.survivalScore ?? property.score}%</h4>
+          <div className="rr-forecast-kicker">기간별 입지 점수</div>
+          <h4>{PRIMARY_HORIZON_YEARS}년 기준 {primaryScore}점</h4>
         </div>
         <span className={`rr-forecast-delta ${delta < 0 ? 'is-down' : delta > 0 ? 'is-up' : 'is-flat'}`}>
           {outlook} {deltaLabel}
@@ -688,9 +693,9 @@ function SurvivalForecastCard({ property }: { property: AnalyzeProperty }) {
             className={`rr-forecast-cell is-${horizonTone(item.survivalScore)} ${item.horizonYears === PRIMARY_HORIZON_YEARS ? 'is-primary' : ''}`}
           >
             <span>{item.horizonYears}년</span>
-            <b>{item.survivalScore}<em>%</em></b>
+            <b>{formatLocationScore(item.survivalScore)}</b>
             <div className="rr-forecast-bar">
-              <i style={{ width: `${item.survivalScore}%` }} />
+              <i style={{ width: `${formatLocationScore(item.survivalScore)}%` }} />
             </div>
           </div>
         ))}
@@ -846,7 +851,7 @@ function PropertyDetail({
         </div>
       </div>
       <div className="rr-detail-body">
-        <SurvivalForecastCard property={property} />
+        <LocationScoreForecastCard property={property} />
         <ScoreExplanationPanel property={property} />
         {factors.map(factor => (
           <FactorCard key={factor.key} {...factor} />
