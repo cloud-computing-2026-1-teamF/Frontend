@@ -1722,6 +1722,36 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   font-weight: 850;
   font-variant-numeric: tabular-nums;
 }
+.rr-xai-values {
+  margin-top: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.rr-xai-values span {
+  min-width: 0;
+  height: 22px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  background: #F1F5F9;
+  color: #64748B;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+.rr-xai-values b {
+  min-width: 0;
+  color: #273142;
+  font-size: 9.5px;
+  font-weight: 950;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .rr-xai-rail {
   margin-top: 11px;
   display: grid;
