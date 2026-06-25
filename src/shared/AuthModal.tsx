@@ -65,7 +65,7 @@ export function AuthModal() {
           <div className="auth-points">
             <div className="auth-point"><Icon name="map-pin" size={15} /><span>지도 기반 공실매물 탐색</span></div>
             <div className="auth-point"><Icon name="chart" size={15} /><span>상권 · 유동인구 데이터 분석</span></div>
-            <div className="auth-point"><Icon name="trending" size={15} /><span>생존점수 기반 입지 추천</span></div>
+            <div className="auth-point"><Icon name="trending" size={15} /><span>입지 점수 기반 입지 추천</span></div>
           </div>
         </div>
 
