@@ -89,7 +89,7 @@ export function KakaoCanvas({
           <CustomOverlayMap
             key={p.rank}
             position={{ lat, lng }}
-            yAnchor={1}
+            yAnchor={0.5}
             xAnchor={0.5}
           >
             <NumberedPin
