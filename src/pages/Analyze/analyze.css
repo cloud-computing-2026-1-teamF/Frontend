@@ -707,7 +707,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   font-size: 13px; font-weight: 800;
   color: #fff;
   flex-shrink: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 .rr-rank.r1 {
   background: linear-gradient(135deg, #F4B431, #E89424);
@@ -740,7 +740,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 }
 .rr-addr {
   font-size: 14px; font-weight: 700; color: #0A0E1A;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   line-height: 1.3;
 }
 .rr-sub {
@@ -753,7 +753,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .rr-score {
   font-size: 24px; font-weight: 800; color: #0A0E1A;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
 .rr-score-lab {
@@ -778,8 +778,9 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   border: 1px solid #E8EDF5;
 }
 .rr-horizon-item.is-primary {
-  background: #101828;
-  border-color: #101828;
+  background: linear-gradient(180deg, #FFF7D6 0%, #FFE7A3 100%);
+  border-color: #F4B431;
+  box-shadow: inset 0 0 0 1px rgba(244,180,49,.38), 0 4px 10px rgba(244,180,49,.18);
 }
 .rr-horizon-top {
   display: flex;
@@ -802,7 +803,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 }
 .rr-horizon-item.is-primary .rr-horizon-top span,
 .rr-horizon-item.is-primary .rr-horizon-top b {
-  color: #fff;
+  color: #7A3F00;
 }
 .rr-horizon-track {
   margin-top: 7px;
@@ -818,10 +819,10 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   background: #0F766E;
 }
 .rr-horizon-item.is-primary .rr-horizon-track {
-  background: rgba(255,255,255,.18);
+  background: rgba(122,63,0,.16);
 }
 .rr-horizon-item.is-primary .rr-horizon-track i {
-  background: #F4B431;
+  background: #E89424;
 }
 .rr-horizon-item.is-watch .rr-horizon-track i { background: #F4B431; }
 .rr-horizon-item.is-risk .rr-horizon-track i { background: #E85D1F; }
@@ -899,7 +900,9 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   font-size: 13px; font-weight: 700; color: #0A0E1A;
   margin-top: 3px;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  line-height: 1.15;
+  word-break: keep-all;
 }
 .rr-kpi-val .unit { font-size: 10px; color: #6B7490; font-weight: 500; margin-left: 1px; }
 
@@ -1397,7 +1400,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .rr-detail-back:hover { background: #F4F6FB; }
 .rr-detail-title-main {
   font-size: 15px; font-weight: 700; color: #0A0E1A;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 .rr-detail-title-sub { font-size: 11px; color: #9AA3BD; margin-top: 1px; }
 
@@ -1473,6 +1476,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   gap: 8px;
 }
 .rr-forecast-cell {
+  position: relative;
   min-width: 0;
   min-height: 92px;
   padding: 10px;
@@ -1481,8 +1485,22 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   border: 1px solid #E7ECF4;
 }
 .rr-forecast-cell.is-primary {
-  background: #101828;
-  border-color: #101828;
+  background: linear-gradient(180deg, #FFF7D6 0%, #FFE7A3 100%);
+  border-color: #F4B431;
+  box-shadow: inset 0 0 0 1px rgba(244,180,49,.42), 0 8px 18px rgba(244,180,49,.24);
+}
+.rr-forecast-cell.is-primary::after {
+  content: '핵심';
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #F4B431;
+  color: #5A2D00;
+  font-size: 8px;
+  font-weight: 950;
+  line-height: 1;
 }
 .rr-forecast-cell span {
   display: block;
@@ -1501,7 +1519,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 }
 .rr-forecast-cell.is-primary span,
 .rr-forecast-cell.is-primary b {
-  color: #fff;
+  color: #7A3F00;
 }
 .rr-forecast-bar {
   margin-top: 12px;
@@ -1517,10 +1535,10 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   background: #0F766E;
 }
 .rr-forecast-cell.is-primary .rr-forecast-bar {
-  background: rgba(255,255,255,.18);
+  background: rgba(122,63,0,.16);
 }
 .rr-forecast-cell.is-primary .rr-forecast-bar i {
-  background: #F4B431;
+  background: #E89424;
 }
 .rr-forecast-cell.is-watch .rr-forecast-bar i { background: #F4B431; }
 .rr-forecast-cell.is-risk .rr-forecast-bar i { background: #E85D1F; }
@@ -1811,7 +1829,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   font-size: 18px; font-weight: 800; color: #fff;
   margin-top: 4px;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 .rr-factor-val .u { font-size: 10px; color: #9AA3BD; font-weight: 500; margin-left: 2px; }
 .rr-factor-delta {
@@ -1869,7 +1887,7 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   border: 1.5px solid var(--brand-500);
   background: linear-gradient(180deg, var(--brand-500), var(--brand-600));
   color: #fff;
-  font: 700 13px var(--font-sans); letter-spacing: -0.01em;
+  font: 700 13px var(--font-sans); letter-spacing: 0;
   cursor: pointer; transition: all .15s;
   box-shadow: 0 4px 12px rgba(232,93,31,.20);
 }
