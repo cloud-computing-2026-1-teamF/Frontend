@@ -260,15 +260,14 @@ function VacancyHistoryInsight({
 
       <HistoryTimeline trend={trend} events={history.occupancyTimeline} currentScore={currentScore} />
 
-      <div className="rr-hi-facts">
-        <span><em>최근 공실 전환</em><b>{compactExitReason(latestExit?.exitReasonSummary ?? history.summary.lastExitReason)}</b></span>
-        {turnoverSignal && (
+      {turnoverSignal && (
+        <div className={`rr-hi-facts is-${effectTone(turnoverSignal.item.effect)} ${turnoverSignal.isFallback ? 'is-fallback' : ''}`}>
           <span>
             <em>{turnoverSignal.isFallback ? '가장 약한 조건' : '전환 의심 조건'}</em>
             <b>{turnoverSignalText(turnoverSignal.item, turnoverSignal.isFallback)}</b>
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="rr-hi-ledger">
         {events.map(item => (
@@ -510,16 +509,6 @@ function formatOccupancyTerms(event?: VacancyHistoryEvent | null): string | null
     event.deposit != null ? `보증 ${formatMan(event.deposit)}` : null,
   ].filter(Boolean);
   return terms.length > 0 ? terms.join(' · ') : null;
-}
-
-function compactExitReason(reason?: string | null): string {
-  if (!reason) return '전환 기록 없음';
-  if (reason.includes('공실 등록') || reason.includes('영업중') || reason.includes('지번 단위')) return '공실 전환';
-  if (reason.includes('폐업')) return '폐업 기록';
-  if (reason.includes('고정비')) return '고정비 부담';
-  if (reason.includes('경쟁')) return '경쟁 부담';
-  if (reason.includes('수요')) return '수요 약화';
-  return reason.replace(' 추정', '').replace(' 가능성', '');
 }
 
 function formatMan(value: number): string {
@@ -785,6 +774,10 @@ function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
 function ScoreFeatureReasonRow({ item }: { item: ScoreFeatureReason }) {
   const tone = effectTone(item.effect);
   const marker = comparisonMarker(item);
+  const current = finiteNumber(item.currentValue);
+  const average = finiteNumber(item.averageValue);
+  const hasValues = current != null && average != null;
+  const currentLabelLeft = marker == null ? 50 : railLabelPosition(marker);
   const fillStyle = marker == null
     ? undefined
     : {
@@ -802,30 +795,32 @@ function ScoreFeatureReasonRow({ item }: { item: ScoreFeatureReason }) {
             <em>{effectLabel(tone)}</em>
           </div>
           <p>{comparisonText(item)}</p>
-          <FeatureValuePair item={item} />
         </div>
       </div>
-      <div className="rr-xai-rail" aria-hidden="true">
-        <span>평균</span>
-        <div className="rr-xai-rail-track">
+      <div
+        className="rr-xai-rail"
+        aria-label={hasValues
+          ? `${item.featureLabel} 평균 ${formatFeatureValue(average, item.displayUnit)}, 이 매물 ${formatFeatureValue(current, item.displayUnit)}`
+          : `${item.featureLabel} 평균 대비 위치`
+        }
+      >
+        <div className="rr-xai-rail-graph">
+          {hasValues && (
+            <span className="rr-xai-rail-value is-current" style={{ left: `${currentLabelLeft}%` }}>
+              이 매물 <b>{formatFeatureValue(current, item.displayUnit)}</b>
+            </span>
+          )}
+          <div className="rr-xai-rail-track" aria-hidden="true">
           {fillStyle && <i style={fillStyle} />}
           {marker != null && <b style={{ left: `${marker}%` }} />}
+          </div>
+          {hasValues && (
+            <span className="rr-xai-rail-value is-average" style={{ left: '50%' }}>
+              평균 <b>{formatFeatureValue(average, item.displayUnit)}</b>
+            </span>
+          )}
         </div>
-        <span>이 매물</span>
       </div>
-    </div>
-  );
-}
-
-function FeatureValuePair({ item }: { item: ScoreFeatureReason }) {
-  const current = finiteNumber(item.currentValue);
-  const average = finiteNumber(item.averageValue);
-  if (current == null || average == null) return null;
-
-  return (
-    <div className="rr-xai-values">
-      <span>평균 <b>{formatFeatureValue(average, item.displayUnit)}</b></span>
-      <span>이 매물 <b>{formatFeatureValue(current, item.displayUnit)}</b></span>
     </div>
   );
 }
@@ -933,6 +928,10 @@ function comparisonMarker(item: ScoreFeatureReason): number | null {
   const amplifiedRatio = Math.min(1, 0.28 + Math.sqrt(deltaRatio) * 0.72);
   const marker = 50 + Math.sign(delta) * amplifiedRatio * 43;
   return Math.round(Math.max(7, Math.min(93, marker)) * 10) / 10;
+}
+
+function railLabelPosition(marker: number): number {
+  return Math.round(Math.max(18, Math.min(82, marker)) * 10) / 10;
 }
 
 function finiteNumber(value: number | null | undefined): number | null {
