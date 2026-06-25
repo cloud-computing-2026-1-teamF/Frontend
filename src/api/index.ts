@@ -299,7 +299,7 @@ function subscribeAnalysisEvents(
     const steps: AnalysisEventResponse[] = [
       { status: 'running', progress: 25, step: { index: 1, total: 4, label: '주변 상권 살펴보는 중' }, error: null },
       { status: 'running', progress: 50, step: { index: 2, total: 4, label: '유동인구와 경쟁 매장 확인' }, error: null },
-      { status: 'running', progress: 75, step: { index: 3, total: 4, label: '업종별 생존율 계산' }, error: null },
+      { status: 'running', progress: 75, step: { index: 3, total: 4, label: '업종별 입지 점수 계산' }, error: null },
       { status: 'done', progress: 100, step: null, error: null },
     ];
     const timer = window.setInterval(() => {
