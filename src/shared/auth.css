@@ -50,7 +50,7 @@
 }
 .auth-quote p {
   margin: 0; font-size: 18px; line-height: 1.5; font-weight: 500;
-  color: #fff; word-break: keep-all; letter-spacing: -0.02em;
+  color: #fff; word-break: keep-all; letter-spacing: 0;
 }
 .auth-quote-foot { display: flex; align-items: center; gap: 12px; }
 .auth-avatar {
@@ -67,7 +67,7 @@
   padding: 16px; background: rgba(255,255,255,.06); border-radius: 10px;
   border: 1px solid rgba(255,255,255,.08); position: relative; z-index: 1;
 }
-.auth-stat-num { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+.auth-stat-num { font-size: 18px; font-weight: 700; letter-spacing: 0; }
 .auth-stat-num span { font-size: 12px; color: var(--ink-300); margin-left: 1px; }
 .auth-stat-lab { font-size: 10px; color: var(--ink-300); margin-top: 2px; }
 .auth-stat-div { width: 1px; height: 24px; background: rgba(255,255,255,.1); }
@@ -98,7 +98,7 @@
 }
 .auth-tabs button.is-on { background: #fff; color: var(--ink-900); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
 
-.auth-head h3 { margin: 0 0 4px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.auth-head h3 { margin: 0 0 4px; font-size: 20px; font-weight: 700; letter-spacing: 0; }
 .auth-head p { margin: 0; font-size: 12px; color: var(--ink-500); line-height: 1.5; word-break: keep-all; }
 
 .auth-social { display: flex; flex-direction: column; gap: 8px; }
