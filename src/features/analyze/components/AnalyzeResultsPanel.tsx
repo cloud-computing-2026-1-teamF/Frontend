@@ -912,7 +912,16 @@ function formatFeatureValue(value: number, unit: string | null | undefined): str
     maximumFractionDigits: digits,
     minimumFractionDigits: 0,
   }).format(value);
-  return unit ? `${formatted}${unit}` : formatted;
+  const normalizedUnit = normalizeFeatureUnit(unit);
+  return normalizedUnit ? `${formatted}${normalizedUnit}` : formatted;
+}
+
+function normalizeFeatureUnit(unit: string | null | undefined): string {
+  if (!unit) return '';
+  return unit
+    .trim()
+    .replace(/km(?:\^?2|²)/gi, '㎢')
+    .replace(/m(?:\^?2|²)/gi, '㎡');
 }
 
 function comparisonMarker(item: ScoreFeatureReason): number | null {
