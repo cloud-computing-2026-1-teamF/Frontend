@@ -242,7 +242,7 @@ function VacancyHistoryInsight({
           <em>{history.summary.scoreLabel}</em>
         </div>
         <div className="rr-hi-metric">
-          <span>장기 변화</span>
+          <span>장기 점수 변화</span>
           <b className={`rr-hi-delta is-${direction}`}>{formatSigned(delta)}p</b>
           <em>{first.year} - {latest.year}</em>
         </div>
