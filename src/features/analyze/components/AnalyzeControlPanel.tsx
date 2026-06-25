@@ -79,6 +79,7 @@ export function AnalyzeControlPanel({
   const budgetCount = activeBudgetFields
     .map(field => budget[field.key])
     .filter(value => value.trim() !== '').length;
+  const displayStepLabel = formatAnalysisStepLabel(analysisStepLabel);
 
   useEffect(() => {
     if (!bizType || !area || candidateStatus === 'idle' || candidateStatus === 'loading') return;
@@ -119,7 +120,7 @@ export function AnalyzeControlPanel({
           </div>
           <div>
             <div className="lf-analyzing-title">{selectedBiz?.emoji} {selectedBiz?.label} · {area?.displayName}</div>
-            <div className="lf-analyzing-sub">{analysisStepLabel || `반경 ${area?.radius ?? FIXED_RADIUS}m 안에서 입지를 찾고 있어요`}</div>
+            <div className="lf-analyzing-sub">{displayStepLabel || `반경 ${area?.radius ?? FIXED_RADIUS}m 안에서 입지를 찾고 있어요`}</div>
             <div className="lf-progress">
               <div className="lf-progress-track">
                 <span style={{ width: `${Math.max(0, Math.min(100, analysisProgress))}%` }} />
@@ -314,6 +315,14 @@ export function AnalyzeControlPanel({
       </div>
     </div>
   );
+}
+
+function formatAnalysisStepLabel(label?: string | null): string | null {
+  if (!label) return null;
+  return label
+    .replace(/생존률/g, '입지 점수')
+    .replace(/생존율/g, '입지 점수')
+    .replace(/생존점수/g, '입지 점수');
 }
 
 function MoneyField({
