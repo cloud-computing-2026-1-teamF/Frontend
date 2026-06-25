@@ -234,7 +234,6 @@ function VacancyHistoryInsight({
           <div className="rr-hi-kicker">매물·상권 변화 이력</div>
           <h4>{first.year} - {latest.year}</h4>
         </div>
-        <span className="rr-hi-source">{history.summary.source.startsWith('mock') ? 'MOCK' : 'DATA'}</span>
       </div>
 
       <div className="rr-hi-summary">
@@ -260,7 +259,7 @@ function VacancyHistoryInsight({
       {turnoverSignal && (
         <div className={`rr-hi-facts is-${effectTone(turnoverSignal.item.effect)} ${turnoverSignal.isFallback ? 'is-fallback' : ''}`}>
           <span>
-            <em>{turnoverSignal.isFallback ? '가장 약한 조건' : '전환 의심 조건'}</em>
+            <em>{turnoverSignal.isFallback ? '참고 조건' : '전환 의심 조건'}</em>
             <b>{turnoverSignalText(turnoverSignal.item, turnoverSignal.isFallback)}</b>
           </span>
         </div>
@@ -742,7 +741,6 @@ function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
 
   const positiveCount = features.filter(item => effectTone(item.effect) === 'positive').length;
   const cautionCount = features.filter(item => effectTone(item.effect) === 'negative').length;
-  const sourceLabel = scoreSourceLabel(explanation.source);
 
   return (
     <div className="rr-xai-panel">
@@ -751,7 +749,6 @@ function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
           <div className="rr-xai-kicker">추천 이유</div>
           <h4>결정적으로 본 조건 Top 3</h4>
         </div>
-        <span className={`rr-xai-source ${sourceLabel === '예시' ? 'is-mock' : ''}`}>{sourceLabel}</span>
       </div>
 
       <div className="rr-xai-summary" aria-label="평균 대비 조건 요약">
@@ -791,7 +788,6 @@ function ScoreFeatureReasonRow({ item }: { item: ScoreFeatureReason }) {
             <b>{item.featureLabel}</b>
             <em>{effectLabel(tone)}</em>
           </div>
-          <p>{comparisonText(item)}</p>
         </div>
       </div>
       <div
@@ -856,31 +852,10 @@ function effectLabel(tone: ReturnType<typeof effectTone>): string {
   return '확인중';
 }
 
-function scoreSourceLabel(source: string | null | undefined): string {
-  if (!source || source.startsWith('mock')) return '예시';
-  if (source.includes('top_features')) return 'AI 근거';
-  return '데이터';
-}
-
-function comparisonText(item: ScoreFeatureReason): string {
-  const current = finiteNumber(item.currentValue);
-  const average = finiteNumber(item.averageValue);
-  if (current == null || average == null) return '상권 평균과 비교 준비 중';
-
-  const delta = current - average;
-  if (Math.abs(delta) < 0.000001) return '상권 평균과 거의 같아요';
-
-  const direction = featureDirection(item, 'clause');
-  const tone = effectTone(item.effect);
-  if (tone === 'positive') return `상권 평균보다 ${direction} 재입점 조건이 좋아요`;
-  if (tone === 'negative') return `상권 평균보다 ${direction} 공실 전환 부담으로 보여요`;
-  return `상권 평균보다 ${direction} 보여요`;
-}
-
 function turnoverSignalText(item: ScoreFeatureReason, isFallback = false): string {
-  if (isFallback) return `${item.featureLabel} 유리폭 약함`;
+  if (isFallback) return `${withSubjectParticle(item.featureLabel)} 평균에 가장 가까워요`;
   const direction = featureDirection(item);
-  return direction ? `${item.featureLabel} ${direction}` : item.featureLabel;
+  return direction ? `${withSubjectParticle(item.featureLabel)} 평균보다 ${direction}` : item.featureLabel;
 }
 
 function positiveMargin(item: ScoreFeatureReason): number {
@@ -893,62 +868,44 @@ function positiveMargin(item: ScoreFeatureReason): number {
   return favorableDelta / base;
 }
 
-type FeatureDirectionMode = 'label' | 'clause';
-
 type FeatureDirectionWords = {
   highLabel: string;
   lowLabel: string;
-  highClause: string;
-  lowClause: string;
 };
 
 const SIZE_DIRECTION: FeatureDirectionWords = {
   highLabel: '큼',
   lowLabel: '작음',
-  highClause: '커',
-  lowClause: '작아',
 };
 
 const COUNT_DIRECTION: FeatureDirectionWords = {
   highLabel: '많음',
   lowLabel: '적음',
-  highClause: '많아',
-  lowClause: '적어',
 };
 
 const LEVEL_DIRECTION: FeatureDirectionWords = {
   highLabel: '높음',
   lowLabel: '낮음',
-  highClause: '높아',
-  lowClause: '낮아',
 };
 
 const DISTANCE_DIRECTION: FeatureDirectionWords = {
   highLabel: '멂',
   lowLabel: '가까움',
-  highClause: '멀어',
-  lowClause: '가까워',
 };
 
 const DURATION_DIRECTION: FeatureDirectionWords = {
   highLabel: '긺',
   lowLabel: '짧음',
-  highClause: '길어',
-  lowClause: '짧아',
 };
 
 const PRICE_DIRECTION: FeatureDirectionWords = {
   highLabel: '비쌈',
   lowLabel: '저렴함',
-  highClause: '비싸',
-  lowClause: '저렴해',
 };
 
 const SIGNAL_DIRECTION: FeatureDirectionWords = {
   highLabel: '강함',
   lowLabel: '약함',
-  highClause: '강해',
-  lowClause: '약해',
 };
 
 const FEATURE_DIRECTION_WORDS: Record<string, FeatureDirectionWords> = {
@@ -987,7 +944,7 @@ const FEATURE_DIRECTION_WORDS: Record<string, FeatureDirectionWords> = {
   commercial_turnover_type: SIGNAL_DIRECTION,
 };
 
-function featureDirection(item: ScoreFeatureReason, mode: FeatureDirectionMode = 'label'): string | null {
+function featureDirection(item: ScoreFeatureReason): string | null {
   const current = finiteNumber(item.currentValue);
   const average = finiteNumber(item.averageValue);
   if (current == null || average == null) return null;
@@ -995,8 +952,19 @@ function featureDirection(item: ScoreFeatureReason, mode: FeatureDirectionMode =
   if (Math.abs(delta) < 0.000001) return '평균 수준';
   const words = FEATURE_DIRECTION_WORDS[item.featureKey] ?? LEVEL_DIRECTION;
   const high = delta > 0;
-  if (mode === 'clause') return high ? words.highClause : words.lowClause;
   return high ? words.highLabel : words.lowLabel;
+}
+
+function withSubjectParticle(label: string): string {
+  return `${label}${hasFinalConsonant(label) ? '이' : '가'}`;
+}
+
+function hasFinalConsonant(value: string): boolean {
+  const last = [...value.trim()].pop();
+  if (!last) return false;
+  const code = last.charCodeAt(0);
+  if (code < 0xAC00 || code > 0xD7A3) return false;
+  return (code - 0xAC00) % 28 !== 0;
 }
 
 function formatFeatureValue(value: number, unit: string | null | undefined): string {

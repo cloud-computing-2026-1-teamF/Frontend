@@ -1127,18 +1127,6 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
-.rr-hi-source {
-  min-width: 42px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: #E8F6F0;
-  color: #0A7A5B;
-  font-size: 9px;
-  font-weight: 900;
-}
 .rr-hi-summary {
   margin-top: 11px;
   display: grid;
@@ -1583,24 +1571,6 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
-.rr-xai-source {
-  flex-shrink: 0;
-  min-width: 46px;
-  height: 24px;
-  padding: 0 9px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: #E7F0FF;
-  color: #2453B5;
-  font-size: 9px;
-  font-weight: 950;
-}
-.rr-xai-source.is-mock {
-  background: #F1F5F9;
-  color: #475569;
-}
 .rr-xai-summary {
   margin-top: 12px;
   display: flex;
@@ -1736,14 +1706,6 @@ html:has(.analyze-shell), body:has(.analyze-shell) { overflow: hidden; height: 1
 .rr-xai-feature.is-negative .rr-xai-feature-top em {
   background: #FFF0E6;
   color: #B54708;
-}
-.rr-xai-feature-copy p {
-  margin: 4px 0 0;
-  color: #64748B;
-  font-size: 11px;
-  line-height: 1.35;
-  font-weight: 850;
-  font-variant-numeric: tabular-nums;
 }
 .rr-xai-rail {
   margin-top: 9px;
