@@ -228,8 +228,7 @@ function VacancyHistoryInsight({
   const latestExit = [...closedEvents].reverse().find(event => event.endedOn || event.exitReasonSummary)
     ?? closedEvents[closedEvents.length - 1];
   const latestExitYear = yearFromDate(latestExit?.endedOn);
-  const turnoverSignal = topScoreFeatures(scoreExplanation)
-    .find(item => effectTone(item.effect) === 'negative');
+  const turnoverSignal = evacuationSignalCandidate(scoreExplanation);
 
   return (
     <div className="rr-history-intel">
@@ -264,7 +263,10 @@ function VacancyHistoryInsight({
       <div className="rr-hi-facts">
         <span><em>최근 공실 전환</em><b>{compactExitReason(latestExit?.exitReasonSummary ?? history.summary.lastExitReason)}</b></span>
         {turnoverSignal && (
-          <span><em>전환 의심 조건</em><b>{turnoverSignalText(turnoverSignal)}</b></span>
+          <span>
+            <em>{turnoverSignal.isFallback ? '가장 약한 조건' : '전환 의심 조건'}</em>
+            <b>{turnoverSignalText(turnoverSignal.item, turnoverSignal.isFallback)}</b>
+          </span>
         )}
       </div>
 
@@ -672,6 +674,10 @@ function MenuPriceEstimator({
 
 type ScoreExplanationData = NonNullable<AnalyzeProperty['scoreExplanation']>;
 type ScoreFeatureReason = ScoreExplanationData['features'][number];
+type EvacuationSignal = {
+  item: ScoreFeatureReason;
+  isFallback: boolean;
+};
 
 function ScoreExplanationCue({ explanation }: { explanation: ScoreExplanationData }) {
   const features = topScoreFeatures(explanation);
@@ -832,6 +838,18 @@ function topScoreFeatures(explanation: ScoreExplanationData): ScoreFeatureReason
     .slice(0, 3);
 }
 
+function evacuationSignalCandidate(explanation: ScoreExplanationData): EvacuationSignal | null {
+  const features = topScoreFeatures(explanation);
+  const negative = features.find(item => effectTone(item.effect) === 'negative');
+  if (negative) return { item: negative, isFallback: false };
+
+  const weakestPositive = features
+    .filter(item => effectTone(item.effect) === 'positive')
+    .slice()
+    .sort((a, b) => positiveMargin(a) - positiveMargin(b))[0];
+  return weakestPositive ? { item: weakestPositive, isFallback: true } : null;
+}
+
 function effectTone(effect: ScoreFeatureReason['effect']): 'positive' | 'negative' | 'neutral' | 'unknown' {
   if (effect === 'positive') return 'positive';
   if (effect === 'negative') return 'negative';
@@ -867,9 +885,20 @@ function comparisonText(item: ScoreFeatureReason): string {
   return `상권 평균보다 ${direction} 보여요`;
 }
 
-function turnoverSignalText(item: ScoreFeatureReason): string {
+function turnoverSignalText(item: ScoreFeatureReason, isFallback = false): string {
+  if (isFallback) return `${item.featureLabel} 유리폭 약함`;
   const direction = featureDirection(item);
   return direction ? `${item.featureLabel} ${direction}` : item.featureLabel;
+}
+
+function positiveMargin(item: ScoreFeatureReason): number {
+  const current = finiteNumber(item.currentValue);
+  const average = finiteNumber(item.averageValue);
+  if (current == null || average == null) return Number.POSITIVE_INFINITY;
+  const delta = current - average;
+  const favorableDelta = item.higherIsPositive === false ? -delta : delta;
+  const base = Math.max(Math.abs(average), 1);
+  return favorableDelta / base;
 }
 
 function featureDirection(item: ScoreFeatureReason): string | null {
