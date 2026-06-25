@@ -266,7 +266,10 @@ export function Analyze() {
         category: selectedBusiness?.label,
         categoryEmoji: selectedBusiness?.emoji,
       });
-      const nextProperties = buildPropertiesFromRecommendations(result.recommendations ?? []);
+      const nextProperties = keepPropertiesInsideRadius(
+        buildPropertiesFromRecommendations(result.recommendations ?? []),
+        analysisArea,
+      );
       if (nextProperties.length > 0) {
         setRecommendedProperties(nextProperties);
         setSelected(nextProperties[0].rank);
@@ -398,7 +401,10 @@ export function Analyze() {
     if (USE_MOCK) return;
     try {
       const section = await api.analyses.recommendations(id);
-      const nextProperties = buildPropertiesFromRecommendations(section.recommendations);
+      const nextProperties = keepPropertiesInsideRadius(
+        buildPropertiesFromRecommendations(section.recommendations),
+        area,
+      );
       if (nextProperties.length === 0) return;
       setRecommendedProperties(nextProperties);
       setSelected(current => nextProperties.some(property => property.rank === current)
@@ -560,6 +566,20 @@ function toBudgetRequest(budget: {
     premiumMax?: number;
     salePriceMax?: number;
   };
+}
+
+function keepPropertiesInsideRadius(
+  properties: AnalyzeProperty[],
+  area: AnalyzeArea | null,
+): AnalyzeProperty[] {
+  if (!area) return properties;
+  return properties
+    .filter(property =>
+      typeof property.distanceM !== 'number'
+      || !Number.isFinite(property.distanceM)
+      || property.distanceM <= area.radius
+    )
+    .map((property, index) => ({ ...property, rank: index + 1 }));
 }
 
 function requestTransactionType(transactionType: VacancyTransactionType): string | undefined {
