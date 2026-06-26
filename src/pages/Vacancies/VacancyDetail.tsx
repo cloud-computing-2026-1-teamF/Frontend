@@ -9,6 +9,7 @@ import {
 import { Icon } from '../../shared/Icon';
 import { Footer } from '../../shared/Nav';
 import { VacancyDetailMap } from './components/VacancyDetailMap';
+import { RoadviewModal } from '../../shared/RoadviewModal';
 import { RatioBars, VacancyMetricGrid } from './components/VacancyMetricCards';
 import {
   formatArea,
@@ -34,6 +35,7 @@ export function VacancyDetail() {
   const [status, setStatus] = useState<LoadStatus>('loading');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [roadviewOpen, setRoadviewOpen] = useState(false);
   const collections = useVacancyCollections();
   const { user } = useAuth();
   // 공실 상세(생존점수 포함)는 Pro·Business 전용 — 직접 URL 접근도 차단.
@@ -97,6 +99,7 @@ export function VacancyDetail() {
   const isCompared = collections.compareIds.includes(vacancy.id);
   const compareDisabled = !isCompared && collections.compareIds.length >= MAX_COMPARE_VACANCIES;
   const burden = rentBurden(vacancy);
+  const hasCoord = typeof vacancy.latitude === 'number' && typeof vacancy.longitude === 'number';
 
   return (
     <>
@@ -155,6 +158,18 @@ export function VacancyDetail() {
           <section className="vf-detail-dashboard">
             <Panel className="vf-panel-map" eyebrow="Map" title="위치와 주변 분포">
               <VacancyDetailMap vacancies={[vacancy]} selectedId={vacancy.id} height={400} />
+              <div className="vf-map-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setRoadviewOpen(true)}
+                  disabled={!hasCoord}
+                  title={hasCoord ? '카카오 로드뷰로 외부 전경 보기' : '좌표 정보가 없어요'}
+                >
+                  <Icon name="map-pin" size={15} />
+                  로드뷰 보기
+                </button>
+              </div>
             </Panel>
 
             <Panel className="vf-panel-property" eyebrow="Property" title="매물 정보">
@@ -301,6 +316,17 @@ export function VacancyDetail() {
         </div>
       </main>
       <Footer />
+      <RoadviewModal
+        open={roadviewOpen}
+        onClose={() => setRoadviewOpen(false)}
+        target={{
+          id: vacancy.id,
+          latitude: vacancy.latitude,
+          longitude: vacancy.longitude,
+          title: vacancyTitle(vacancy),
+          subtitle: `${vacancy.roadAddress || vacancySubtitle(vacancy)} · 월세 ${formatManWon(vacancy.monthlyRent)}만`,
+        }}
+      />
     </>
   );
 }
