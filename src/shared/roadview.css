@@ -147,8 +147,16 @@
   font-size: 14px;
 }
 
-/* 마커 = 점수 말풍선 + 꼬리 + 실제 위치 점(dot). 세로로 쌓고, 맨 아래 점이
-   매물의 정확한 좌표를 가리킨다(CustomOverlayMap yAnchor=1 기준). */
+/* 클러스터 = 같은 건물의 매물들을 한 점 위에 세로로 쌓는다.
+   말풍선(.t3-rv-marker) N개 + 공유 꼬리 + 공유 점. 맨 아래 점이 좌표를 가리킨다. */
+.t3-rv-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+/* 마커 = 점수 말풍선. 클러스터 안에서 위로 쌓인다. */
 .t3-rv-marker {
   display: flex;
   flex-direction: column;
@@ -208,27 +216,21 @@
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.45);
 }
 
-/* 랭킹 색상 (말풍선 / 꼬리 / 점 동일 색) */
-.t3-rv-marker.r1 .t3-rv-bubble,
-.t3-rv-marker.r1 .t3-rv-dot { background: #e85d1f; }
-.t3-rv-marker.r1 .t3-rv-tail { border-top-color: #e85d1f; }
-.t3-rv-marker.r2 .t3-rv-bubble,
-.t3-rv-marker.r2 .t3-rv-dot { background: #f4a300; }
-.t3-rv-marker.r2 .t3-rv-tail { border-top-color: #f4a300; }
-.t3-rv-marker.r3 .t3-rv-bubble,
-.t3-rv-marker.r3 .t3-rv-dot { background: #3b6fe8; }
-.t3-rv-marker.r3 .t3-rv-tail { border-top-color: #3b6fe8; }
+/* 랭킹 색상 — 말풍선은 각 마커 색, 공유 꼬리·점은 클러스터(맨 아래 매물) 색 */
+.t3-rv-marker.r1 .t3-rv-bubble { background: #e85d1f; }
+.t3-rv-cluster.r1 .t3-rv-dot { background: #e85d1f; }
+.t3-rv-cluster.r1 .t3-rv-tail { border-top-color: #e85d1f; }
+.t3-rv-marker.r2 .t3-rv-bubble { background: #f4a300; }
+.t3-rv-cluster.r2 .t3-rv-dot { background: #f4a300; }
+.t3-rv-cluster.r2 .t3-rv-tail { border-top-color: #f4a300; }
+.t3-rv-marker.r3 .t3-rv-bubble { background: #3b6fe8; }
+.t3-rv-cluster.r3 .t3-rv-dot { background: #3b6fe8; }
+.t3-rv-cluster.r3 .t3-rv-tail { border-top-color: #3b6fe8; }
 
 /* 선택 상태 — 말풍선 강조 + 점 확대 */
 .t3-rv-marker.is-sel .t3-rv-bubble {
   transform: scale(1.1);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.4);
-}
-.t3-rv-marker.is-sel .t3-rv-dot {
-  width: 13px;
-  height: 13px;
-  border-width: 3px;
-  margin-bottom: -6px;
 }
 
 .t3-rv-actions {
