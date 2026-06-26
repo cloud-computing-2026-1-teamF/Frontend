@@ -327,6 +327,8 @@ function makeTop3(lat: number, lng: number): Top3Item[] {
   ];
   return seed.map((item, index) => ({
     ...item,
+    lat: lat + offsets[index].dLat,
+    lng: lng + offsets[index].dLng,
     addr: `${item.addr} · ${lat + offsets[index].dLat > 0 ? 'N' : 'S'}${Math.abs(lat + offsets[index].dLat).toFixed(4)}, ${lng + offsets[index].dLng > 0 ? 'E' : 'W'}${Math.abs(lng + offsets[index].dLng).toFixed(4)}`,
     horizonScores: normalizeHorizonScores(item.horizonScores, item.score),
     footHourly: makeHourly(item.foot),
@@ -350,6 +352,8 @@ function recommendationsToTop3(recommendations: AnalysisRecommendation[]): Top3I
       const area = item.facilityTotalSize ?? item.locationArea ?? 0;
       return {
         vacancyId: item.vacancyId,
+        lat: item.latitude,
+        lng: item.longitude,
         addr: readableLabel(item.roadAddress)
           || readableLabel(item.lotAddress)
           || readableLabel(item.businessSubCategoryName)

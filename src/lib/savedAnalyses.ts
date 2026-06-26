@@ -8,6 +8,10 @@ export type Top3Item = Property & {
   vacancyId?: string;
   categoryId?: string | null;
   addr: string;
+  // 매물 좌표. 추천 API 응답에는 들어오지만, 주소만 있는 시드 데이터에서는
+  // 비어 있을 수 있다(그 경우 지도/로드뷰는 주소를 지오코딩해 좌표를 얻는다).
+  lat?: number | null;
+  lng?: number | null;
   recommended?: boolean | null;
   score: number;
   horizonScores?: HorizonScore[];

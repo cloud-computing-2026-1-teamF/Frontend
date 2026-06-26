@@ -21,10 +21,14 @@ import {
 import { HourlyChart } from '../../features/detail/components/HourlyChart';
 import { RiskSummary } from '../../features/detail/components/RiskSummary';
 import { ScoreRing } from '../../features/detail/components/ScoreRing';
+import { Top3LocationMap, type LatLng, type Top3Point } from '../../features/detail/components/Top3LocationMap';
+import { RoadviewModal } from '../../shared/RoadviewModal';
 import { useVacancyMetricReference } from '../../features/vacancies/useVacancyMetricReference';
 
 export function Detail() {
   const [selected, setSelected] = useState(0);
+  const [roadviewOpen, setRoadviewOpen] = useState(false);
+  const [top3Coords, setTop3Coords] = useState<Array<LatLng | null>>([]);
   const [reportLoading, setReportLoading] = useState(false);
   // 보고서 HTML 버튼 상태: 생성 완료(success)면 초록 체크, 실패(error)면 빨강 X 를 버튼 왼쪽에 표시.
   const [reportStatus, setReportStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -180,6 +184,23 @@ export function Detail() {
   const sel = item.top3[selected];
   const selRank = selected + 1;
 
+  // Top3 매물 위치 — 좌표가 있으면 그대로, 없으면 "시·구 + 주소"로 지오코딩한다.
+  const top3SiGu = (item.region ?? '').split(' ').slice(0, 2).join(' ');
+  const top3Points: Top3Point[] = item.top3.map((p, index) => ({
+    id: p.vacancyId ?? `top3-${index}`,
+    rank: index + 1,
+    score: p.score,
+    title: p.addr,
+    lat: p.lat,
+    lng: p.lng,
+    geocodeQuery: `${top3SiGu} ${p.addr}`.trim(),
+  }));
+  const selCoord =
+    top3Coords[selected] ??
+    (typeof sel.lat === 'number' && typeof sel.lng === 'number'
+      ? { lat: sel.lat, lng: sel.lng }
+      : null);
+
   return (
     <>
       <div className="dt-page">
@@ -287,6 +308,20 @@ export function Detail() {
             </div>
           </section>
 
+          <section className="dt-section">
+            <div className="dt-sec-label">
+              <span className="dt-sec-num">02</span>
+              <span>위치와 로드뷰</span>
+            </div>
+            <Top3LocationMap
+              points={top3Points}
+              selectedIndex={selected}
+              onSelect={setSelected}
+              onResolved={setTop3Coords}
+              onOpenRoadview={() => setRoadviewOpen(true)}
+            />
+          </section>
+
           <section className="dt-hero">
             <div className="dt-hero-left">
               <div className="dt-hero-tag-row">
@@ -330,7 +365,7 @@ export function Detail() {
 
           <section className="dt-section">
             <div className="dt-sec-label">
-              <span className="dt-sec-num">02</span>
+              <span className="dt-sec-num">03</span>
               <span>주요 지표</span>
             </div>
             <div className="dt-factors">
@@ -342,7 +377,7 @@ export function Detail() {
 
           <section className="dt-section">
             <div className="dt-sec-label">
-              <span className="dt-sec-num">03</span>
+              <span className="dt-sec-num">04</span>
               <span>유동 패턴 & 입지 접근성</span>
             </div>
             <div className="dt-grid-2">
@@ -401,7 +436,7 @@ export function Detail() {
 
           <section className="dt-section">
             <div className="dt-sec-label">
-              <span className="dt-sec-num">04</span>
+              <span className="dt-sec-num">05</span>
               <span>종합 진단</span>
             </div>
             <RiskSummary sel={sel} selRank={selRank} metricReference={metricReference} />
@@ -415,6 +450,17 @@ export function Detail() {
         </div>
       </div>
       <Footer />
+      <RoadviewModal
+        open={roadviewOpen}
+        onClose={() => setRoadviewOpen(false)}
+        target={{
+          id: sel.vacancyId ?? `top3-${selected}`,
+          latitude: selCoord?.lat ?? null,
+          longitude: selCoord?.lng ?? null,
+          title: sel.addr,
+          subtitle: `${sel.floor} · ${sel.area}㎡ · 월세 ${sel.rent}만`,
+        }}
+      />
     </>
   );
 }
