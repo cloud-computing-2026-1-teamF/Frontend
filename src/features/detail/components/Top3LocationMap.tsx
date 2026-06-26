@@ -108,26 +108,18 @@ export function Top3LocationMap({
 
   const selectedHasCoord = !!coords[selectedIndex];
 
-  // 같은 좌표(같은 건물)에 매물이 여러 개면 마커가 정확히 겹쳐 하나만 보인다.
-  // 같은 좌표 그룹을 찾아 가로로 펼쳐(fan-out) 모두 보이고 누를 수 있게 한다.
-  const clusterOffsets = useMemo(() => {
-    const groups = new Map<string, number[]>();
-    coords.forEach((c, i) => {
+  // 같은 좌표(같은 건물) 매물은 하나의 핀 위에 세로로 쌓아 모두 보이게 묶는다.
+  // (꼬리·점은 그룹당 하나만 공유 → "한 건물에 N개"로 깔끔하게 표시)
+  const groups = useMemo(() => {
+    const byKey = new Map<string, { coord: LatLng; members: number[] }>();
+    coords.forEach((c, index) => {
       if (!c) return;
       const key = `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`; // ≈1m 정밀도로 같은 건물 묶기
-      const arr = groups.get(key);
-      if (arr) arr.push(i);
-      else groups.set(key, [i]);
+      const g = byKey.get(key);
+      if (g) g.members.push(index);
+      else byKey.set(key, { coord: c, members: [index] });
     });
-    const offsets = new Array<number>(coords.length).fill(0);
-    const SPACING = 78; // px — 말풍선이 서로 안 겹치도록 가로 간격
-    groups.forEach(indices => {
-      if (indices.length < 2) return;
-      indices.forEach((idx, pos) => {
-        offsets[idx] = (pos - (indices.length - 1) / 2) * SPACING;
-      });
-    });
-    return offsets;
+    return Array.from(byKey, ([key, g]) => ({ key, coord: g.coord, members: g.members }));
   }, [coords]);
 
   return (
@@ -142,30 +134,34 @@ export function Top3LocationMap({
         )}
         {!sdkLoading && !sdkError && resolved.length > 0 && (
           <KakaoMapView center={center} isPanto level={5} style={{ width: '100%', height: '100%' }} draggable zoomable>
-            {points.map((p, index) => {
-              const c = coords[index];
-              if (!c) return null;
-              const isSel = index === selectedIndex;
+            {groups.map(group => {
+              const hasSel = group.members.includes(selectedIndex);
+              // 공유 꼬리·점 색은 맨 아래(점에 닿는) 매물 색을 따른다.
+              const bottomRank = points[group.members[group.members.length - 1]].rank;
               return (
-                <CustomOverlayMap key={p.id} position={c} yAnchor={1} xAnchor={0.5} zIndex={isSel ? 6 : 3}>
-                  <button
-                    type="button"
-                    className={`t3-rv-marker r${p.rank} ${isSel ? 'is-sel' : ''}`}
-                    style={
-                      clusterOffsets[index]
-                        ? { transform: `translateX(${clusterOffsets[index]}px)` }
-                        : undefined
-                    }
-                    onClick={() => onSelect(index)}
-                    title={p.title}
-                  >
-                    <span className="t3-rv-bubble">
-                      <span className="t3-rv-rank">{p.rank}</span>
-                      {Math.round(p.score)}점
-                    </span>
+                <CustomOverlayMap key={group.key} position={group.coord} yAnchor={1} xAnchor={0.5} zIndex={hasSel ? 6 : 3}>
+                  <div className={`t3-rv-cluster r${bottomRank}`}>
+                    {group.members.map(index => {
+                      const p = points[index];
+                      const isSel = index === selectedIndex;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className={`t3-rv-marker r${p.rank} ${isSel ? 'is-sel' : ''}`}
+                          onClick={() => onSelect(index)}
+                          title={p.title}
+                        >
+                          <span className="t3-rv-bubble">
+                            <span className="t3-rv-rank">{p.rank}</span>
+                            {Math.round(p.score)}점
+                          </span>
+                        </button>
+                      );
+                    })}
                     <span className="t3-rv-tail" aria-hidden="true" />
                     <span className="t3-rv-dot" aria-hidden="true" />
-                  </button>
+                  </div>
                 </CustomOverlayMap>
               );
             })}
