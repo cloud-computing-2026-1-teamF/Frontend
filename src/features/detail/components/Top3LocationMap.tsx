@@ -108,6 +108,28 @@ export function Top3LocationMap({
 
   const selectedHasCoord = !!coords[selectedIndex];
 
+  // 같은 좌표(같은 건물)에 매물이 여러 개면 마커가 정확히 겹쳐 하나만 보인다.
+  // 같은 좌표 그룹을 찾아 가로로 펼쳐(fan-out) 모두 보이고 누를 수 있게 한다.
+  const clusterOffsets = useMemo(() => {
+    const groups = new Map<string, number[]>();
+    coords.forEach((c, i) => {
+      if (!c) return;
+      const key = `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`; // ≈1m 정밀도로 같은 건물 묶기
+      const arr = groups.get(key);
+      if (arr) arr.push(i);
+      else groups.set(key, [i]);
+    });
+    const offsets = new Array<number>(coords.length).fill(0);
+    const SPACING = 78; // px — 말풍선이 서로 안 겹치도록 가로 간격
+    groups.forEach(indices => {
+      if (indices.length < 2) return;
+      indices.forEach((idx, pos) => {
+        offsets[idx] = (pos - (indices.length - 1) / 2) * SPACING;
+      });
+    });
+    return offsets;
+  }, [coords]);
+
   return (
     <div className="t3-rv">
       <div className="t3-rv-map">
@@ -129,6 +151,11 @@ export function Top3LocationMap({
                   <button
                     type="button"
                     className={`t3-rv-marker r${p.rank} ${isSel ? 'is-sel' : ''}`}
+                    style={
+                      clusterOffsets[index]
+                        ? { transform: `translateX(${clusterOffsets[index]}px)` }
+                        : undefined
+                    }
                     onClick={() => onSelect(index)}
                     title={p.title}
                   >
