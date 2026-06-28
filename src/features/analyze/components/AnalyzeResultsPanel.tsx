@@ -98,8 +98,8 @@ export function AnalyzeResultsPanel({
                       <div className="rr-sub">{formatPropertySubline(property)}</div>
                     </div>
                     <div className="rr-score-box">
-                      <div className="rr-score">{formatLocationScore(property.score)}</div>
-                      <div className="rr-score-lab">입지 점수</div>
+                      <div className="rr-score">{formatLocationScore(property.score)}%</div>
+                      <div className="rr-score-lab">예상 생존률(%)</div>
                     </div>
                   </div>
                   <HorizonForecastStrip horizons={horizons} />
@@ -196,13 +196,14 @@ function VacancyHistoryCue({
   history: VacancyHistoryData;
 }) {
   const delta = history.summary.scoreDelta ?? scoreDelta(history.scoreTrend);
-  const transitionCount = closedHistoryEvents(history.occupancyTimeline).length;
+  const averageOperatingMonths = averageClosedOperatingMonths(history.occupancyTimeline);
+  const averageOperatingLabel = formatAverageOperatingPeriod(averageOperatingMonths);
 
   return (
     <div className="rr-history-cue">
       <span>상권 변화 이력</span>
       <b>{formatSigned(delta)}p</b>
-      <em>{transitionCount}회 업종 변동</em>
+      <em>{averageOperatingMonths == null ? '영업 이력 없음' : `평균 영업 ${averageOperatingLabel}`}</em>
     </div>
   );
 }
@@ -224,7 +225,8 @@ function VacancyHistoryInsight({
   const delta = history.summary.scoreDelta ?? scoreDelta(trend);
   const direction = directionFromDelta(delta);
   const events = buildEventInsights(history, trend);
-  const closedEvents = closedHistoryEvents(history.occupancyTimeline);
+  const averageOperatingMonths = averageClosedOperatingMonths(history.occupancyTimeline);
+  const averageOperatingLabel = formatAverageOperatingPeriod(averageOperatingMonths);
   const turnoverSignal = evacuationSignalCandidate(scoreExplanation);
 
   return (
@@ -238,19 +240,19 @@ function VacancyHistoryInsight({
 
       <div className="rr-hi-summary">
         <div className="rr-hi-metric">
-          <span>현재 점수</span>
-          <b>{Math.round(currentScore)}</b>
+          <span>현재 예상 생존률</span>
+          <b>{Math.round(currentScore)}%</b>
           <em>{history.summary.scoreLabel}</em>
         </div>
         <div className="rr-hi-metric">
-          <span>장기 점수 변화</span>
+          <span>장기 예상 생존률 변화</span>
           <b className={`rr-hi-delta is-${direction}`}>{formatSigned(delta)}p</b>
           <em>{first.year} - {latest.year}</em>
         </div>
         <div className="rr-hi-metric">
-          <span>업종 변동</span>
-          <b>{closedEvents.length}회</b>
-          <em>{closedEvents.length > 0 ? '전환 이력' : '현재 공실'}</em>
+          <span>평균 영업 기간</span>
+          <b>{averageOperatingLabel}</b>
+          <em>{averageOperatingMonths != null ? '이전 매장 기준' : '영업 이력 없음'}</em>
         </div>
       </div>
 
@@ -354,7 +356,7 @@ function HistoryTimeline({
     .filter(year => year === firstYear || year === lastLabelYear || year % 2 === 0);
 
   return (
-    <svg className="rr-hi-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="매물 점수와 점유 이력 그래프">
+    <svg className="rr-hi-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="예상 생존률과 점유 이력 그래프">
       <defs>
         <linearGradient id="rrScoreArea" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#14B8A6" stopOpacity=".2" />
@@ -434,6 +436,40 @@ function buildEventInsights(history: VacancyHistoryData, trend: VacancyScorePoin
 
 function closedHistoryEvents(events: VacancyHistoryEvent[]): VacancyHistoryEvent[] {
   return events.filter(event => event.status === 'closed' || Boolean(event.endedOn));
+}
+
+function averageClosedOperatingMonths(events: VacancyHistoryEvent[]): number | null {
+  const durations = closedHistoryEvents(events)
+    .map(event => monthsBetween(event.startedOn, event.endedOn))
+    .filter((duration): duration is number => duration != null && duration > 0);
+  if (!durations.length) return null;
+  return durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
+}
+
+function monthsBetween(start?: string | null, end?: string | null): number | null {
+  const startDate = parseDateOnly(start);
+  const endDate = parseDateOnly(end);
+  if (!startDate || !endDate || endDate <= startDate) return null;
+  const days = (endDate.getTime() - startDate.getTime()) / 86_400_000;
+  return days / 30.4375;
+}
+
+function parseDateOnly(value?: string | null): Date | null {
+  if (!value) return null;
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatAverageOperatingPeriod(months: number | null): string {
+  if (months == null) return '-';
+  const roundedMonths = Math.max(1, Math.round(months));
+  if (roundedMonths < 12) return `${roundedMonths}개월`;
+  const years = roundedMonths / 12;
+  if (roundedMonths % 12 === 0) return `${roundedMonths / 12}년`;
+  return `${Number(years.toFixed(1))}년`;
 }
 
 function scoreAtYear(trend: VacancyScorePoint[], year?: number | null): number | null {
@@ -557,7 +593,7 @@ function formatDistance(value?: number): string | null {
 
 function HorizonForecastStrip({ horizons }: { horizons: ReturnType<typeof normalizeHorizonScores> }) {
   return (
-    <div className="rr-horizon-strip" aria-label="기간별 입지 점수">
+    <div className="rr-horizon-strip" aria-label="기간별 예상 생존률">
       {horizons.map(item => (
         <div
           key={item.horizonYears}
@@ -565,7 +601,7 @@ function HorizonForecastStrip({ horizons }: { horizons: ReturnType<typeof normal
         >
           <div className="rr-horizon-top">
             <span>{item.horizonYears}년</span>
-            <b>{formatLocationScore(item.survivalScore)}</b>
+            <b>{formatLocationScore(item.survivalScore)}%</b>
           </div>
           <div className="rr-horizon-track">
             <i style={{ width: `${formatLocationScore(item.survivalScore)}%` }} />
@@ -709,8 +745,8 @@ function LocationScoreForecastCard({ property }: { property: AnalyzeProperty }) 
     <div className="rr-forecast-card">
       <div className="rr-forecast-head">
         <div>
-          <div className="rr-forecast-kicker">기간별 입지 점수</div>
-          <h4>{PRIMARY_HORIZON_YEARS}년 기준 {primaryScore}점</h4>
+          <div className="rr-forecast-kicker">기간별 예상 생존률</div>
+          <h4>{PRIMARY_HORIZON_YEARS}년 기준 {primaryScore}%</h4>
         </div>
         <span className={`rr-forecast-delta ${delta < 0 ? 'is-down' : delta > 0 ? 'is-up' : 'is-flat'}`}>
           {outlook} {deltaLabel}
@@ -723,7 +759,7 @@ function LocationScoreForecastCard({ property }: { property: AnalyzeProperty }) 
             className={`rr-forecast-cell is-${horizonTone(item.survivalScore)} ${item.horizonYears === PRIMARY_HORIZON_YEARS ? 'is-primary' : ''}`}
           >
             <span>{item.horizonYears}년</span>
-            <b>{formatLocationScore(item.survivalScore)}</b>
+            <b>{formatLocationScore(item.survivalScore)}%</b>
             <div className="rr-forecast-bar">
               <i style={{ width: `${formatLocationScore(item.survivalScore)}%` }} />
             </div>
