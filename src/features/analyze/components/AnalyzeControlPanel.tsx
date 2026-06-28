@@ -320,9 +320,10 @@ export function AnalyzeControlPanel({
 function formatAnalysisStepLabel(label?: string | null): string | null {
   if (!label) return null;
   return label
-    .replace(/생존률/g, '입지 점수')
-    .replace(/생존율/g, '입지 점수')
-    .replace(/생존점수/g, '입지 점수');
+    .replace(/생존률/g, '예상 생존률(%)')
+    .replace(/생존율/g, '예상 생존률(%)')
+    .replace(/생존점수/g, '예상 생존률(%)')
+    .replace(/입지 점수/g, '예상 생존률(%)');
 }
 
 function MoneyField({
