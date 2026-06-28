@@ -43,7 +43,7 @@ export function Hero() {
           <p className="hero-sub">
             서울 전역의 상권 데이터와 실제 공실매물을 <b>지도 위에서</b> 한 번에 살펴보세요.<br />
             업종 하나 고르고 <b>지도에 위치만 찍으면</b>, 마커 주변 상권에서<br />
-            입지 점수가 높은 <b>Top 3 공실매물</b>을 바로 찾아드립니다.
+            예상 생존률이 높은 <b>Top 3 공실매물</b>을 바로 찾아드립니다.
           </p>
 
           <div className="hero-search">
@@ -86,7 +86,7 @@ export function Hero() {
             </div>
             <div className="hs-stat">
               <div className="hs-num num">Top 3</div>
-              <div className="hs-lab">공실매물 추천<br /><span>(입지 점수 높은 순)</span></div>
+              <div className="hs-lab">공실매물 추천<br /><span>(예상 생존률 높은 순)</span></div>
             </div>
           </div>
         </div>
@@ -98,19 +98,19 @@ export function Hero() {
         <div className="ticker-track">
           {Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="ticker-inner">
-              <span className="tk"><b>LIVE</b> ☕ 홍대입구동 카페/디저트 입지 점수 <span className="tk-up num">88<i>점</i></span></span>
+              <span className="tk"><b>LIVE</b> ☕ 홍대입구동 카페/디저트 예상 생존률 <span className="tk-up num">88<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">🍚 연남동 한식 <span className="tk-up num">77<i>점</i></span></span>
+              <span className="tk">🍚 연남동 한식 <span className="tk-up num">77<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">🍔 신림동 패스트푸드 <span className="tk-down num">54<i>점</i></span></span>
+              <span className="tk">🍔 신림동 패스트푸드 <span className="tk-down num">54<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">🍝 성수2가동 서양식 <span className="tk-up num">82<i>점</i></span></span>
+              <span className="tk">🍝 성수2가동 서양식 <span className="tk-up num">82<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">🍻 이태원1동 주점업 <span className="tk-down num">43<i>점</i></span></span>
+              <span className="tk">🍻 이태원1동 주점업 <span className="tk-down num">43<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">🍣 역삼1동 일식 <span className="tk-up num">71<i>점</i></span></span>
+              <span className="tk">🍣 역삼1동 일식 <span className="tk-up num">71<i>%</i></span></span>
               <span className="tk-sep" />
-              <span className="tk">🥟 명동 중식 <span className="tk-up num">75<i>점</i></span></span>
+              <span className="tk">🥟 명동 중식 <span className="tk-up num">75<i>%</i></span></span>
               <span className="tk-sep" />
             </div>
           ))}
@@ -165,8 +165,8 @@ function HeroVisual() {
                   <div className="hv-meta mono">{p.label} · 월세 {p.rent}만 · 1F</div>
                 </div>
                 <div className="hv-score">
-                  <div className="hv-score-num num">{p.score}</div>
-                  <div className="hv-score-lab">입지 점수</div>
+                  <div className="hv-score-num num">{p.score}%</div>
+                  <div className="hv-score-lab">예상 생존률</div>
                 </div>
               </div>
             ))}
@@ -175,7 +175,7 @@ function HeroVisual() {
         <div className="hv-foot mono">
           <span><i className="dot-green" />유동인구 9,200/일</span>
           <span><i className="dot-amber" />동종 경쟁 3곳</span>
-          <span><i className="dot-blue" />입지 점수 92점</span>
+          <span><i className="dot-blue" />예상 생존률 92%</span>
         </div>
       </div>
 
@@ -230,10 +230,10 @@ export function HeroMap() {
         <text x="295" y="210" textAnchor="middle" fill="#fff" fontSize="12" fontWeight="700">3</text>
       </g>
       <g transform="translate(220, 110)">
-        <rect width="140" height="44" rx="6" fill="#0A0E1A" />
+        <rect width="160" height="44" rx="6" fill="#0A0E1A" />
         <text x="12" y="18" fill="#fff" fontSize="10" fontFamily="Pretendard" fontWeight="500">서교동 367-12</text>
-        <text x="12" y="34" fill="#F26B2E" fontSize="12" fontWeight="700">입지 점수 88</text>
-        <text x="54" y="34" fill="#9AA3BD" fontSize="10">· 1F · 33m²</text>
+        <text x="12" y="34" fill="#F26B2E" fontSize="11" fontWeight="700">예상 생존률 88%</text>
+        <text x="100" y="34" fill="#9AA3BD" fontSize="10">· 1F · 33m²</text>
         <path d="M18 44 L22 52 L26 44 Z" fill="#0A0E1A" />
       </g>
     </svg>
