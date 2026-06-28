@@ -488,7 +488,7 @@ export function Vacancies() {
 
           <section className="vacancy-summary-grid" aria-label="공실 탐색 요약">
             <SummaryTile icon="database" label="검색 결과" value={formatCount(summary.total)} unit="개" loading={summaryLoading} />
-            <SummaryTile icon="trending" label="평균 생존점수" value={formatScore(summary.averageScore)} unit="/100" tone="blue" loading={summaryLoading} />
+            <SummaryTile icon="trending" label="평균 예상 생존률" value={formatScore(summary.averageScore)} unit="%" tone="blue" loading={summaryLoading} />
             <SummaryTile icon="building" label={summaryPrice.label} value={summaryPrice.value} unit={summaryPrice.unit} tone="teal" loading={summaryLoading} />
             <SummaryTile icon="map-pin" label="행정동 수" value={formatCount(summary.areaCount)} unit="곳" tone="amber" loading={summaryLoading} />
           </section>
@@ -564,7 +564,7 @@ export function Vacancies() {
                     <NumberField label="관리비 최대" value={filters.maintenanceFeeMax} suffix="만원" onChange={value => updateFilter('maintenanceFeeMax', value)} />
                   </>
                 )}
-                <NumberField label="최소 점수" value={filters.scoreMin} suffix="점" onChange={value => updateFilter('scoreMin', value)} />
+                <NumberField label="최소 예상 생존률" value={filters.scoreMin} suffix="%" onChange={value => updateFilter('scoreMin', value)} />
                 <NumberField label="면적 최소" value={filters.areaMin} suffix="㎡" onChange={value => updateFilter('areaMin', value)} />
                 <NumberField label="면적 최대" value={filters.areaMax} suffix="㎡" onChange={value => updateFilter('areaMax', value)} />
               </div>
@@ -865,7 +865,7 @@ function CategoryFilter({ value, options, onChange }: {
     <div className="vacancy-filter-group">
       <label htmlFor="vacancy-category">업종 적합도</label>
       <select id="vacancy-category" value={value} onChange={event => onChange(event.target.value)}>
-        <option value="">전체 최고 점수</option>
+        <option value="">전체 최고 예상 생존률</option>
         {options.map(option => (
           <option key={option.key} value={option.key}>
             {option.emoji} {option.label}
