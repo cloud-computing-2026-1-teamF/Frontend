@@ -18,7 +18,7 @@ import {
   formatManWon,
   formatPeople,
   formatPercent,
-  formatScore,
+  formatSurvivalRate,
   formatWon,
   rentBurden,
   scoreClass,
@@ -38,7 +38,7 @@ export function VacancyDetail() {
   const [roadviewOpen, setRoadviewOpen] = useState(false);
   const collections = useVacancyCollections();
   const { user } = useAuth();
-  // 공실 상세(생존점수 포함)는 Pro·Business 전용 — 직접 URL 접근도 차단.
+  // 공실 상세(예상 생존률 포함)는 Pro·Business 전용 — 직접 URL 접근도 차단.
   const canViewDetail = user?.tier === 'pro' || user?.tier === 'business';
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export function VacancyDetail() {
         <EmptyState
           icon="lock"
           title="Pro 플랜 전용 화면이에요"
-          description="공실 상세 정보와 생존점수는 Pro 플랜부터 확인할 수 있어요."
+          description="공실 상세 정보와 예상 생존률은 Pro 플랜부터 확인할 수 있어요."
         />
       </VacancyPageShell>
     );
@@ -114,7 +114,7 @@ export function VacancyDetail() {
           <header className="vf-hero">
             <div className="vf-title-block">
               <span className={`vf-score-pill ${scoreClass(vacancy.survivalScore)}`}>
-                {formatScore(vacancy.survivalScore)}
+                {formatSurvivalRate(vacancy.survivalScore)}
               </span>
               <div>
                 <h1>{vacancyTitle(vacancy)}</h1>
