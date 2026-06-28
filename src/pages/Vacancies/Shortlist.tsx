@@ -18,6 +18,7 @@ import {
   formatManWon,
   formatPeople,
   formatScore,
+  formatSurvivalRate,
   rentBurden,
   scoreClass,
   totalCompetition,
@@ -143,7 +144,7 @@ export function Shortlist() {
             <>
               <div className="vf-metric-grid shortlist-summary">
                 <MetricCard label="찜한 공실" value={formatCount(items.length)} unit="개" tone="brand" />
-                <MetricCard label="평균 생존점수" value={formatScore(summary.averageScore)} unit="/100" tone="blue" />
+                <MetricCard label="평균 예상 생존률" value={formatScore(summary.averageScore)} unit="%" tone="blue" />
                 <MetricCard label="평균 월세" value={formatManWon(summary.averageRent)} unit="만원" tone="teal" />
                 <MetricCard label="행정동 수" value={formatCount(summary.areaCount)} unit="곳" tone="amber" />
               </div>
@@ -166,7 +167,7 @@ export function Shortlist() {
                     <article key={item.id} className={`vshort-card ${item.id === selectedId ? 'is-selected' : ''}`}>
                       <button type="button" className="vshort-card-head" onClick={() => setSelectedId(item.id)}>
                         <span className={`vf-score-pill small ${scoreClass(item.survivalScore)}`}>
-                          {formatScore(item.survivalScore)}
+                          {formatSurvivalRate(item.survivalScore)}
                         </span>
                         <div>
                           <h2>{vacancyTitle(item)}</h2>

@@ -16,7 +16,7 @@ export function VacancyMetricGrid({ vacancy }: { vacancy: Vacancy }) {
   const competition = totalCompetition(vacancy);
   return (
     <div className="vf-metric-grid">
-      <MetricCard label="생존점수" value={formatScore(vacancy.survivalScore)} unit="/100" tone="brand" />
+      <MetricCard label="예상 생존률" value={formatScore(vacancy.survivalScore)} unit="%" tone="brand" />
       {vacancyPriceMetrics(vacancy).map((metric, index) => (
         <MetricCard key={metric.label} label={metric.label} value={metric.value} unit={metric.unit} tone={PRICE_TONES[index]} />
       ))}

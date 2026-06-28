@@ -136,7 +136,7 @@ export function LivePreview() {
                     <div className="lp-res-addr">{p.addr}</div>
                     <div className="lp-res-floor mono">{p.floor}</div>
                   </div>
-                  <div className="lp-res-score num">{p.score}</div>
+                  <div className="lp-res-score num">{p.score}%</div>
                 </div>
                 <div className="lp-res-bar"><span style={{ width: `${p.score}%`, background: p.color }} /></div>
                 <div className="lp-res-meta mono">

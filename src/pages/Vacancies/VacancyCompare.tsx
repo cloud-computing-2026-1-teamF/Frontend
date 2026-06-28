@@ -18,6 +18,7 @@ import {
   formatPeople,
   formatPercent,
   formatScore,
+  formatSurvivalRate,
   rentBurden,
   scoreClass,
   totalCompetition,
@@ -42,11 +43,11 @@ type CompareBest = {
 
 const COMPARE_ROWS: CompareRow[] = [
   {
-    label: '생존점수',
+    label: '예상 생존률',
     help: '높을수록 유리',
     higherBetter: true,
     getValue: vacancy => vacancy.survivalScore,
-    format: formatScore,
+    format: formatSurvivalRate,
   },
   {
     label: '월세+관리비',
@@ -231,7 +232,7 @@ export function VacancyCompare() {
                   <article key={item.id} className={`vcmp-card ${item.id === selectedId ? 'is-selected' : ''}`}>
                     <button type="button" className="vcmp-card-main" onClick={() => setSelectedId(item.id)}>
                       <span className={`vf-score-pill small ${scoreClass(item.survivalScore)}`}>
-                        {formatScore(item.survivalScore)}
+                        {formatSurvivalRate(item.survivalScore)}
                       </span>
                       <div>
                         <h2>{vacancyTitle(item)}</h2>
@@ -286,7 +287,7 @@ export function VacancyCompare() {
                           <th key={item.id} className={item.id === selectedId ? 'is-selected-col' : ''}>
                             <button type="button" className="vcmp-column-head" onClick={() => setSelectedId(item.id)}>
                               <span className={`vf-score-pill small ${scoreClass(item.survivalScore)}`}>
-                                {formatScore(item.survivalScore)}
+                                {formatSurvivalRate(item.survivalScore)}
                               </span>
                               <span className="vcmp-column-copy">
                                 <b>{vacancyTitle(item)}</b>
