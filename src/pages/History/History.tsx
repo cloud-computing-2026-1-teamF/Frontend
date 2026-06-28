@@ -203,7 +203,7 @@ export function History() {
               <span>정렬</span>
               <select value={sort} onChange={e => setSort(e.target.value as 'recent' | 'score')}>
                 <option value="recent">최근 분석 순</option>
-                <option value="score">생존율 높은 순</option>
+                <option value="score">예상 생존률 높은 순</option>
               </select>
             </div>
           </div>
@@ -390,7 +390,7 @@ function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: num
                 <div className="hc-addr">{p.addr}</div>
                 <HistoryHorizonMini item={p} />
               </div>
-              <div className="hc-score"><b className="num">{p.score}</b><span>/100</span></div>
+              <div className="hc-score"><b className="num">{p.score}</b><span>%</span></div>
             </div>
           ))}
         </div>
@@ -398,8 +398,8 @@ function HistoryCard({ item, onDelete }: { item: HistoryItem; onDelete: (id: num
 
       <div className="hc-right">
         <div className="hc-score-big">
-          <div className="hc-score-num num">{item.topScore}</div>
-          <div className="hc-score-lab">최고 3년 생존율</div>
+          <div className="hc-score-num num">{item.topScore}%</div>
+          <div className="hc-score-lab">최고 3년 예상 생존률</div>
         </div>
         <button type="button" className="btn btn-primary btn-sm" onClick={openDetail}>
           상세 보기 <Icon name="arrow-right" size={12} />
@@ -422,7 +422,7 @@ function HistoryHorizonMini({ item }: { item: HistoryItem['top3'][number] }) {
           key={score.horizonYears}
           className={score.horizonYears === PRIMARY_HORIZON_YEARS ? 'is-primary' : undefined}
         >
-          {score.horizonYears}년 {score.survivalScore}
+          {score.horizonYears}년 {score.survivalScore}%
         </span>
       ))}
     </div>
