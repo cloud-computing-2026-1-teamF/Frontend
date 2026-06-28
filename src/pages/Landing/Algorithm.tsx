@@ -57,10 +57,10 @@ export function Algorithm() {
               <span className="an-title">Top 3 공실매물 확인</span>
             </div>
             <div className="an-body">
-              <div className="an-desc">입지 점수가 높은 순서로 3곳을 추천해요</div>
-              <div className="out-item"><span className="out-rank" style={{ background: '#E85D1F' }}>1</span><span className="out-addr">서교동 367-12</span><span className="mono">88점</span></div>
-              <div className="out-item"><span className="out-rank" style={{ background: '#F4B431' }}>2</span><span className="out-addr">동교동 154-8</span><span className="mono">82점</span></div>
-              <div className="out-item"><span className="out-rank" style={{ background: '#0FB5A6' }}>3</span><span className="out-addr">서교동 401-3</span><span className="mono">77점</span></div>
+              <div className="an-desc">예상 생존률이 높은 순서로 3곳을 추천해요</div>
+              <div className="out-item"><span className="out-rank" style={{ background: '#E85D1F' }}>1</span><span className="out-addr">서교동 367-12</span><span className="mono">88%</span></div>
+              <div className="out-item"><span className="out-rank" style={{ background: '#F4B431' }}>2</span><span className="out-addr">동교동 154-8</span><span className="mono">82%</span></div>
+              <div className="out-item"><span className="out-rank" style={{ background: '#0FB5A6' }}>3</span><span className="out-addr">서교동 401-3</span><span className="mono">77%</span></div>
             </div>
           </div>
         </div>
@@ -94,15 +94,15 @@ export function Algorithm() {
           <div className="ad-card dark">
             <div className="ad-head">
               <span className="ad-step dark">결과</span>
-              <h3>0~100점으로 한눈에</h3>
+              <h3>예상 생존률(%)로 한눈에</h3>
             </div>
             <p>
-              4가지를 종합해서 공실매물마다 <b>입지 점수</b>를 매겨드려요. 점수가 높을수록 그 업종으로 창업했을 때 자리 잡기 좋은 입지라는 뜻이에요.
+              4가지를 종합해서 공실매물마다 <b>예상 생존률</b>을 보여드려요. 예상 생존률이 높을수록 그 업종으로 창업했을 때 자리 잡기 좋은 입지라는 뜻이에요.
             </p>
             <div className="ad-score-demo">
-              <div className="ad-score-row"><span className="ad-sr-lab">서교동 367-12</span><div className="ad-sr-bar"><span style={{ width: '88%' }} /></div><b className="num">88</b></div>
-              <div className="ad-score-row"><span className="ad-sr-lab">동교동 154-8</span><div className="ad-sr-bar"><span style={{ width: '82%', background: '#F4B431' }} /></div><b className="num">82</b></div>
-              <div className="ad-score-row"><span className="ad-sr-lab">서교동 401-3</span><div className="ad-sr-bar"><span style={{ width: '77%', background: '#0FB5A6' }} /></div><b className="num">77</b></div>
+              <div className="ad-score-row"><span className="ad-sr-lab">서교동 367-12</span><div className="ad-sr-bar"><span style={{ width: '88%' }} /></div><b className="num">88%</b></div>
+              <div className="ad-score-row"><span className="ad-sr-lab">동교동 154-8</span><div className="ad-sr-bar"><span style={{ width: '82%', background: '#F4B431' }} /></div><b className="num">82%</b></div>
+              <div className="ad-score-row"><span className="ad-sr-lab">서교동 401-3</span><div className="ad-sr-bar"><span style={{ width: '77%', background: '#0FB5A6' }} /></div><b className="num">77%</b></div>
             </div>
             <div className="ad-meta mono">분석은 보통 몇 초면 끝나요</div>
           </div>
