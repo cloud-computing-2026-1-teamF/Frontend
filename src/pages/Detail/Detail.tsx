@@ -489,7 +489,7 @@ function DetailForecastPanel({ item }: { item: SavedAnalysis['top3'][number] }) 
   return (
     <div className="dt-forecast">
       <div className="dt-forecast-head">
-        <span>생존율 전망</span>
+        <span>예상 생존률 전망</span>
         <b className={delta < 0 ? 'is-down' : delta > 0 ? 'is-up' : 'is-flat'}>{deltaText}</b>
       </div>
       <div className="dt-forecast-grid">
