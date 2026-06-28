@@ -34,7 +34,7 @@ export function VacancyTable({
   onToggleCompare,
 }: VacancyTableProps) {
   const { user } = useAuth();
-  // 상세 보기(생존점수 포함)는 Pro·Business 전용. Free/비로그인은 막는다.
+  // 상세 보기(예상 생존률 포함)는 Pro·Business 전용. Free/비로그인은 막는다.
   const canViewDetail = user?.tier === 'pro' || user?.tier === 'business';
   const handleKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, id: string) => {
     if (event.key === 'Enter' || event.key === ' ') onSelect(id);
