@@ -74,7 +74,7 @@ export const EMPTY_SUMMARY: VacancySearchResponse['summary'] = {
 };
 
 export const SORT_OPTIONS: Array<{ value: VacancySearchSort; label: string }> = [
-  { value: 'score_desc', label: '생존점수 높은 순' },
+  { value: 'score_desc', label: '예상 생존률 높은 순' },
   { value: 'rent_asc', label: '월세 낮은 순' },
   { value: 'rent_desc', label: '월세 높은 순' },
   { value: 'deposit_asc', label: '보증금 낮은 순' },
@@ -183,7 +183,7 @@ export function interpretVacancyPrompt(prompt: string, businessTypes: BusinessTy
   const scoreMin = detectScoreMin(normalized);
   if (scoreMin !== undefined) {
     filters.scoreMin = formatPromptNumber(scoreMin);
-    labels.push(`점수 ${scoreMin}점 이상`);
+    labels.push(`예상 생존률 ${scoreMin}% 이상`);
   }
 
   const areaRange = detectAreaRange(normalized);
@@ -286,7 +286,7 @@ export function promptPatchFromStructuredFilter(
 
   if (category?.scoreMin != null) {
     filters.scoreMin = formatPromptNumber(category.scoreMin);
-    labels.push(`점수 ${formatPromptNumber(category.scoreMin)}점 이상`);
+    labels.push(`예상 생존률 ${formatPromptNumber(category.scoreMin)}% 이상`);
   }
 
   const areaMin = space?.dedicatedAreaMin ?? space?.supplyAreaMin;
@@ -501,7 +501,7 @@ function applyAroundSlack(value: number, prompt: string): number {
 }
 
 function detectScoreMin(prompt: string): number | undefined {
-  const match = prompt.match(/(?:점수|생존점수|스코어)\s*([0-9]{1,3})(?:점)?\s*(?:이상|넘|부터)?/);
+  const match = prompt.match(/(?:예상\s*)?(?:생존률|생존율|생존점수|점수|스코어)\s*([0-9]{1,3})(?:점|%)?\s*(?:이상|넘|부터)?/);
   if (!match) return undefined;
   const value = Number(match[1]);
   if (!Number.isFinite(value)) return undefined;
@@ -570,6 +570,11 @@ export function formatCount(value?: number | null): string {
 export function formatScore(value?: number | null): string {
   if (value === undefined || value === null || !Number.isFinite(Number(value))) return '-';
   return Number(value).toFixed(1);
+}
+
+export function formatSurvivalRate(value?: number | null): string {
+  const score = formatScore(value);
+  return score === '-' ? score : `${score}%`;
 }
 
 export function formatManWon(value?: number | null): string {
