@@ -107,7 +107,7 @@ export function KakaoCanvas({
 function CandidateDot({ property, dense }: { property: AnalyzeProperty; dense: boolean }) {
   const recommended = property.recommended !== false;
   const size = dense ? 9 : 12;
-  const title = `${property.addr} · 입지 점수 ${property.score}`;
+  const title = `${property.addr} · 예상 생존률 ${property.score}%`;
   return (
     <div
       className={`km-candidate-dot ${recommended ? 'is-recommended' : 'is-caution'}`}
@@ -163,7 +163,7 @@ function NumberedPin({ p, isSel, onClick }: { p: AnalyzeProperty; isSel: boolean
         }}>
           <div style={{ fontSize: 11 }}>{p.addr}</div>
           <div style={{ fontSize: 10, color: c, fontWeight: 700, marginTop: 2 }}>
-            {recommended ? '추천' : '비추천'} · 입지 점수 {p.score} · 월세 {p.rent}만
+            {recommended ? '추천' : '비추천'} · 예상 생존률 {p.score}% · 월세 {p.rent}만
           </div>
           <div style={{
             position: 'absolute', bottom: -4, left: '50%',
