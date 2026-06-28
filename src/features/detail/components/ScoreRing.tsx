@@ -45,7 +45,7 @@ export function ScoreRing({ score, size = 160, stroke = 14, rank = 1, showLabel 
         <div className="dt-ring-val" style={{ color, fontSize: size * 0.28 }}>
           {score}<span style={{ fontSize: size * 0.13 }}>%</span>
         </div>
-        {showLabel && <div className="dt-ring-lab">3년 생존율</div>}
+        {showLabel && <div className="dt-ring-lab">3년 예상 생존률</div>}
       </div>
     </div>
   );
