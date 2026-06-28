@@ -52,7 +52,7 @@ export function RiskSummary({ sel, selRank, metricReference }: RiskSummaryProps)
         </div>
         <div>
           <div className="dt-risk-title">{title}</div>
-          <div className="dt-risk-sub">생존율 {sel.score}% · Top {selRank} 공실매물 기준 · 주요 지표 3개 요약</div>
+          <div className="dt-risk-sub">예상 생존률 {sel.score}% · Top {selRank} 공실매물 기준 · 주요 지표 3개 요약</div>
         </div>
       </div>
       <ul className="dt-risk-list">
