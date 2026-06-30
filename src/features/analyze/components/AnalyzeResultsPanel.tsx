@@ -701,10 +701,8 @@ type EvacuationSignal = {
 };
 
 function ScoreExplanationCue({ explanation }: { explanation: ScoreExplanationData }) {
-  const features = topScoreFeatures(explanation);
-  const positive = features.find(item => effectTone(item.effect) === 'positive');
-  const caution = features.find(item => effectTone(item.effect) === 'negative')
-    ?? features.find(item => item.featureKey !== positive?.featureKey);
+  const positive = positiveScoreFeatures(explanation)[0];
+  const caution = negativeScoreFeatures(explanation)[0];
   const cueItems = [positive, caution]
     .filter((item): item is ScoreFeatureReason => Boolean(item))
     .filter((item, index, items) => items.findIndex(candidate => candidate.featureKey === item.featureKey) === index);
@@ -727,7 +725,7 @@ function ScoreExplanationCue({ explanation }: { explanation: ScoreExplanationDat
 
 function cueLabel(tone: ReturnType<typeof effectTone>): string {
   if (tone === 'positive') return '강점';
-  if (tone === 'negative') return '주의';
+  if (tone === 'negative') return '약점';
   if (tone === 'neutral') return '보통';
   return '조건';
 }
@@ -788,8 +786,8 @@ function ScoreExplanationPanel({ property }: { property: AnalyzeProperty }) {
       </div>
 
       <div className="rr-xai-summary" aria-label="평균 대비 조건 요약">
-        <span className="is-positive"><b>{positiveCount}</b> 유리</span>
-        <span className="is-negative"><b>{cautionCount}</b> 주의</span>
+        <span className="is-positive"><b>{positiveCount}</b> 강점</span>
+        <span className="is-negative"><b>{cautionCount}</b> 약점</span>
       </div>
 
       <div className="rr-xai-feature-list">
@@ -807,6 +805,7 @@ function ScoreFeatureReasonRow({ item }: { item: ScoreFeatureReason }) {
   const current = finiteNumber(item.currentValue);
   const average = finiteNumber(item.averageValue);
   const hasValues = current != null && average != null;
+  const percentileLabel = item.valuePercentileLabel || percentilePositionLabel(item.valuePercentile);
   const currentLabelLeft = marker == null ? 50 : railLabelPosition(marker);
   const fillStyle = marker == null
     ? undefined
@@ -829,7 +828,7 @@ function ScoreFeatureReasonRow({ item }: { item: ScoreFeatureReason }) {
       <div
         className="rr-xai-rail"
         aria-label={hasValues
-          ? `${item.featureLabel} 평균 ${formatFeatureValue(average, item.displayUnit)}, 이 매물 ${formatFeatureValue(current, item.displayUnit)}`
+          ? `${item.featureLabel} 평균 ${formatFeatureValue(average, item.displayUnit)}, 이 매물 ${formatFeatureValue(current, item.displayUnit)}${percentileLabel ? `, ${percentileLabel}` : ''}`
           : `${item.featureLabel} 평균 대비 위치`
         }
       >
@@ -855,23 +854,35 @@ function ScoreFeatureReasonRow({ item }: { item: ScoreFeatureReason }) {
 }
 
 function topScoreFeatures(explanation: ScoreExplanationData): ScoreFeatureReason[] {
-  return explanation.features
-    .filter(item => item && item.featureKey && item.featureLabel)
-    .slice()
-    .sort((a, b) => a.rank - b.rank)
+  return sortedScoreFeatures(explanation.features)
     .slice(0, 3);
 }
 
-function evacuationSignalCandidate(explanation: ScoreExplanationData): EvacuationSignal | null {
-  const features = topScoreFeatures(explanation);
-  const negative = features.find(item => effectTone(item.effect) === 'negative');
-  if (negative) return { item: negative, isFallback: false };
+function positiveScoreFeatures(explanation: ScoreExplanationData): ScoreFeatureReason[] {
+  const explicit = sortedScoreFeatures(explanation.positiveFeatures ?? []);
+  if (explicit.length) return explicit;
+  return sortedScoreFeatures(explanation.features)
+    .filter(item => effectTone(item.effect) === 'positive');
+}
 
-  const weakestPositive = features
-    .filter(item => effectTone(item.effect) === 'positive')
+function negativeScoreFeatures(explanation: ScoreExplanationData): ScoreFeatureReason[] {
+  const explicit = sortedScoreFeatures(explanation.negativeFeatures ?? []);
+  if (explicit.length) return explicit;
+  return sortedScoreFeatures(explanation.features)
+    .filter(item => effectTone(item.effect) === 'negative');
+}
+
+function sortedScoreFeatures(features: ScoreFeatureReason[] | null | undefined): ScoreFeatureReason[] {
+  return (features ?? [])
+    .filter(item => item && item.featureKey && item.featureLabel)
     .slice()
-    .sort((a, b) => positiveMargin(a) - positiveMargin(b))[0];
-  return weakestPositive ? { item: weakestPositive, isFallback: true } : null;
+    .sort((a, b) => a.rank - b.rank);
+}
+
+function evacuationSignalCandidate(explanation: ScoreExplanationData): EvacuationSignal | null {
+  const negative = negativeScoreFeatures(explanation)[0];
+  if (negative) return { item: negative, isFallback: false };
+  return null;
 }
 
 function effectTone(effect: ScoreFeatureReason['effect']): 'positive' | 'negative' | 'neutral' | 'unknown' {
@@ -883,7 +894,7 @@ function effectTone(effect: ScoreFeatureReason['effect']): 'positive' | 'negativ
 
 function effectLabel(tone: ReturnType<typeof effectTone>): string {
   if (tone === 'positive') return '유리';
-  if (tone === 'negative') return '주의';
+  if (tone === 'negative') return '약점';
   if (tone === 'neutral') return '보통';
   return '확인중';
 }
@@ -892,16 +903,6 @@ function turnoverSignalText(item: ScoreFeatureReason, isFallback = false): strin
   if (isFallback) return `${withSubjectParticle(item.featureLabel)} 평균에 가장 가까워요`;
   const direction = featureDirection(item);
   return direction ? `${withSubjectParticle(item.featureLabel)} 평균보다 ${direction}` : item.featureLabel;
-}
-
-function positiveMargin(item: ScoreFeatureReason): number {
-  const current = finiteNumber(item.currentValue);
-  const average = finiteNumber(item.averageValue);
-  if (current == null || average == null) return Number.POSITIVE_INFINITY;
-  const delta = current - average;
-  const favorableDelta = item.higherIsPositive === false ? -delta : delta;
-  const base = Math.max(Math.abs(average), 1);
-  return favorableDelta / base;
 }
 
 type FeatureDirectionWords = {
@@ -1023,6 +1024,10 @@ function normalizeFeatureUnit(unit: string | null | undefined): string {
 }
 
 function comparisonMarker(item: ScoreFeatureReason): number | null {
+  const percentile = finiteNumber(item.valuePercentile);
+  if (percentile != null) {
+    return Math.round(Math.max(7, Math.min(93, percentile)) * 10) / 10;
+  }
   const current = finiteNumber(item.currentValue);
   const average = finiteNumber(item.averageValue);
   if (current == null || average == null) return null;
@@ -1035,6 +1040,14 @@ function comparisonMarker(item: ScoreFeatureReason): number | null {
   const amplifiedRatio = Math.min(1, 0.28 + Math.sqrt(deltaRatio) * 0.72);
   const marker = 50 + Math.sign(delta) * amplifiedRatio * 43;
   return Math.round(Math.max(7, Math.min(93, marker)) * 10) / 10;
+}
+
+function percentilePositionLabel(value: number | null | undefined): string | null {
+  const percentile = finiteNumber(value);
+  if (percentile == null) return null;
+  const rounded = Math.round(percentile * 10) / 10;
+  if (rounded >= 50) return `상위 ${Math.max(0.1, Math.round((100 - rounded) * 10) / 10)}%`;
+  return `하위 ${Math.max(0.1, rounded)}%`;
 }
 
 function railLabelPosition(marker: number): number {

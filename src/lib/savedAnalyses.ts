@@ -36,6 +36,8 @@ export type Top3Item = Property & {
 
 export type ScoreExplanation = {
   features: ScoreFeatureReason[];
+  positiveFeatures?: ScoreFeatureReason[] | null;
+  negativeFeatures?: ScoreFeatureReason[] | null;
   source?: string | null;
 };
 
@@ -43,6 +45,8 @@ export type ScoreFeatureEffect = 'positive' | 'negative' | 'neutral' | 'unknown'
 
 export type ScoreFeatureReason = {
   rank: number;
+  sourceRank?: number | null;
+  sourceTone?: string | null;
   featureKey: string;
   featureLabel: string;
   effect: ScoreFeatureEffect;
@@ -50,6 +54,13 @@ export type ScoreFeatureReason = {
   averageValue?: number | null;
   displayUnit?: string | null;
   higherIsPositive?: boolean | null;
+  contributionLogOdds?: number | null;
+  contributionPp?: number | null;
+  percentileLabel?: string | null;
+  normalizedImpact?: number | null;
+  impactPercentile?: number | null;
+  valuePercentile?: number | null;
+  valuePercentileLabel?: string | null;
 };
 
 export type SavedAnalysis = {
